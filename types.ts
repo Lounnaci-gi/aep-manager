@@ -1,0 +1,161 @@
+export enum QuoteStatus {
+  PENDING = 'En attente',
+  APPROVED = 'Approuve',
+  REJECTED = 'Rejete',
+  PAID = 'Paye'
+}
+
+export enum RequestStatus {
+  RECEIVED = 'Recue',
+  UNDER_STUDY = 'A letude',
+  VALIDATED = 'Validee',
+  REJECTED = 'Rejetee',
+  QUOTED = 'Devis etabli'
+}
+
+export enum UserRole {
+  ADMIN = 'Administrateur',
+  CHEF_CENTRE = 'Chef-Centre',
+  AGENT = 'Relation-Clientele',
+  CHEF_AGENCE = 'Chef-Agence',
+  JURISTE = 'Juriste',
+  TECHICO_COMMERCIAL = 'Technico-Commerciale'
+}
+
+export enum ClientCategory {
+  PHYSICAL = 'Individu',
+  LEGAL = 'Entreprise / Chantier'
+}
+
+export interface Centre {
+  id: string;
+  name: string;
+  prefix: string;
+  address: string;
+  commune: string;
+  postalCode: string;
+  phone: string;
+  secondaryPhone?: string;
+  fax?: string;
+  email?: string;
+  bankName?: string;
+  bankAccount?: string;
+  comptePostale?: string;
+  createdAt: string;
+}
+
+export interface CommercialAgency {
+  id: string;
+  centreId: string;
+  name: string;
+  address: string;
+  phone: string;
+  secondaryPhone?: string;
+  fax?: string;
+  email?: string;
+  comptePostale?: string;
+  createdAt: string;
+}
+
+export interface Client {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  category: ClientCategory;
+  nin?: string;
+  commune: string;
+  installationAddress: string;
+  installationCommune: string;
+  type: 'Proprietaire' | 'Locataire' | 'Mandataire';
+  civility?: string;
+  businessName?: string;
+  idDocumentType?: string;
+  idDocumentNumber?: string;
+  idDocumentIssueDate?: string;
+  idDocumentIssuer?: string;
+  createdAt: string;
+}
+
+export interface QuoteItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export interface WorkRequest {
+  id: string;
+  clientId: string;
+  clientName: string;
+  clientPhone: string;
+  clientEmail?: string;
+  centreId: string;
+  installationAddress: string;
+  installationCommune: string;
+  serviceType: string;
+  description: string;
+  type: 'Proprietaire' | 'Locataire' | 'Mandataire';
+  status: RequestStatus;
+  agencyId: string;
+  category?: ClientCategory;
+  civility?: string;
+  businessName?: string;
+  idDocumentType?: string;
+  idDocumentNumber?: string;
+  idDocumentIssueDate?: string;
+  idDocumentIssuer?: string;
+  address?: string;
+  commune?: string;
+  createdAt: string;
+}
+
+export interface Quote {
+  id: string;
+  requestId: string;
+  clientId: string;
+  clientName: string;
+  centreId: string;
+  agencyId?: string;
+  address?: string;
+  commune?: string;
+  installationAddress: string;
+  installationCommune: string;
+  serviceType: string;
+  description: string;
+  type: 'Proprietaire' | 'Locataire' | 'Mandataire';
+  items: QuoteItem[];
+  subtotal: number;
+  tax: number;
+  total: number;
+  status: QuoteStatus;
+  category?: ClientCategory;
+  civility?: string;
+  businessName?: string;
+  idDocumentType?: string;
+  idDocumentNumber?: string;
+  idDocumentIssueDate?: string;
+  idDocumentIssuer?: string;
+  clientEmail?: string;
+  clientPhone?: string;
+  createdAt: string;
+}
+
+export interface WorkType {
+  id: string;
+  name?: string;
+  description?: string;
+  label?: string;
+}
+
+export interface User {
+  id: string;
+  username: string;
+  fullName: string;
+  phone: string;
+  email: string;
+  password?: string;
+  role: UserRole;
+  centreId: string;
+  agencyId?: string;
+  createdAt: string;
+}

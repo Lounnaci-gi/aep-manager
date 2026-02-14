@@ -1,0 +1,5 @@
+{
+  "name": "AEP Manager - Gestion de Travaux d'Eau",
+  "description": "Application spécialisée pour la création et la gestion de devis de travaux d'Alimentation en Eau Potable (AEP).",
+  "requestFramePermissions": []
+}
