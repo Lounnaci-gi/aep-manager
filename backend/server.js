@@ -232,6 +232,21 @@ COLLECTIONS.forEach(colName => {
         return res.status(400).json({ error: 'Document doit avoir un id' });
       }
       
+      // Vérification spécifique pour les utilisateurs
+      if (colName === 'users') {
+        // Vérifier si c'est une création d'administrateur alors qu'un existe déjà
+        if (doc.role === 'Administrateur') {
+          const existingAdmins = await db.collection('users').find({ role: 'Administrateur' }).toArray();
+          const isAdminUpdate = existingAdmins.some(user => user.id === doc.id);
+          
+          if (existingAdmins.length > 0 && !isAdminUpdate) {
+            return res.status(403).json({ 
+              error: 'Un administrateur existe déjà dans le système. Vous ne pouvez pas créer un second administrateur.' 
+            });
+          }
+        }
+      }
+      
       // Supprimer le champ _id s'il existe pour éviter l'erreur MongoDB
       const { _id, ...docToSave } = doc;
       

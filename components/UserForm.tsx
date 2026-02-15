@@ -9,9 +9,10 @@ interface UserFormProps {
   centres: Centre[];
   agencies: CommercialAgency[];
   initialData?: User;
+  existingAdmin?: boolean;
 }
 
-export const UserForm: React.FC<UserFormProps> = ({ onSave, onCancel, centres, agencies, initialData }) => {
+export const UserForm: React.FC<UserFormProps> = ({ onSave, onCancel, centres, agencies, initialData, existingAdmin = false }) => {
   const [formData, setFormData] = useState({
     username: initialData?.username || '',
     fullName: initialData?.fullName || '',
@@ -223,9 +224,20 @@ export const UserForm: React.FC<UserFormProps> = ({ onSave, onCancel, centres, a
             onChange={e => setFormData({ ...formData, role: e.target.value as UserRole })}
           >
             {Object.values(UserRole).map(role => (
-              <option key={role} value={role}>{role}</option>
+              <option 
+                key={role} 
+                value={role}
+                disabled={existingAdmin && role === UserRole.ADMIN && formData.role !== UserRole.ADMIN}
+              >
+                {role}{existingAdmin && role === UserRole.ADMIN && formData.role !== UserRole.ADMIN ? ' (Déjà existant)' : ''}
+              </option>
             ))}
           </select>
+          {existingAdmin && formData.role !== UserRole.ADMIN && (
+            <p className="text-[9px] text-rose-600 font-bold uppercase mt-2 px-1 leading-tight">
+              * Un administrateur existe déjà dans le système
+            </p>
+          )}
         </div>
 
         <div className="flex gap-4 pt-6">

@@ -68,11 +68,11 @@ export const AgencyManager: React.FC<AgencyManagerProps> = ({
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mt-12">
         <div>
           <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tighter leading-none">Agences Commerciales</h2>
-          <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">Gestion des Agences Commerciales ADE.</p>
+          <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">Gestion des Centres Techniques et Agences ADE.</p>
         </div>
         <button 
           onClick={() => handleOpenAgencyForm()}
-          className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-100"
+          className="bg-blue-600 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-100"
         >
           + Nouvelle Agence
         </button>
@@ -81,7 +81,7 @@ export const AgencyManager: React.FC<AgencyManagerProps> = ({
       {/* Tableau des Agences Commerciales */}
       {agencies.length > 0 && (
         <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 bg-emerald-50 border-b border-gray-100 flex justify-between items-center">
+          <div className="px-6 py-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
             <h3 className="font-black text-gray-900 uppercase tracking-tight text-sm">Liste des Agences Commerciales ({agencies.length})</h3>
           </div>
           <div className="overflow-x-auto">
@@ -100,9 +100,9 @@ export const AgencyManager: React.FC<AgencyManagerProps> = ({
                 {agencies.map((agency) => {
                   const centre = centres.find(c => c.id === agency.centreId);
                   return (
-                    <tr key={agency.id} className="hover:bg-emerald-50/30 transition-colors">
+                    <tr key={agency.id} className="hover:bg-blue-50/30 transition-colors">
                       <td className="p-4 font-bold text-gray-900">{agency.name}</td>
-                      <td className="p-4 font-black text-emerald-600 uppercase">{centre?.name || '-'}</td>
+                      <td className="p-4 font-black text-blue-600 uppercase">{centre?.name || '-'}</td>
                       <td className="p-4 font-bold text-gray-600">{agency.address}</td>
                       <td className="p-4 font-mono text-gray-600">{agency.phone}</td>
                       <td className="p-4 font-bold text-gray-600">{agency.email}</td>
@@ -205,7 +205,7 @@ export const AgencyManager: React.FC<AgencyManagerProps> = ({
                 </div>
                 <div className="flex justify-end gap-3 mt-6">
                   <button type="button" onClick={() => setIsAgencyFormOpen(false)} className="px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all">Annuler</button>
-                  <button type="submit" className="px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest bg-emerald-600 text-white hover:bg-emerald-700 transition-all">{editingAgency ? 'Enregistrer' : 'Ajouter'}</button>
+                  <button type="submit" className="px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest bg-blue-600 text-white hover:bg-blue-700 transition-all">{editingAgency ? 'Enregistrer' : 'Ajouter'}</button>
                 </div>
               </form>
            </div>

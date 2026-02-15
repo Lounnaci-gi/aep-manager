@@ -230,6 +230,19 @@ const App: React.FC = () => {
   };
 
   const handleSaveUser = async (user: User) => {
+    // Vérifier s'il y a déjà un administrateur
+    const existingAdmin = users.some(u => u.role === UserRole.ADMIN && u.id !== user.id);
+    
+    if (user.role === UserRole.ADMIN && existingAdmin) {
+      Swal.fire({
+        title: 'Action non autorisée',
+        text: 'Un administrateur existe déjà dans le système. Vous ne pouvez pas créer un second administrateur.',
+        icon: 'error',
+        confirmButtonColor: '#dc2626'
+      });
+      return;
+    }
+    
     await DbService.saveUser(user);
     await loadData();
     setView('users');
@@ -393,6 +406,7 @@ const App: React.FC = () => {
             initialData={editingUser} 
             centres={centres}
             agencies={agencies}
+            existingAdmin={users.some(u => u.role === UserRole.ADMIN && u.id !== editingUser?.id)}
             onSave={handleSaveUser} 
             onCancel={() => setView('users')} 
           />

@@ -200,72 +200,7 @@ export const StructureManager: React.FC<StructureManagerProps> = ({
         </div>
       )}
 
-      {/* Tableau des Agences Commerciales */}
-      {agencies.length > 0 && (
-        <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 bg-emerald-50 border-b border-gray-100 flex justify-between items-center">
-            <h3 className="font-black text-gray-900 uppercase tracking-tight text-sm">Liste des Agences Commerciales ({agencies.length})</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead className="bg-gray-50 border-b border-gray-100">
-                <tr>
-                  <th className="text-left p-4 font-black text-gray-500 uppercase tracking-widest">Agence</th>
-                  <th className="text-left p-4 font-black text-gray-500 uppercase tracking-widest">Centre</th>
-                  <th className="text-left p-4 font-black text-gray-500 uppercase tracking-widest">Adresse</th>
-                  <th className="text-left p-4 font-black text-gray-500 uppercase tracking-widest">Téléphone</th>
-                  <th className="text-left p-4 font-black text-gray-500 uppercase tracking-widest">Email</th>
-                  <th className="text-center p-4 font-black text-gray-500 uppercase tracking-widest">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {agencies.map((agency) => {
-                  const centre = centres.find(c => c.id === agency.centreId);
-                  return (
-                    <tr key={agency.id} className="hover:bg-emerald-50/30 transition-colors">
-                      <td className="p-4 font-bold text-gray-900">{agency.name}</td>
-                      <td className="p-4 font-black text-emerald-600 uppercase">{centre?.name || '-'}</td>
-                      <td className="p-4 font-bold text-gray-600">{agency.address}</td>
-                      <td className="p-4 font-mono text-gray-600">{agency.phone}</td>
-                      <td className="p-4 font-bold text-gray-600">{agency.email}</td>
-                      <td className="p-4 text-center">
-                        <div className="flex justify-center gap-2">
-                          <button onClick={() => handleOpenAgencyForm(agency.centreId, agency)} className="p-2 text-gray-400 hover:text-blue-600 rounded-lg transition-all">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                          </button>
-                          <button onClick={async () => {
-                            const result = await Swal.fire({
-                              title: 'Supprimer l\'Agence',
-                              text: 'Êtes-vous sûr de vouloir supprimer cette agence?',
-                              icon: 'warning',
-                              showCancelButton: true,
-                              confirmButtonColor: '#dc2626',
-                              cancelButtonColor: '#64748b',
-                              confirmButtonText: 'Supprimer',
-                              cancelButtonText: 'Annuler'
-                            });
-                            if (result.isConfirmed) {
-                              onDeleteAgency(agency.id);
-                              Swal.fire({
-                                title: 'Supprimé !',
-                                text: 'L\'agence a été supprimée avec succès',
-                                icon: 'success',
-                                confirmButtonColor: '#2563eb'
-                              });
-                            }
-                          }} className="p-2 text-gray-300 hover:text-rose-600 rounded-lg transition-all">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+
 
       {/* Forms Modals */}
       {isCentreFormOpen && (

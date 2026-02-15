@@ -69,6 +69,14 @@ export const DbService = {
   },
   
   async saveUser(user: User): Promise<void> { 
+    // Vérifier s'il y a déjà un administrateur
+    const existingUsers = await this.getUsers();
+    const existingAdmin = existingUsers.some(u => u.role === UserRole.ADMIN && u.id !== user.id);
+    
+    if (user.role === UserRole.ADMIN && existingAdmin) {
+      throw new Error('Un administrateur existe déjà dans le système. Vous ne pouvez pas créer un second administrateur.');
+    }
+    
     // Hash password before saving
     const hashedPassword = await hashPasswordWithSalt(user.password || '', user.id);
     const userWithHashedPassword = { ...user, password: hashedPassword };
