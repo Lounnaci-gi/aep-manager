@@ -51,7 +51,7 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
     if (!currentUser) return workTypes;
     
     return workTypes.filter(workType => {
-      const allowedRoles = workType.allowedRoles || WORK_TYPE_PERMISSIONS[workType.label || ''] || Object.values(UserRole);
+      const allowedRoles = (workType.allowedRoles && workType.allowedRoles.length > 0) ? workType.allowedRoles : (WORK_TYPE_PERMISSIONS[workType.label || ''] || Object.values(UserRole));
       return allowedRoles.includes(currentUser.role);
     });
   };
