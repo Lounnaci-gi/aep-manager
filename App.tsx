@@ -230,6 +230,19 @@ const App: React.FC = () => {
   };
 
   const handleSaveUser = async (user: User) => {
+    // Vérifier les droits du chef de centre
+    if (currentUser?.role === UserRole.CHEF_CENTRE) {
+      if (user.centreId !== currentUser.centreId) {
+        Swal.fire({
+          title: 'Action non autorisée',
+          text: 'En tant que Chef-Centre, vous ne pouvez créer des utilisateurs que dans votre propre centre.',
+          icon: 'error',
+          confirmButtonColor: '#dc2626'
+        });
+        return;
+      }
+    }
+    
     // Vérifier s'il y a déjà un administrateur
     const existingAdmin = users.some(u => u.role === UserRole.ADMIN && u.id !== user.id);
     
@@ -259,16 +272,17 @@ const App: React.FC = () => {
     }
   };
 
-  const handleAddWorkType = async (label: string) => {
+  const handleAddWorkType = async (label: string, workType?: WorkType) => {
     const currentTypes = await DbService.getWorkTypes();
-    const newTypes = [...currentTypes, { id: Date.now().toString(), label }];
+    const newType = workType || { id: Date.now().toString(), label };
+    const newTypes = [...currentTypes, newType];
     await DbService.saveWorkTypes(newTypes);
     await loadData();
   };
 
-  const handleUpdateWorkType = async (id: string, label: string) => {
+  const handleUpdateWorkType = async (id: string, label: string, workType?: WorkType) => {
     const currentTypes = await DbService.getWorkTypes();
-    const newTypes = currentTypes.map(t => t.id === id ? { ...t, label } : t);
+    const newTypes = currentTypes.map(t => t.id === id ? workType || { ...t, label } : t);
     await DbService.saveWorkTypes(newTypes);
     await loadData();
   };
@@ -342,6 +356,7 @@ const App: React.FC = () => {
             centres={centres}
             initialData={editingRequest}
             currentUserAgencyId={currentUser.agencyId}
+            currentUser={currentUser}
             onSave={handleSaveRequest}
             onCancel={() => { setView('requests'); setEditingRequest(undefined); }}
           />
@@ -381,10 +396,10 @@ const App: React.FC = () => {
           </div>
         )}
         {view === 'client-form' && <ClientForm initialData={editingClient} onSave={handleSaveClient} onCancel={() => setView('clients')} />}
-        {view === 'settings' && <WorkTypeManager workTypes={workTypes} onAdd={handleAddWorkType} onUpdate={handleUpdateWorkType} onDelete={handleDeleteWorkType} />}
+        {view === 'settings' && <WorkTypeManager workTypes={workTypes} onAdd={handleAddWorkType} onUpdate={handleUpdateWorkType} onDelete={handleDeleteWorkType} currentUser={currentUser} />}
         {view === 'users' && (
           <div className="space-y-4">
-            {currentUser?.role === UserRole.ADMIN && (
+            {(currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.CHEF_CENTRE) && (
             <div className="flex justify-end">
               <button onClick={() => { setEditingUser(undefined); setView('user-form'); }} className="bg-rose-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-700">
                 Ajouter un Membre
@@ -406,6 +421,7 @@ const App: React.FC = () => {
             initialData={editingUser} 
             centres={centres}
             agencies={agencies}
+            currentUser={currentUser}
             existingAdmin={users.some(u => u.role === UserRole.ADMIN && u.id !== editingUser?.id)}
             onSave={handleSaveUser} 
             onCancel={() => setView('users')} 

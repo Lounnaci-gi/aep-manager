@@ -145,6 +145,7 @@ export interface WorkType {
   name?: string;
   description?: string;
   label?: string;
+  allowedRoles?: UserRole[]; // Rôles autorisés à créer ce type de travail
 }
 
 export interface User {
@@ -159,3 +160,16 @@ export interface User {
   agencyId?: string;
   createdAt: string;
 }
+
+// Permissions par défaut pour les types de travaux
+export const WORK_TYPE_PERMISSIONS: Record<string, UserRole[]> = {
+  'Branchement eau potable': [UserRole.AGENT, UserRole.CHEF_AGENCE],
+  'Branchement assainissement': [UserRole.AGENT, UserRole.CHEF_AGENCE],
+  'Réparation fuite': [UserRole.AGENT, UserRole.CHEF_AGENCE, UserRole.TECHICO_COMMERCIAL],
+  'Changement compteur': [UserRole.AGENT, UserRole.CHEF_AGENCE],
+  'Déménagement branchement': [UserRole.AGENT, UserRole.CHEF_AGENCE],
+  'Fermeture compte': [UserRole.AGENT, UserRole.CHEF_AGENCE, UserRole.JURISTE],
+  'Résiliation contrat': [UserRole.CHEF_AGENCE, UserRole.JURISTE],
+  'Audit technique': [UserRole.TECHICO_COMMERCIAL, UserRole.CHEF_AGENCE],
+  // Ajoutez d'autres types selon vos besoins
+};

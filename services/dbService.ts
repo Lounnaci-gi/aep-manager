@@ -207,8 +207,8 @@ export const DbService = {
     }
   },
   
-  async saveWorkType(workType: WorkType): Promise<void> { 
-    await apiRequest('POST', COLLECTIONS.WORK_TYPES, workType); 
+  async saveWorkType(workType: WorkType): Promise<void> {
+    await apiRequest('POST', COLLECTIONS.WORK_TYPES, workType);
   },
   
   async deleteWorkType(id: string): Promise<void> {

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { WorkRequest, RequestStatus, WorkType, Client, CommercialAgency, Centre, ClientCategory } from '../types';
+import { WorkRequest, RequestStatus, WorkType, Client, CommercialAgency, Centre, ClientCategory, UserRole, WORK_TYPE_PERMISSIONS } from '../types';
 
 interface WorkRequestFormProps {
   onSave: (request: WorkRequest) => void;
@@ -11,6 +11,7 @@ interface WorkRequestFormProps {
   centres: Centre[];
   initialData?: WorkRequest;
   currentUserAgencyId?: string;
+  currentUser?: { role: UserRole; agencyId?: string };
 }
 
 export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({ 
@@ -21,7 +22,8 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
   agencies,
   centres,
   initialData,
-  currentUserAgencyId 
+  currentUserAgencyId,
+  currentUser
 }) => {
   const [formData, setFormData] = useState({
     category: initialData?.category || ClientCategory.PHYSICAL,
@@ -43,6 +45,18 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
     type: initialData?.type || 'Propriétaire',
     agencyId: initialData?.agencyId || currentUserAgencyId || (agencies.length > 0 ? agencies[0].id : ''),
   });
+
+  // Filtrer les types de travaux selon les permissions de l'utilisateur
+  const getFilteredWorkTypes = (): WorkType[] => {
+    if (!currentUser) return workTypes;
+    
+    return workTypes.filter(workType => {
+      const allowedRoles = workType.allowedRoles || WORK_TYPE_PERMISSIONS[workType.label || ''] || Object.values(UserRole);
+      return allowedRoles.includes(currentUser.role);
+    });
+  };
+
+  const filteredWorkTypes = getFilteredWorkTypes();
 
   const handleSelectClient = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const clientId = e.target.value;
@@ -153,7 +167,7 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
           <h3 className="text-[11px] font-black text-amber-600 uppercase tracking-widest border-l-4 border-amber-600 pl-3">Lieu des Travaux</h3>
           
           <select className="w-full rounded-xl border-gray-200 p-3 text-sm font-black border bg-amber-50/20" value={formData.serviceType} onChange={e => setFormData({ ...formData, serviceType: e.target.value })}>
-            {workTypes.map(s => <option key={s.id} value={s.label}>{s.label}</option>)}
+            {filteredWorkTypes.map(s => <option key={s.id} value={s.label}>{s.label}</option>)}
           </select>
 
           <div className="space-y-3 p-4 bg-gray-50 border border-gray-100 rounded-2xl">

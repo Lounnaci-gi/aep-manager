@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, UserRole, Centre, CommercialAgency } from '../types';
 import { verifyPassword } from '../services/passwordUtils';
+import Swal from 'sweetalert2';
 
 interface UserFormProps {
   onSave: (user: User) => void;
@@ -10,9 +11,10 @@ interface UserFormProps {
   agencies: CommercialAgency[];
   initialData?: User;
   existingAdmin?: boolean;
+  currentUser?: User;
 }
 
-export const UserForm: React.FC<UserFormProps> = ({ onSave, onCancel, centres, agencies, initialData, existingAdmin = false }) => {
+export const UserForm: React.FC<UserFormProps> = ({ onSave, onCancel, centres, agencies, initialData, existingAdmin = false, currentUser }) => {
   const [formData, setFormData] = useState({
     username: initialData?.username || '',
     fullName: initialData?.fullName || '',
@@ -25,9 +27,39 @@ export const UserForm: React.FC<UserFormProps> = ({ onSave, onCancel, centres, a
   });
   const [oldPassword, setOldPassword] = useState('');
   const [changePassword, setChangePassword] = useState(false);
+  const [phoneError, setPhoneError] = useState('');
+  const [emailError, setEmailError] = useState('');
+
+  // Validation du téléphone (format algérien)
+  const validatePhone = (phone: string): boolean => {
+    const phoneRegex = /^(05|06|07)[0-9]{8}$/;
+    return phoneRegex.test(phone.replace(/\s/g, ''));
+  };
+
+  // Validation de l'email
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validation du téléphone
+    if (!validatePhone(formData.phone)) {
+      setPhoneError('Format de téléphone invalide. Exemple: 0661234567');
+      return;
+    } else {
+      setPhoneError('');
+    }
+    
+    // Validation de l'email
+    if (!validateEmail(formData.email)) {
+      setEmailError('Format d\'email invalide');
+      return;
+    } else {
+      setEmailError('');
+    }
     
     // Si un nouveau mot de passe est entré, vérifier l'ancien mot de passe
     if (formData.password && initialData) {
@@ -43,12 +75,34 @@ export const UserForm: React.FC<UserFormProps> = ({ onSave, onCancel, centres, a
       }
     }
     
-    const user: User = {
-      id: initialData?.id || `USR-${Date.now().toString().slice(-4)}`,
-      ...formData,
-      createdAt: initialData?.createdAt || new Date().toISOString(),
-    };
-    onSave(user);
+    // Message de confirmation avec SweetAlert2
+    const result = await Swal.fire({
+      title: initialData ? 'Modifier le collaborateur' : 'Ajouter un nouveau collaborateur',
+      html: `
+        <div class="text-left space-y-2">
+          <p><strong>Nom & Prénom:</strong> ${formData.fullName}</p>
+          <p><strong>Identifiant:</strong> ${formData.username}</p>
+          <p><strong>Téléphone:</strong> ${formData.phone}</p>
+          <p><strong>Email:</strong> ${formData.email}</p>
+          <p><strong>Rôle:</strong> ${formData.role}</p>
+        </div>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#2563eb',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: initialData ? 'Modifier' : 'Ajouter',
+      cancelButtonText: 'Annuler'
+    });
+    
+    if (result.isConfirmed) {
+      const user: User = {
+        id: initialData?.id || `USR-${Date.now().toString().slice(-4)}`,
+        ...formData,
+        createdAt: initialData?.createdAt || new Date().toISOString(),
+      };
+      onSave(user);
+    }
   };
 
   const filteredAgencies = agencies.filter(a => a.centreId === formData.centreId);
@@ -94,22 +148,38 @@ export const UserForm: React.FC<UserFormProps> = ({ onSave, onCancel, centres, a
             <input 
               required
               type="tel" 
-              className="w-full rounded-2xl border-gray-200 focus:ring-blue-500 focus:border-blue-500 p-3.5 border text-sm font-medium bg-gray-50/50"
+              className={`w-full rounded-2xl border p-3.5 text-sm font-medium bg-gray-50/50 ${phoneError ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-200 focus:ring-blue-500 focus:border-blue-500'}`}
               value={formData.phone}
-              onChange={e => setFormData({ ...formData, phone: e.target.value })}
-              placeholder="ex: 0661 XX XX XX"
+              onChange={e => {
+                setFormData({ ...formData, phone: e.target.value });
+                if (phoneError && validatePhone(e.target.value)) {
+                  setPhoneError('');
+                }
+              }}
+              placeholder="ex: 0661234567"
             />
+            {phoneError && (
+              <p className="text-[10px] text-red-600 font-bold mt-1 ml-1">{phoneError}</p>
+            )}
           </div>
           <div>
             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Adresse Email</label>
             <input 
               required
               type="email" 
-              className="w-full rounded-2xl border-gray-200 focus:ring-blue-500 focus:border-blue-500 p-3.5 border text-sm font-medium bg-gray-50/50"
+              className={`w-full rounded-2xl border p-3.5 text-sm font-medium bg-gray-50/50 ${emailError ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-200 focus:ring-blue-500 focus:border-blue-500'}`}
               value={formData.email}
-              onChange={e => setFormData({ ...formData, email: e.target.value })}
+              onChange={e => {
+                setFormData({ ...formData, email: e.target.value });
+                if (emailError && validateEmail(e.target.value)) {
+                  setEmailError('');
+                }
+              }}
               placeholder="nom@gestioneau.dz"
             />
+            {emailError && (
+              <p className="text-[10px] text-red-600 font-bold mt-1 ml-1">{emailError}</p>
+            )}
           </div>
         </div>
 
@@ -193,10 +263,26 @@ export const UserForm: React.FC<UserFormProps> = ({ onSave, onCancel, centres, a
                 onChange={e => {
                   setFormData({ ...formData, centreId: e.target.value, agencyId: '' });
                 }}
+                disabled={!!initialData?.centreId || currentUser?.role === UserRole.CHEF_CENTRE}
               >
-                <option value="">-- Choisir un centre --</option>
-                {centres.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {currentUser?.role === UserRole.CHEF_CENTRE ? (
+                  // Chef de centre ne voit que son propre centre
+                  <option value={currentUser.centreId}>
+                    {centres.find(c => c.id === currentUser.centreId)?.name || 'Votre centre'}
+                  </option>
+                ) : (
+                  // Admin voit tous les centres
+                  <>
+                    <option value="">-- Choisir un centre --</option>
+                    {centres.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </>
+                )}
               </select>
+              {currentUser?.role === UserRole.CHEF_CENTRE && (
+                <p className="text-[9px] text-blue-600 font-bold uppercase mt-2 px-1 leading-tight">
+                  * En tant que Chef-Centre, vous ne pouvez affecter des utilisateurs qu'à votre centre
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Unité (Optionnel)</label>
