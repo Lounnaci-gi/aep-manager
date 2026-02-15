@@ -35,6 +35,23 @@ export const WorkTypeManager: React.FC<WorkTypeManagerProps> = ({ workTypes, onA
         return;
       }
       
+      // Vérifier si un type de travail avec le même libellé existe déjà
+      const typeExists = workTypes.some(
+        type => type.label.toLowerCase() === newLabel.trim().toLowerCase()
+      );
+      
+      if (typeExists) {
+        Swal.fire({
+          title: 'Type de travail existant',
+          text: `Un type de travail avec le libellé "${newLabel.trim()}" existe déjà. Veuillez choisir un libellé unique.`,
+          icon: 'warning',
+          confirmButtonColor: '#2563eb',
+          timer: 4000,
+          showConfirmButton: true
+        });
+        return;
+      }
+      
       Swal.fire({
         title: 'Confirmation',
         text: `Êtes-vous sûr de vouloir ajouter le type de travail "${newLabel.trim()}" ?`,
@@ -85,6 +102,23 @@ export const WorkTypeManager: React.FC<WorkTypeManagerProps> = ({ workTypes, onA
           icon: 'warning',
           confirmButtonColor: '#2563eb',
           timer: 3000,
+          showConfirmButton: true
+        });
+        return;
+      }
+      
+      // Vérifier si un type de travail avec le même libellé existe déjà (autre que celui en cours de modification)
+      const typeExists = workTypes.some(
+        type => type.id !== editingId && type.label.toLowerCase() === editLabel.trim().toLowerCase()
+      );
+      
+      if (typeExists) {
+        Swal.fire({
+          title: 'Type de travail existant',
+          text: `Un type de travail avec le libellé "${editLabel.trim()}" existe déjà. Veuillez choisir un libellé unique.`,
+          icon: 'warning',
+          confirmButtonColor: '#2563eb',
+          timer: 4000,
           showConfirmButton: true
         });
         return;
@@ -235,53 +269,68 @@ export const WorkTypeManager: React.FC<WorkTypeManagerProps> = ({ workTypes, onA
             <ul className="divide-y divide-gray-100">
               {workTypes.map((type) => (
                 <li key={type.id} className="px-6 py-4 flex flex-col hover:bg-blue-50/30 transition-colors">
-                  <div className="flex items-center justify-between w-full">
-                    {editingId === type.id ? (
-                      <div className="flex-grow flex gap-2 mr-4">
-                        <input 
-                          type="text" 
-                          className="flex-grow rounded-md border-gray-300 sm:text-sm p-1 border"
-                          value={editLabel}
-                          onChange={(e) => setEditLabel(e.target.value)}
-                        />
-                        <button onClick={handleUpdate} className="text-green-600 font-bold text-xs uppercase">Sauver</button>
-                        <button onClick={() => setEditingId(null)} className="text-gray-400 text-xs uppercase">Annuler</button>
-                      </div>
-                    ) : (
-                      <>
-                        <span className="text-gray-900 font-bold text-sm italic flex-grow">{type.label}</span>
-                        <div className="flex gap-4">
-                          <button onClick={() => startEdit(type)} className="text-blue-600 hover:text-blue-800 transition-colors">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                          </button>
-                          <button onClick={async () => {
-                            const result = await Swal.fire({
-                              title: 'Êtes-vous sûr ?',
-                              text: 'Cette action supprimera définitivement ce type de travail.',
-                              icon: 'warning',
-                              showCancelButton: true,
-                              confirmButtonColor: '#dc2626',
-                              cancelButtonColor: '#64748b',
-                              confirmButtonText: 'Oui, supprimer',
-                              cancelButtonText: 'Annuler'
-                            });
-                            if (result.isConfirmed) {
-                              onDelete(type.id);
-                              Swal.fire({
-                                title: 'Supprimé !',
-                                text: 'Le type de travail a été supprimé avec succès.',
-                                icon: 'success',
-                                confirmButtonColor: '#2563eb',
-                                timer: 2000,
-                                showConfirmButton: false
-                              });
-                            }
-                          }} className="text-red-300 hover:text-red-600 transition-colors">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                          </button>
+                  <div className="flex flex-col w-full">
+                    <div className="flex items-center justify-between w-full">
+                      {editingId === type.id ? (
+                        <div className="flex-grow flex gap-2 mr-4">
+                          <input 
+                            type="text" 
+                            className="flex-grow rounded-md border-gray-300 sm:text-sm p-1 border"
+                            value={editLabel}
+                            onChange={(e) => setEditLabel(e.target.value)}
+                          />
+                          <button onClick={handleUpdate} className="text-green-600 font-bold text-xs uppercase">Sauver</button>
+                          <button onClick={() => setEditingId(null)} className="text-gray-400 text-xs uppercase">Annuler</button>
                         </div>
-                      </>
-                    )}
+                      ) : (
+                        <>
+                          <div className="flex-grow">
+                            <span className="text-gray-900 font-bold text-sm italic">{type.label}</span>
+                            <div className="mt-1 flex flex-wrap gap-1">
+                              {type.allowedRoles && type.allowedRoles.length > 0 ? (
+                                type.allowedRoles.map((role, index) => (
+                                  <span key={index} className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-[8px] font-bold">
+                                    {role}
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="text-gray-400 text-[10px] italic">Aucun rôle spécifique</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex gap-4">
+                            <button onClick={() => startEdit(type)} className="text-blue-600 hover:text-blue-800 transition-colors">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                            </button>
+                            <button onClick={async () => {
+                              const result = await Swal.fire({
+                                title: 'Êtes-vous sûr ?',
+                                text: 'Cette action supprimera définitivement ce type de travail.',
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonColor: '#dc2626',
+                                cancelButtonColor: '#64748b',
+                                confirmButtonText: 'Oui, supprimer',
+                                cancelButtonText: 'Annuler'
+                              });
+                              if (result.isConfirmed) {
+                                onDelete(type.id);
+                                Swal.fire({
+                                  title: 'Supprimé !',
+                                  text: 'Le type de travail a été supprimé avec succès.',
+                                  icon: 'success',
+                                  confirmButtonColor: '#2563eb',
+                                  timer: 2000,
+                                  showConfirmButton: false
+                                });
+                              }
+                            }} className="text-red-300 hover:text-red-600 transition-colors">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                   {editingId === type.id && (
                     <div className="mt-3 pt-3 border-t border-gray-100">
