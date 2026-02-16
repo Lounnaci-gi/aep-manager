@@ -346,6 +346,7 @@ const App: React.FC = () => {
             onEdit={(r) => { setEditingRequest(r); setView('request-form'); }}
             onCreateQuote={handleCreateQuoteFromRequest}
             onUpdateStatus={handleUpdateRequestStatus}
+            currentUser={currentUser}
           />
         )}
         {view === 'request-form' && (

@@ -91,7 +91,7 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
     }
   };
 
-  // Fonction pour générer un ID temporaire au format xxxx/préfix/yyyy
+  // Fonction pour générer un ID temporaire au format spécial pour indiquer au backend de générer un vrai ID
   // NOTE: Pour une implémentation complète, cette fonction devrait être appelée via le backend
   // avec un système d'incrément basé sur la base de données
   const generateTempRequestId = () => {
@@ -106,10 +106,8 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
       }
     }
     
-    // Pour l'instant, on utilise une partie de l'horodatage pour éviter les doublons
-    // En production, vous aurez besoin d'un système centralisé par centre
-    const timestampPart = Date.now() % 10000; // Derniers 4 chiffres du timestamp
-    return `${timestampPart.toString().padStart(4, '0')}/${prefix}/${currentYear}`;
+    // ID spécial pour indiquer au backend de générer le vrai numéro incrémental
+    return `TEMP-${Date.now()}-${prefix}-${currentYear}`;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -118,7 +116,7 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
     const request: WorkRequest = {
       id: initialData?.id || generateTempRequestId(),
       ...formData,
-      status: initialData?.status || RequestStatus.RECEIVED,
+      status: initialData?.status || (isBranchementEau ? RequestStatus.AWAITING_AGENCY_VALIDATION : RequestStatus.RECEIVED),
       createdAt: initialData?.createdAt || new Date().toISOString(),
     };
     onSave(request);
@@ -153,21 +151,7 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
             </div>
           )}
           
-          <div>
-            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Importer un client</label>
-            <select 
-              className={`w-full rounded-xl border-gray-200 bg-gray-50/50 p-3 text-sm font-bold border ${!isServiceTypeSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
-              onChange={handleSelectClient}
-              disabled={!isServiceTypeSelected}
-            >
-              <option value="">-- Saisie Directe --</option>
-              {clients.map(c => (
-                <option key={c.id} value={c.id}>
-                  {c.category === ClientCategory.LEGAL ? `[E] ${c.businessName}` : `[I] ${c.name}`}
-                </option>
-              ))}
-            </select>
-          </div>
+
 
           <div className={`bg-blue-50/30 p-4 rounded-2xl border border-blue-100 space-y-4 ${!isServiceTypeSelected ? 'opacity-50' : ''}`}>
             <div className="grid grid-cols-2 gap-2">
@@ -291,8 +275,8 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <h5 className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-2">Adresse de correspondance</h5>
                 <input required type="text" placeholder="Rue" className="w-full rounded-xl border-gray-200 p-3 text-sm font-bold border mb-2" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} />
                 <input required type="text" placeholder="Commune" className="w-full rounded-xl border-gray-200 p-3 text-sm font-bold border mb-2" value={formData.commune} onChange={e => setFormData({ ...formData, commune: e.target.value })} />
-                <input required type="text" placeholder="Téléphone" className="w-full rounded-xl border-gray-200 p-3 text-sm font-bold border mb-2" value={formData.correspondencePhone} onChange={e => setFormData({ ...formData, correspondencePhone: e.target.value })} />
-                <input required type="email" placeholder="Email" className="w-full rounded-xl border-gray-200 p-3 text-sm font-bold border" value={formData.correspondenceEmail} onChange={e => setFormData({ ...formData, correspondenceEmail: e.target.value })} />
+                <input type="text" placeholder="Téléphone (facultatif)" className="w-full rounded-xl border-gray-200 p-3 text-sm font-bold border mb-2" value={formData.correspondencePhone} onChange={e => setFormData({ ...formData, correspondencePhone: e.target.value })} />
+                <input type="email" placeholder="Email (facultatif)" className="w-full rounded-xl border-gray-200 p-3 text-sm font-bold border" value={formData.correspondenceEmail} onChange={e => setFormData({ ...formData, correspondenceEmail: e.target.value })} />
               </div>
               
               {/* Adresse de branchement */}
@@ -362,7 +346,7 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
             )}
           </div>
 
-          <textarea required rows={3} className="w-full rounded-xl border-gray-200 p-3 text-sm font-medium border" placeholder="Détails techniques du projet..." value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
+          <textarea rows={3} className="w-full rounded-xl border-gray-200 p-3 text-sm font-medium border" placeholder="Détails techniques du projet (facultatif)" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
 
 
 

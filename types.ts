@@ -8,6 +8,8 @@ export enum QuoteStatus {
 export enum RequestStatus {
   RECEIVED = 'Recue',
   UNDER_STUDY = 'A letude',
+  AWAITING_AGENCY_VALIDATION = 'En attente validation agence',
+  AWAITING_CUSTOMER_SERVICE_VALIDATION = 'En attente validation relation clientèle',
   VALIDATED = 'Validee',
   REJECTED = 'Rejetee',
   QUOTED = 'Devis etabli'

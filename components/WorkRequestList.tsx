@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { WorkRequest, RequestStatus, CommercialAgency, Centre, BranchementType } from '../types';
+import { WorkRequest, RequestStatus, CommercialAgency, Centre, BranchementType, UserRole, User } from '../types';
 
 interface WorkRequestListProps {
   requests: WorkRequest[];
@@ -10,6 +10,7 @@ interface WorkRequestListProps {
   onEdit: (request: WorkRequest) => void;
   onCreateQuote: (request: WorkRequest) => void;
   onUpdateStatus: (id: string, status: RequestStatus) => void;
+  currentUser?: User;
 }
 
 type SortOption = 'date-desc' | 'date-asc' | 'name-asc';
@@ -21,13 +22,63 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
   onDelete, 
   onEdit, 
   onCreateQuote, 
-  onUpdateStatus 
+  onUpdateStatus,
+  currentUser
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<RequestStatus | ''>('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('date-desc');
+  const [showValidationPanel, setShowValidationPanel] = useState(true);
+  const [validationFilter, setValidationFilter] = useState<'all' | 'pending' | 'validated'>('all');
+
+  // Compter les demandes en attente de validation
+  const pendingAgencyValidation = requests.filter(req => 
+    req.serviceType === "Branchement d'eau potable" && 
+    req.status === RequestStatus.AWAITING_AGENCY_VALIDATION &&
+    currentUser?.role === UserRole.CHEF_AGENCE
+  ).length;
+
+  const pendingCustomerServiceValidation = requests.filter(req => 
+    req.serviceType === "Branchement d'eau potable" && 
+    req.status === RequestStatus.AWAITING_CUSTOMER_SERVICE_VALIDATION &&
+    currentUser?.role === UserRole.AGENT
+  ).length;
+
+  // DEBUG: Compter toutes les demandes de branchement d'eau
+  const allWaterRequests = requests.filter(req => 
+    req.serviceType === "Branchement d'eau potable"
+  );
+  
+  const allWaterRequestsCount = allWaterRequests.length;
+  
+  // DEBUG: Afficher les statuts des demandes d'eau
+  const waterRequestStatuses = allWaterRequests.map(req => ({
+    id: req.id,
+    status: req.status,
+    client: req.clientName
+  }));
+
+  const totalPendingValidations = pendingAgencyValidation + pendingCustomerServiceValidation;
+
+  // Filtrer les demandes selon le filtre de validation
+  const getFilteredRequests = () => {
+    if (validationFilter === 'pending') {
+      return requests.filter(req => 
+        req.serviceType === "Branchement d'eau potable" && 
+        (req.status === RequestStatus.AWAITING_AGENCY_VALIDATION || 
+         req.status === RequestStatus.AWAITING_CUSTOMER_SERVICE_VALIDATION)
+      );
+    }
+    if (validationFilter === 'validated') {
+      return requests.filter(req => 
+        req.serviceType === "Branchement d'eau potable" && 
+        req.status === RequestStatus.VALIDATED
+      );
+    }
+    return requests;
+  };
 
   const getStatusBadge = (status: RequestStatus) => {
     switch (status) {
@@ -56,13 +107,13 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
   };
 
   const filteredAndSortedRequests = useMemo(() => {
-    let result = requests.filter(req => {
+    let result = getFilteredRequests().filter(req => {
       const matchesSearch = 
         req.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         req.id.toLowerCase().includes(searchTerm.toLowerCase());
-      
+        
       const matchesStatus = statusFilter === '' || req.status === statusFilter;
-      
+        
       const reqDate = new Date(req.createdAt).getTime();
       let matchesDate = true;
       if (startDate) {
@@ -73,7 +124,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
         const end = new Date(endDate).setHours(23, 59, 59, 999);
         if (reqDate > end) matchesDate = false;
       }
-
+        
       return matchesSearch && matchesStatus && matchesDate;
     });
 
@@ -100,7 +151,56 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
   };
 
   return (
-    <div className="bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100 mx-2 sm:mx-0">
+    <div className="space-y-6">
+      {/* Panneau de validation rapide */}
+      {totalPendingValidations > 0 && showValidationPanel && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6 shadow-lg">
+          <div className="flex justify-between items-start">
+            <div className="flex-1">
+              <h3 className="text-lg font-black text-blue-900 uppercase tracking-tight mb-2">
+                📋 Demandes à valider
+              </h3>
+              <p className="text-sm text-blue-700 font-medium mb-4">
+                Vous avez {totalPendingValidations} demande{totalPendingValidations > 1 ? 's' : ''} en attente de votre validation
+              </p>
+              
+              <div className="flex flex-wrap gap-4">
+                {pendingAgencyValidation > 0 && currentUser?.role === UserRole.CHEF_AGENCE && (
+                  <div className="bg-white rounded-xl p-4 border border-green-200 flex items-center gap-3">
+                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                    <div>
+                      <p className="text-xs font-black text-green-800 uppercase tracking-widest">Validation Chef Agence</p>
+                      <p className="text-sm font-bold text-green-700">{pendingAgencyValidation} demande{pendingAgencyValidation > 1 ? 's' : ''}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {pendingCustomerServiceValidation > 0 && currentUser?.role === UserRole.AGENT && (
+                  <div className="bg-white rounded-xl p-4 border border-emerald-200 flex items-center gap-3">
+                    <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
+                    <div>
+                      <p className="text-xs font-black text-emerald-800 uppercase tracking-widest">Validation Relation Clientèle</p>
+                      <p className="text-sm font-bold text-emerald-700">{pendingCustomerServiceValidation} demande{pendingCustomerServiceValidation > 1 ? 's' : ''}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <button 
+              onClick={() => setShowValidationPanel(false)}
+              className="text-blue-400 hover:text-blue-600 p-2 rounded-lg hover:bg-blue-100 transition-colors"
+              title="Masquer ce panneau"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+      
+      <div className="bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100 mx-2 sm:mx-0">
       {/* Filters Bar */}
       <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50 space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -112,6 +212,40 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
             <span className="text-[10px] font-black px-3 py-1 bg-blue-600 text-white rounded-full uppercase tracking-widest shadow-lg shadow-blue-200">
               {filteredAndSortedRequests.length} Dossiers
             </span>
+            
+            {/* Filtres de validation */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setValidationFilter('all')}
+                className={`px-3 py-1.5 text-[9px] font-black rounded-lg uppercase tracking-widest transition-all ${
+                  validationFilter === 'all' 
+                    ? 'bg-gray-600 text-white shadow-lg' 
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                Tous
+              </button>
+              <button
+                onClick={() => setValidationFilter('pending')}
+                className={`px-3 py-1.5 text-[9px] font-black rounded-lg uppercase tracking-widest transition-all ${
+                  validationFilter === 'pending' 
+                    ? 'bg-amber-500 text-white shadow-lg' 
+                    : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+                }`}
+              >
+                En attente
+              </button>
+              <button
+                onClick={() => setValidationFilter('validated')}
+                className={`px-3 py-1.5 text-[9px] font-black rounded-lg uppercase tracking-widest transition-all ${
+                  validationFilter === 'validated' 
+                    ? 'bg-emerald-500 text-white shadow-lg' 
+                    : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                }`}
+              >
+                Validés
+              </button>
+            </div>
             {(searchTerm || statusFilter || startDate || endDate) && (
               <button 
                 onClick={clearFilters}
@@ -228,7 +362,49 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right">
                   <div className="flex justify-end items-center gap-3">
-                    {req.status !== RequestStatus.QUOTED && req.status !== RequestStatus.REJECTED && (
+                    {/* Boutons de validation spécifiques pour les branchements d'eau potable */}
+                    {req.serviceType === "Branchement d'eau potable" && (
+                      <>
+                        {/* Validation Chef d'Agence */}
+                        {req.status === RequestStatus.AWAITING_AGENCY_VALIDATION && currentUser?.role === UserRole.CHEF_AGENCE && (
+                          <div className="flex gap-2">
+                            <button 
+                              onClick={() => onUpdateStatus(req.id, RequestStatus.AWAITING_CUSTOMER_SERVICE_VALIDATION)}
+                              className="bg-green-600 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg shadow-green-100/50"
+                            >
+                              Valider Chef Agence
+                            </button>
+                            <button 
+                              onClick={() => onUpdateStatus(req.id, RequestStatus.REJECTED)}
+                              className="bg-rose-600 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100/50"
+                            >
+                              Rejeter
+                            </button>
+                          </div>
+                        )}
+                        
+                        {/* Validation Relation Clientèle */}
+                        {req.status === RequestStatus.AWAITING_CUSTOMER_SERVICE_VALIDATION && currentUser?.role === UserRole.AGENT && (
+                          <div className="flex gap-2">
+                            <button 
+                              onClick={() => onUpdateStatus(req.id, RequestStatus.VALIDATED)}
+                              className="bg-emerald-600 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100/50"
+                            >
+                              Valider Relation Clientèle
+                            </button>
+                            <button 
+                              onClick={() => onUpdateStatus(req.id, RequestStatus.REJECTED)}
+                              className="bg-rose-600 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100/50"
+                            >
+                              Rejeter
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    )}
+                    
+                    {/* Bouton Établir Devis (seulement pour les demandes validées) */}
+                    {req.status === RequestStatus.VALIDATED && req.status !== RequestStatus.QUOTED && req.status !== RequestStatus.REJECTED && (
                       <button 
                         onClick={() => onCreateQuote(req)}
                         className="bg-emerald-600 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100/50 flex items-center gap-1.5"
@@ -237,20 +413,26 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                         Établir Devis
                       </button>
                     )}
+                    
                     <button 
                       onClick={() => onEdit(req)} 
                       className="text-blue-400 hover:text-blue-600 transition-colors p-2 hover:bg-blue-50 rounded-lg"
                       title="Modifier la demande"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                     </button>
-                    <select
-                      className="text-[9px] font-black uppercase bg-gray-50 border border-gray-100 rounded-xl p-2 focus:ring-2 focus:ring-blue-500/20 outline-none"
-                      value={req.status}
-                      onChange={(e) => onUpdateStatus(req.id, e.target.value as RequestStatus)}
-                    >
-                      {Object.values(RequestStatus).map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
+                    
+                    {/* Sélecteur de statut (pour les administrateurs et chefs de centre) */}
+                    {(currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.CHEF_CENTRE) && (
+                      <select
+                        className="text-[9px] font-black uppercase bg-gray-50 border border-gray-100 rounded-xl p-2 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                        value={req.status}
+                        onChange={(e) => onUpdateStatus(req.id, e.target.value as RequestStatus)}
+                      >
+                        {Object.values(RequestStatus).map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    )}
+                    
                     <button 
                       onClick={() => onDelete(req.id)} 
                       className="text-gray-200 hover:text-rose-600 transition-colors p-2 hover:bg-rose-50 rounded-lg"
@@ -281,5 +463,6 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
         </table>
       </div>
     </div>
-  );
+  </div>
+);
 };

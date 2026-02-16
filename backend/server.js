@@ -227,9 +227,43 @@ COLLECTIONS.forEach(colName => {
   // POST - Créer ou mettre à jour un document
   app.post(`/api/${colName}`, async (req, res) => {
     try {
-      const doc = req.body;
+      let doc = req.body;
       if (!doc || !doc.id) {
         return res.status(400).json({ error: 'Document doit avoir un id' });
+      }
+      
+      // Logique spéciale pour la génération d'ID incrémental pour les demandes
+      if (colName === 'requests' && doc.id.startsWith('TEMP-')) {
+        // Extraire les infos du format TEMP-timestamp-prefix-year
+        const parts = doc.id.split('-');
+        if (parts.length >= 4) {
+          const timestamp = parts[1];
+          const prefix = parts[2];
+          const year = parts[3];
+          
+          // Trouver le dernier numéro utilisé pour ce centre et cette année
+          const allRequests = await db.collection('requests').find({}).toArray();
+          const currentYearRequests = allRequests.filter(req => {
+            // Vérifier que l'ID est au bon format xxxx/prefix/yyyy
+            const idParts = req.id.split('/');
+            return idParts.length === 3 && idParts[1] === prefix && idParts[2] === year;
+          });
+          
+          // Trouver le plus grand numéro
+          let maxNum = 0;
+          for (const req of currentYearRequests) {
+            const idParts = req.id.split('/');
+            const num = parseInt(idParts[0]);
+            if (!isNaN(num) && num > maxNum) {
+              maxNum = num;
+            }
+          }
+          
+          // Générer le nouvel ID incrémental
+          const nextNum = maxNum + 1;
+          const newId = `${nextNum.toString().padStart(4, '0')}/${prefix}/${year}`;
+          doc = { ...doc, id: newId };
+        }
       }
       
       // Vérification spécifique pour les utilisateurs
