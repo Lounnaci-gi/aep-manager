@@ -278,8 +278,6 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <h5 className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-2">Adresse de branchement</h5>
                 <input required type="text" placeholder="Rue" className="w-full rounded-xl border-gray-200 p-3 text-sm font-bold border mb-2" value={formData.installationAddress} onChange={e => setFormData({ ...formData, installationAddress: e.target.value })} />
                 <input required type="text" placeholder="Commune" className="w-full rounded-xl border-gray-200 p-3 text-sm font-bold border mb-2" value={formData.installationCommune} onChange={e => setFormData({ ...formData, installationCommune: e.target.value })} />
-                <input required type="text" placeholder="Téléphone" className="w-full rounded-xl border-gray-200 p-3 text-sm font-bold border mb-2" value={formData.installationPhone} onChange={e => setFormData({ ...formData, installationPhone: e.target.value })} />
-                <input required type="email" placeholder="Email" className="w-full rounded-xl border-gray-200 p-3 text-sm font-bold border" value={formData.installationEmail} onChange={e => setFormData({ ...formData, installationEmail: e.target.value })} />
               </div>
               
               {/* Diamètre et Débit */}
