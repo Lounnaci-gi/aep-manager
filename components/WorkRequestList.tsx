@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { WorkRequest, RequestStatus, CommercialAgency, Centre } from '../types';
+import { WorkRequest, RequestStatus, CommercialAgency, Centre, BranchementType } from '../types';
 
 interface WorkRequestListProps {
   requests: WorkRequest[];
@@ -212,7 +212,14 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-[10px] font-black text-blue-600 uppercase tracking-tighter">{req.serviceType}</div>
-                  <div className="text-[9px] text-gray-400 font-bold uppercase">{new Date(req.createdAt).toLocaleDateString()}</div>
+                  {req.serviceType === "Branchement d'eau potable" && req.branchementType && (
+                    <div className="text-[9px] text-emerald-600 font-bold mt-1">
+                      {req.branchementType === BranchementType.AUTRE && req.branchementDetails 
+                        ? `${req.branchementType}: ${req.branchementDetails}` 
+                        : req.branchementType}
+                    </div>
+                  )}
+                  <div className="text-[9px] text-gray-400 font-bold uppercase mt-1">{new Date(req.createdAt).toLocaleDateString()}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2.5 py-1 text-[9px] font-black rounded-full uppercase border ${getStatusBadge(req.status)}`}>

@@ -27,6 +27,16 @@ export enum ClientCategory {
   LEGAL = 'Entreprise / Chantier'
 }
 
+export enum BranchementType {
+  DOMESTIQUE = 'Domestique (Maison individuelle)',
+  IMMEUBLE = 'Immeuble collectif',
+  COMMERCIAL = 'Commerciaux',
+  INDUSTRIEL = 'Industrie ou tourisme',
+  CHANTIER = 'Besoins de chantier',
+  INCENDIE = 'Borne d\'incendie',
+  AUTRE = 'Autres (à préciser)'
+}
+
 export interface Centre {
   id: string;
   name: string;
@@ -106,6 +116,14 @@ export interface WorkRequest {
   idDocumentIssuer?: string;
   address?: string;
   commune?: string;
+  branchementType?: BranchementType;
+  branchementDetails?: string;
+  diameter?: string;
+  flowRate?: string;
+  correspondencePhone?: string;
+  correspondenceEmail?: string;
+  installationPhone?: string;
+  installationEmail?: string;
   createdAt: string;
 }
 
