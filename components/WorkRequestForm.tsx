@@ -91,10 +91,32 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
     }
   };
 
+  // Fonction pour générer un ID temporaire au format xxxx/préfix/yyyy
+  // NOTE: Pour une implémentation complète, cette fonction devrait être appelée via le backend
+  // avec un système d'incrément basé sur la base de données
+  const generateTempRequestId = () => {
+    const currentYear = new Date().getFullYear();
+    
+    // Utiliser le préfixe du centre de l'utilisateur connecté
+    let prefix = 'CB'; // Préfixe par défaut
+    if (currentUser && centres.length > 0) {
+      const userCentre = centres.find(centre => centre.id === currentUser.centreId);
+      if (userCentre && userCentre.prefix) {
+        prefix = userCentre.prefix;
+      }
+    }
+    
+    // Pour l'instant, on utilise une partie de l'horodatage pour éviter les doublons
+    // En production, vous aurez besoin d'un système centralisé par centre
+    const timestampPart = Date.now() % 10000; // Derniers 4 chiffres du timestamp
+    return `${timestampPart.toString().padStart(4, '0')}/${prefix}/${currentYear}`;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
     const request: WorkRequest = {
-      id: initialData?.id || `DEM-${Date.now().toString().slice(-6)}`,
+      id: initialData?.id || generateTempRequestId(),
       ...formData,
       status: initialData?.status || RequestStatus.RECEIVED,
       createdAt: initialData?.createdAt || new Date().toISOString(),

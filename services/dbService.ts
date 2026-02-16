@@ -159,7 +159,8 @@ export const DbService = {
   },
   
   async deleteRequest(id: string): Promise<void> {
-    await fetch(`${API_URL}/${COLLECTIONS.REQUESTS}/${id}`, { method: 'DELETE' });
+    const encodedId = encodeURIComponent(id);
+    await fetch(`${API_URL}/${COLLECTIONS.REQUESTS}/${encodedId}`, { method: 'DELETE' });
   },
   
   async updateRequestStatus(id: string, status: RequestStatus): Promise<void> {
