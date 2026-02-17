@@ -209,6 +209,12 @@ const App: React.FC = () => {
     Swal.fire({ title: 'Statut Mis à jour', icon: 'success', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
   };
 
+  const handleUpdateRequestWithValidations = async (request: WorkRequest) => {
+    await DbService.saveRequest(request);
+    await loadData();
+    Swal.fire({ title: 'Validation Enregistrée', icon: 'success', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
+  };
+
   const handleCreateQuoteFromRequest = (request: WorkRequest) => {
     const partialQuote: Partial<Quote> = {
       id: `AEP-${Date.now().toString().slice(-6)}`,
@@ -373,6 +379,7 @@ const App: React.FC = () => {
             onEdit={(r) => { setEditingRequest(r); setView('request-form'); }}
             onCreateQuote={handleCreateQuoteFromRequest}
             onUpdateStatus={handleUpdateRequestStatus}
+            onUpdateRequestWithValidations={handleUpdateRequestWithValidations}
             currentUser={currentUser}
           />
         )}
