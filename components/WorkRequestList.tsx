@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useMemo } from 'react';
 import { WorkRequest, RequestStatus, CommercialAgency, Centre, BranchementType, UserRole, User } from '../types';
 
@@ -363,7 +363,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                 <td className="px-6 py-4 whitespace-nowrap text-right">
                   <div className="flex justify-end items-center gap-3">
                     {/* Boutons de validation spécifiques pour les branchements d'eau potable */}
-                    {req.serviceType === "Branchement d'eau potable" && (
+                    {req.serviceType.toLowerCase().includes("branchement") && (
                       <>
                         {/* Validation Chef d'Agence */}
                         {req.status === RequestStatus.AWAITING_AGENCY_VALIDATION && currentUser?.role === UserRole.CHEF_AGENCE && (
