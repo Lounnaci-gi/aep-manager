@@ -16,7 +16,7 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
 // Configuration MongoDB
-const uri = process.env.MONGODB_URI || 'mongodb+srv://lounnaci:hyhwarez@cluster0.l0q2v.mongodb.net/?appName=Cluster0';
+const uri = process.env.MONGODB_URI || '';
 const dbName = process.env.MONGODB_DB || 'GestionEau';
 
 let client;
@@ -355,3 +355,4 @@ process.on('SIGINT', async () => {
   }
   process.exit(0);
 });
+
