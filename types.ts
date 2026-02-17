@@ -10,9 +10,28 @@ export enum RequestStatus {
   UNDER_STUDY = 'A letude',
   AWAITING_AGENCY_VALIDATION = 'En attente validation agence',
   AWAITING_CUSTOMER_SERVICE_VALIDATION = 'En attente validation relation clientèle',
+  AWAITING_LAWYER_VALIDATION = 'En attente validation juriste',
   VALIDATED = 'Validee',
   REJECTED = 'Rejetee',
   QUOTED = 'Devis etabli'
+}
+
+// Types de validation possibles
+export enum ValidationType {
+  AGENCY = 'agency',
+  CUSTOMER_SERVICE = 'customer_service',
+  LAWYER = 'lawyer'
+}
+
+// Interface pour le suivi des validations
+export interface ValidationRecord {
+  type: ValidationType;
+  userId: string;
+  userName: string;
+  validatedAt: string;
+  status: 'pending' | 'validated' | 'rejected';
+  date?: string;
+  user?: string;
 }
 
 export enum UserRole {
@@ -127,6 +146,9 @@ export interface WorkRequest {
   installationPhone?: string;
   installationEmail?: string;
   createdAt: string;
+  // Nouveau système de validation
+  validations?: ValidationRecord[];
+  assignedValidations?: ValidationType[]; // Validations assignées à cette demande
 }
 
 export interface Quote {

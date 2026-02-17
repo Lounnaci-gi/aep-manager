@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { WorkRequest, RequestStatus, WorkType, Client, CommercialAgency, Centre, ClientCategory, UserRole, WORK_TYPE_PERMISSIONS, BranchementType } from '../types';
+import { WorkRequest, RequestStatus, WorkType, Client, CommercialAgency, Centre, ClientCategory, UserRole, WORK_TYPE_PERMISSIONS, BranchementType, ValidationType } from '../types';
 
 interface WorkRequestFormProps {
   onSave: (request: WorkRequest) => void;
@@ -113,10 +113,24 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Déterminer les validations à assigner selon le type de service
+    const assignedValidations: ValidationType[] = [];
+    if (isBranchementEau) {
+      assignedValidations.push(ValidationType.AGENCY, ValidationType.CUSTOMER_SERVICE, ValidationType.LAWYER);
+    }
+    
     const request: WorkRequest = {
       id: initialData?.id || generateTempRequestId(),
       ...formData,
       status: initialData?.status || (isBranchementEau ? RequestStatus.AWAITING_AGENCY_VALIDATION : RequestStatus.RECEIVED),
+      assignedValidations,
+      validations: assignedValidations.map(type => ({
+        type,
+        userId: '',
+        userName: '',
+        validatedAt: '',
+        status: 'pending'
+      })),
       createdAt: initialData?.createdAt || new Date().toISOString(),
     };
     onSave(request);

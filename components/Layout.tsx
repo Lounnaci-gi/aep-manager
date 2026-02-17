@@ -19,9 +19,10 @@ interface LayoutProps {
   onLogout: () => void;
   onEditProfile?: () => void;
   requestsBadgeCount?: number;
+  validationsBadgeCount?: number;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, currentView, setView, user, onLogout, onEditProfile, requestsBadgeCount = 0 }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, currentView, setView, user, onLogout, onEditProfile, requestsBadgeCount = 0, validationsBadgeCount = 0 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
@@ -32,7 +33,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, setView, 
 
   const navItems: NavItem[] = [
     { id: 'dashboard', label: 'Dashboard', show: isCHEF_CENTRE },
-    { id: 'requests', label: 'Demandes', show: true, badge: requestsBadgeCount },
+    { id: 'requests', label: 'Demandes', show: true, badge: requestsBadgeCount > 0 ? requestsBadgeCount : (validationsBadgeCount > 0 ? validationsBadgeCount : undefined) },
     { id: 'list', label: 'Chantiers', show: true },
     { id: 'clients', label: 'Clients', show: true },
     { id: 'structure', label: 'Structure', show: isAdmin, subItems: [

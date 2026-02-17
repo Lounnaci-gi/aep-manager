@@ -103,6 +103,32 @@ const App: React.FC = () => {
     });
   };
 
+  // Calcul des notifications pour chaque rôle
+  const getPendingValidationsCount = () => {
+    if (!currentUser) return 0;
+    
+    return requests.filter(req => {
+      // Vérifier si la demande a des validations assignées
+      if (!req.assignedValidations || req.assignedValidations.length === 0) return false;
+      
+      // Vérifier si l'utilisateur actuel a une validation assignée non validée
+      switch (currentUser.role) {
+        case UserRole.CHEF_AGENCE:
+          return req.assignedValidations.includes('agency') && 
+                 !req.validations?.find(v => v.type === 'agency' && v.status === 'validated');
+        case UserRole.AGENT:
+          return req.assignedValidations.includes('customer_service') && 
+                 !req.validations?.find(v => v.type === 'customer_service' && v.status === 'validated');
+        case UserRole.JURISTE:
+          return req.assignedValidations.includes('lawyer') && 
+                 !req.validations?.find(v => v.type === 'lawyer' && v.status === 'validated');
+        default:
+          return false;
+      }
+    }).length;
+  };
+
+  const pendingValidationsCount = getPendingValidationsCount();
   const newRequestsCount = requests.filter(r => r.status === RequestStatus.RECEIVED).length;
 
   const handleSaveCentre = async (centre: Centre) => {
@@ -315,6 +341,7 @@ const App: React.FC = () => {
       onLogout={handleLogout}
       onEditProfile={() => { setEditingUser(currentUser || undefined); setView('user-form'); }}
       requestsBadgeCount={newRequestsCount}
+      validationsBadgeCount={pendingValidationsCount}
     >
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {view === 'dashboard' && <Dashboard quotes={quotes} requests={requests} workTypes={workTypes} />}
