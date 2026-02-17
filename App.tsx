@@ -9,6 +9,8 @@ import { ClientList } from './components/ClientList';
 import { ClientForm } from './components/ClientForm';
 import { WorkRequestList } from './components/WorkRequestList';
 import { WorkRequestForm } from './components/WorkRequestForm';
+import { BranchementQuoteForm } from './components/BranchementQuoteForm';
+import { ArticleManager } from './components/ArticleManager';
 import { StructureManager } from './components/StructureManager';
 import { AgencyManager } from './components/AgencyManager';
 import { WorkTypeManager } from './components/WorkTypeManager';
@@ -25,11 +27,12 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : null;
   });
 
-  const [view, setView] = useState<'dashboard' | 'requests' | 'request-form' | 'list' | 'create' | 'edit-quote' | 'clients' | 'client-form' | 'settings' | 'users' | 'user-form' | 'structure' | 'agencies'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'requests' | 'request-form' | 'list' | 'create' | 'edit-quote' | 'clients' | 'client-form' | 'settings' | 'users' | 'user-form' | 'structure' | 'agencies' | 'branchement-quote' | 'articles'>('dashboard');
   const [editingClient, setEditingClient] = useState<Client | undefined>(undefined);
   const [editingUser, setEditingUser] = useState<User | undefined>(undefined);
   const [editingQuote, setEditingQuote] = useState<Quote | undefined>(undefined);
   const [editingRequest, setEditingRequest] = useState<WorkRequest | undefined>(undefined);
+  const [quoteRequest, setQuoteRequest] = useState<WorkRequest | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   
   const [quotes, setQuotes] = useState<Quote[]>([]);
@@ -216,32 +219,39 @@ const App: React.FC = () => {
   };
 
   const handleCreateQuoteFromRequest = (request: WorkRequest) => {
-    const partialQuote: Partial<Quote> = {
-      id: `AEP-${Date.now().toString().slice(-6)}`,
-      requestId: request.id,
-      agencyId: request.agencyId,
-      category: request.category,
-      civility: request.civility,
-      clientName: request.clientName,
-      businessName: request.businessName,
-      idDocumentType: request.idDocumentType,
-      idDocumentNumber: request.idDocumentNumber,
-      idDocumentIssueDate: request.idDocumentIssueDate,
-      idDocumentIssuer: request.idDocumentIssuer,
-      clientEmail: request.clientEmail,
-      clientPhone: request.clientPhone,
-      address: request.address,
-      commune: request.commune,
-      installationAddress: request.installationAddress,
-      installationCommune: request.installationCommune,
-      serviceType: request.serviceType,
-      description: request.description,
-      type: request.type,
-      status: QuoteStatus.PENDING,
-      createdAt: new Date().toISOString()
-    };
-    setEditingQuote(partialQuote as Quote);
-    setView('create');
+    // Pour les branchements, utiliser le formulaire spécifique
+    if (request.serviceType.toLowerCase().includes("branchement")) {
+      setQuoteRequest(request);
+      setView('branchement-quote');
+    } else {
+      // Pour les autres types, utiliser le formulaire existant
+      const partialQuote: Partial<Quote> = {
+        id: `AEP-${Date.now().toString().slice(-6)}`,
+        requestId: request.id,
+        agencyId: request.agencyId,
+        category: request.category,
+        civility: request.civility,
+        clientName: request.clientName,
+        businessName: request.businessName,
+        idDocumentType: request.idDocumentType,
+        idDocumentNumber: request.idDocumentNumber,
+        idDocumentIssueDate: request.idDocumentIssueDate,
+        idDocumentIssuer: request.idDocumentIssuer,
+        clientEmail: request.clientEmail,
+        clientPhone: request.clientPhone,
+        address: request.address,
+        commune: request.commune,
+        installationAddress: request.installationAddress,
+        installationCommune: request.installationCommune,
+        serviceType: request.serviceType,
+        description: request.description,
+        type: request.type,
+        status: QuoteStatus.PENDING,
+        createdAt: new Date().toISOString()
+      };
+      setEditingQuote(partialQuote as Quote);
+      setView('create');
+    }
   };
 
   const handleSaveClient = async (client: Client) => {
@@ -407,6 +417,24 @@ const App: React.FC = () => {
             onEdit={(q) => { setEditingQuote(q); setView('edit-quote'); }} 
           />
         )}
+        {view === 'branchement-quote' && quoteRequest && (
+          <BranchementQuoteForm 
+            request={quoteRequest}
+            clients={clients} 
+            agencies={agencies}
+            centres={centres}
+            currentUser={currentUser}
+            onSave={handleSaveQuote}
+            onCancel={() => { setView('requests'); setQuoteRequest(undefined); }} 
+          />
+        )}
+        
+        {view === 'articles' && (
+          <ArticleManager 
+            onBack={() => setView('dashboard')} 
+          />
+        )}
+                
         {(view === 'create' || view === 'edit-quote') && (
           <QuoteForm 
             clients={clients} 
@@ -415,7 +443,7 @@ const App: React.FC = () => {
             centres={centres}
             initialData={editingQuote}
             currentUserAgencyId={currentUser.agencyId}
-            onSave={handleSaveQuote} 
+            onSave={handleSaveQuote}
             onDelete={handleDeleteQuote}
             onCancel={() => { setView('list'); setEditingQuote(undefined); }} 
           />

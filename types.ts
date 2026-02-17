@@ -114,6 +114,15 @@ export interface QuoteItem {
   unitPrice: number;
 }
 
+export interface Article {
+  id: string;
+  name: string;
+  description: string;
+  unitPrice: number;
+  category: string;
+  createdAt: string;
+}
+
 export interface WorkRequest {
   id: string;
   clientId: string;

@@ -1,5 +1,5 @@
 
-import { Quote, QuoteStatus, Client, WorkType, User, UserRole, WorkRequest, RequestStatus, Centre, CommercialAgency } from '../types';
+import { Quote, QuoteStatus, Client, WorkType, User, UserRole, WorkRequest, RequestStatus, Centre, CommercialAgency, Article } from '../types';
 import { hashPasswordWithSalt, verifyPassword } from './passwordUtils';
 
 const API_URL = 'http://localhost:5000/api';
@@ -18,7 +18,8 @@ export const COLLECTIONS = {
   CLIENTS: 'clients',
   REQUESTS: 'requests',
   QUOTES: 'quotes',
-  WORK_TYPES: 'work_types'
+  WORK_TYPES: 'work_types',
+  ARTICLES: 'articles'
 };
 
 async function apiRequest<T>(method: string, collection: string, data?: any): Promise<T> {
@@ -223,5 +224,18 @@ export const DbService = {
     } catch {
       return {};
     }
+  },
+
+  // Articles methods
+  async getArticles(): Promise<Article[]> {
+    return await apiRequest<Article[]>('GET', COLLECTIONS.ARTICLES);
+  },
+  
+  async saveArticle(article: Article): Promise<void> {
+    await apiRequest('POST', COLLECTIONS.ARTICLES, article);
+  },
+  
+  async deleteArticle(id: string): Promise<void> {
+    await fetch(`${API_URL}/${COLLECTIONS.ARTICLES}/${id}`, { method: 'DELETE' });
   }
 };
