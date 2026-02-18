@@ -29,57 +29,127 @@ export const ArticleService = {
         id: 'ART-001',
         name: 'Frais de raccordement',
         description: 'Frais administratifs et techniques pour le raccordement',
-        unitPrice: 15000,
+        prices: [
+          { type: 'fourniture', price: 10000 },
+          { type: 'pose', price: 5000 }
+        ],
         category: 'Administratif',
-        createdAt: new Date().toISOString()
+        unit: 'U',
+        createdAt: new Date().toISOString(),
+        defaultPriceType: 'fourniture'
       },
       {
         id: 'ART-002',
         name: 'Compteur eau standard',
         description: 'Compteur eau de diamètre 15mm avec robinet d\'arrêt',
-        unitPrice: 25000,
-        category: 'Matériel',
-        createdAt: new Date().toISOString()
+        prices: [
+          { type: 'fourniture', price: 20000 },
+          { type: 'pose', price: 5000 },
+          { type: 'prestation', price: 600 }
+        ],
+        category: 'Comptage',
+        unit: 'U',
+        createdAt: new Date().toISOString(),
+        defaultPriceType: 'fourniture'
       },
       {
         id: 'ART-003',
         name: 'Compteur eau DN20',
         description: 'Compteur eau de diamètre 20mm pour débits importants',
-        unitPrice: 35000,
-        category: 'Matériel',
-        createdAt: new Date().toISOString()
+        prices: [
+          { type: 'fourniture', price: 30000 },
+          { type: 'pose', price: 5000 },
+          { type: 'prestation', price: 600 }
+        ],
+        category: 'Comptage',
+        unit: 'U',
+        createdAt: new Date().toISOString(),
+        defaultPriceType: 'fourniture'
       },
       {
         id: 'ART-004',
-        name: 'Branchement diamètre 15mm',
-        description: 'Tuyau de branchement en PER diamètre 15mm',
-        unitPrice: 8000,
-        category: 'Matériel',
-        createdAt: new Date().toISOString()
+        name: 'Tuyau PEHD diamètre 15mm',
+        description: 'Tuyau de canalisation en PEHD diamètre 15mm',
+        prices: [
+          { type: 'fourniture', price: 8000 },
+          { type: 'pose', price: 5000 }
+        ],
+        category: 'CANALISATIONS (TUBES PEHD)',
+        unit: 'ML',
+        createdAt: new Date().toISOString(),
+        defaultPriceType: 'fourniture'
       },
       {
         id: 'ART-005',
-        name: 'Branchement diamètre 20mm',
-        description: 'Tuyau de branchement en PER diamètre 20mm',
-        unitPrice: 12000,
-        category: 'Matériel',
-        createdAt: new Date().toISOString()
+        name: 'Tuyau PEHD diamètre 20mm',
+        description: 'Tuyau de canalisation en PEHD diamètre 20mm',
+        prices: [
+          { type: 'fourniture', price: 12000 },
+          { type: 'pose', price: 7000 }
+        ],
+        category: 'CANALISATIONS (TUBES PEHD)',
+        unit: 'ML',
+        createdAt: new Date().toISOString(),
+        defaultPriceType: 'fourniture'
       },
       {
         id: 'ART-006',
         name: 'Main d\'œuvre raccordement',
         description: 'Intervention technique pour le raccordement au réseau',
-        unitPrice: 20000,
+        prices: [{ type: 'pose', price: 20000 }],
         category: 'Main d\'œuvre',
-        createdAt: new Date().toISOString()
+        unit: 'U',
+        createdAt: new Date().toISOString(),
+        defaultPriceType: 'pose'
       },
       {
         id: 'ART-007',
         name: 'Frais de mise en service',
         description: 'Vérification et mise en service du branchement',
-        unitPrice: 10000,
+        prices: [
+          { type: 'fourniture', price: 5000 },
+          { type: 'pose', price: 5000 }
+        ],
         category: 'Administratif',
-        createdAt: new Date().toISOString()
+        unit: 'U',
+        createdAt: new Date().toISOString(),
+        defaultPriceType: 'fourniture'
+      },
+      {
+        id: 'ART-008',
+        name: 'Robinet d\'arrêt',
+        description: 'Robinet d\'arrêt pour branchement',
+        prices: [
+          { type: 'fourniture', price: 5000 },
+          { type: 'pose', price: 3000 }
+        ],
+        category: 'PIÈCES SPÉCIALES',
+        unit: 'U',
+        createdAt: new Date().toISOString(),
+        defaultPriceType: 'fourniture'
+      },
+      {
+        id: 'ART-009',
+        name: 'Travaux terrassement',
+        description: 'Travaux de terrassement pour pose de canalisation',
+        prices: [{ type: 'pose', price: 30000 }],
+        category: 'TRAVAUX DE TERRASSEMENT & VOIRIE',
+        unit: 'M3',
+        createdAt: new Date().toISOString(),
+        defaultPriceType: 'pose'
+      },
+      {
+        id: 'ART-010',
+        name: 'Cautionnement pour branchement',
+        description: 'Frais de cautionnement pour les travaux de branchement',
+        prices: [
+          { type: 'fourniture', price: 15000 },
+          { type: 'pose', price: 5000 }
+        ],
+        category: 'Cautionnement pour Branchement',
+        unit: 'U',
+        createdAt: new Date().toISOString(),
+        defaultPriceType: 'fourniture'
       }
     ];
   }

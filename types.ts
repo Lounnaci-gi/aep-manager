@@ -114,13 +114,47 @@ export interface QuoteItem {
   unitPrice: number;
 }
 
+export interface ArticlePrice {
+  type: 'fourniture' | 'pose' | 'prestation';
+  price: number;
+}
+
+// Types de propriétés pour les articles
+export enum PropertyType {
+  COLOR = 'Couleur',
+  DIAMETER = 'Diamètre',
+  PRESSURE = 'Pression',
+  LENGTH = 'Longueur',
+  WEIGHT = 'Poids',
+  BRAND = 'Marque',
+  STANDARD = 'Norme',
+  CLASS = 'Classe',
+  CUSTOM = 'Personnalisé'
+}
+
+export interface ArticleProperty {
+  id: string;
+  name: string;
+  value: string;
+  type: PropertyType;
+  unit?: string;
+  createdAt: string;
+}
+
 export interface Article {
   id: string;
   name: string;
   description: string;
-  unitPrice: number;
+  prices: ArticlePrice[];
   category: string;
+  unit: 'M²' | 'M3' | 'ML' | 'U' | 'NULL';
+  material?: string;
+  class?: string;
+  nominalPressure?: string;
+  color?: string;
+  properties?: ArticleProperty[];
   createdAt: string;
+  defaultPriceType?: 'fourniture' | 'pose' | 'fourniture_et_pose';
 }
 
 export interface WorkRequest {

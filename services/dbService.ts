@@ -1,5 +1,5 @@
 
-import { Quote, QuoteStatus, Client, WorkType, User, UserRole, WorkRequest, RequestStatus, Centre, CommercialAgency, Article } from '../types';
+import { Quote, QuoteStatus, Client, WorkType, User, UserRole, WorkRequest, RequestStatus, Centre, CommercialAgency, Article, ArticlePrice } from '../types';
 import { hashPasswordWithSalt, verifyPassword } from './passwordUtils';
 
 const API_URL = 'http://localhost:5000/api';
@@ -228,7 +228,70 @@ export const DbService = {
 
   // Articles methods
   async getArticles(): Promise<Article[]> {
-    return await apiRequest<Article[]>('GET', COLLECTIONS.ARTICLES);
+    const articles = await apiRequest<any[]>('GET', COLLECTIONS.ARTICLES);
+    // Migration: convert old articles with unitPrice to new format
+    return articles.map(article => {
+      if ('unitPrice' in article && !('prices' in article)) {
+        // Split the unit price into fourniture (70%) and pose (30%)
+        const totalPrice = article.unitPrice;
+        const fourniturePrice = Math.round(totalPrice * 0.7);
+        const posePrice = totalPrice - fourniturePrice;
+        return {
+          ...article,
+          prices: [
+            { type: 'fourniture', price: fourniturePrice },
+            { type: 'pose', price: posePrice }
+          ],
+          unit: this.migrateUnit(article.unit) || 'U',
+          defaultPriceType: 'fourniture'
+        } as Article;
+      }
+      // Migration: ensure all articles have the three price types and unit field
+      if (article.prices) {
+        const fourniturePrice = article.prices.find((p: any) => p.type === 'fourniture')?.price || 0;
+        const posePrice = article.prices.find((p: any) => p.type === 'pose')?.price || 0;
+        const prestationPrice = article.prices.find((p: any) => p.type === 'prestation')?.price || 0;
+        
+        const newPrices: ArticlePrice[] = [
+          { type: 'fourniture', price: fourniturePrice },
+          { type: 'pose', price: posePrice }
+        ];
+        
+        // Add prestation price only if it exists and is > 0
+        if (prestationPrice > 0) {
+          newPrices.push({ type: 'prestation', price: prestationPrice });
+        }
+        
+        return {
+          ...article,
+          prices: newPrices,
+          unit: this.migrateUnit(article.unit) || 'U',
+          defaultPriceType: article.defaultPriceType === 'fourniture_et_pose' ? 'fourniture' : article.defaultPriceType,
+          // Assurer que les nouveaux champs existent, même si ils sont undefined
+          class: article.class,
+          nominalPressure: article.nominalPressure,
+          color: article.color
+        } as Article;
+      }
+      return {
+        ...article,
+        class: article.class,
+        nominalPressure: article.nominalPressure,
+        color: article.color
+      } as Article;
+    });
+  },
+
+  // Helper method to migrate old unit formats to new format
+  migrateUnit(oldUnit: string): 'M²' | 'M3' | 'ML' | 'U' | 'NULL' {
+    switch (oldUnit?.toLowerCase()) {
+      case 'm²': return 'M²';
+      case 'm³': return 'M3';
+      case 'ml': return 'ML';
+      case 'u': return 'U';
+      case '': return 'NULL';
+      default: return 'NULL';
+    }
   },
   
   async saveArticle(article: Article): Promise<void> {
@@ -237,5 +300,59 @@ export const DbService = {
   
   async deleteArticle(id: string): Promise<void> {
     await fetch(`${API_URL}/${COLLECTIONS.ARTICLES}/${id}`, { method: 'DELETE' });
+  },
+
+  // Fonction pour extraire la matière d'un article à partir de son nom ou description
+  extractMaterialFromArticle(article: Article): string | undefined {
+    const textToSearch = `${article.name} ${article.description}`.toLowerCase();
+    
+    // Liste des matières avec leurs variantes
+    const materialsMap = {
+      'acier': ['acier', 'steel'],
+      'pehd': ['pehd', 'pe', 'polyéthylène haute densité'],
+      'tigre': ['tigre'],
+      'pvc': ['pvc', 'polyvinyl chloride'],
+      'cuivre': ['cuivre', 'copper'],
+      'fonte': ['fonte', 'cast iron'],
+      'inox': ['inox', 'inoxidable', 'stainless'],
+      'aluminium': ['aluminium', 'aluminum']
+    };
+    
+    // Chercher chaque matière dans le texte
+    for (const [material, variants] of Object.entries(materialsMap)) {
+      for (const variant of variants) {
+        if (textToSearch.includes(variant)) {
+          return material.charAt(0).toUpperCase() + material.slice(1);
+        }
+      }
+    }
+    
+    return undefined;
+  },
+  
+  // Migrer tous les articles pour ajouter le champ matière
+  async migrateArticlesWithMaterial(): Promise<void> {
+    try {
+      const articles = await this.getArticles();
+      
+      for (const article of articles) {
+        // Si l'article n'a pas de matière définie
+        if (!article.material) {
+          const extractedMaterial = this.extractMaterialFromArticle(article);
+          if (extractedMaterial) {
+            const updatedArticle = {
+              ...article,
+              material: extractedMaterial
+            };
+            await this.saveArticle(updatedArticle);
+            console.log(`Matière '${extractedMaterial}' ajoutée à l'article: ${article.name}`);
+          }
+        }
+      }
+      
+      console.log('Migration des matières terminée');
+    } catch (error) {
+      console.error('Erreur lors de la migration des matières:', error);
+    }
   }
 };

@@ -54,7 +54,8 @@ const COLLECTIONS = [
   'clients',
   'requests',
   'quotes',
-  'work_types'
+  'work_types',
+  'articles'
 ];
 
 // Route d'authentification avec gestion des tentatives
