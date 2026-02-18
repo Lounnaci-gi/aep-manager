@@ -588,7 +588,7 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-xs font-black px-2 py-1 bg-amber-100 text-amber-800 rounded-full uppercase tracking-widest">
-                        {article.unit !== undefined && article.unit !== null && article.unit !== '' && article.unit !== 'NULL' ? article.unit : 'N/A'}
+                        {article.unit && article.unit !== 'NULL' ? article.unit : 'N/A'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

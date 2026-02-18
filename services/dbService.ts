@@ -291,22 +291,37 @@ export const DbService = {
 
   // Helper method to migrate old unit formats to new format
   migrateUnit(oldUnit: string): 'M²' | 'M3' | 'ML' | 'U' | 'NULL' {
-    switch (oldUnit?.toLowerCase()) {
-      case 'm²': return 'M²';
-      case 'm³': return 'M3';
-      case 'ml': return 'ML';
-      case 'u': return 'U';
-      case '': return 'NULL';
-      default: return 'NULL';
+    if (!oldUnit || oldUnit === 'NULL' || oldUnit === 'null') {
+      return 'NULL';
+    }
+    
+    switch (oldUnit.toLowerCase()) {
+      case 'm²':
+      case 'm2': 
+        return 'M²';
+      case 'm³':
+      case 'm3':
+        return 'M3';
+      case 'ml':
+        return 'ML';
+      case 'u':
+      case 'unit':
+      case 'unité':
+        return 'U';
+      default:
+        return 'NULL';
     }
   },
   
   async saveArticle(article: Article): Promise<void> {
-    // Assurer que l'unité est correctement formatée avant la sauvegarde
-    const articleToSave = {
-      ...article,
-      unit: this.migrateUnit(article.unit) || 'U'
-    };
+    // Ne pas forcer la migration si l'unité est déjà dans le bon format
+    const isValidUnit = article.unit && ['M²', 'M3', 'ML', 'U', 'NULL'].includes(article.unit);
+    const articleToSave = isValidUnit 
+      ? article 
+      : {
+          ...article,
+          unit: this.migrateUnit(article.unit) || 'U'
+        };
     await apiRequest('POST', COLLECTIONS.ARTICLES, articleToSave);
   },
   
