@@ -262,10 +262,14 @@ export const DbService = {
           newPrices.push({ type: 'prestation', price: prestationPrice });
         }
         
+        // Corriger la gestion de l'unité pour préserver la valeur originale
+        const originalUnit = article.unit;
+        const migratedUnit = this.migrateUnit(originalUnit);
+        
         return {
           ...article,
           prices: newPrices,
-          unit: this.migrateUnit(article.unit) || 'U',
+          unit: originalUnit !== undefined && originalUnit !== null && originalUnit !== '' && originalUnit !== 'NULL' ? originalUnit : (migratedUnit || 'U'),
           defaultPriceType: article.defaultPriceType === 'fourniture_et_pose' ? 'fourniture' : article.defaultPriceType,
           // Assurer que les nouveaux champs existent, même si ils sont undefined
           class: article.class,
@@ -273,8 +277,11 @@ export const DbService = {
           color: article.color
         } as Article;
       }
+      // Pour les articles sans prix, préserver l'unité originale
+      const originalUnit = article.unit;
       return {
         ...article,
+        unit: originalUnit !== undefined && originalUnit !== null && originalUnit !== '' && originalUnit !== 'NULL' ? originalUnit : 'U',
         class: article.class,
         nominalPressure: article.nominalPressure,
         color: article.color
@@ -295,7 +302,12 @@ export const DbService = {
   },
   
   async saveArticle(article: Article): Promise<void> {
-    await apiRequest('POST', COLLECTIONS.ARTICLES, article);
+    // Assurer que l'unité est correctement formatée avant la sauvegarde
+    const articleToSave = {
+      ...article,
+      unit: this.migrateUnit(article.unit) || 'U'
+    };
+    await apiRequest('POST', COLLECTIONS.ARTICLES, articleToSave);
   },
   
   async deleteArticle(id: string): Promise<void> {
