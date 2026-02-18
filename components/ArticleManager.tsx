@@ -612,15 +612,19 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col space-y-1">
-                        {article.prices.map((price, index) => (
-                          <div key={index} className="flex items-center gap-2 text-sm">
-                            <span className="text-xs font-black px-2 py-1 bg-gray-100 text-gray-700 rounded-full">
-                              {price.type === 'fourniture' ? 'F' : 
-                               price.type === 'pose' ? 'P' : 'PS'}
-                            </span>
-                            <span className="font-bold text-gray-900">{price.price.toLocaleString()} DZD</span>
-                          </div>
-                        ))}
+                        {article.prices.filter(price => price.price > 0).length > 0 ? (
+                          article.prices.filter(price => price.price > 0).map((price, index) => (
+                            <div key={index} className="flex items-center gap-2 text-sm">
+                              <span className="text-xs font-black px-2 py-1 bg-gray-100 text-gray-700 rounded-full">
+                                {price.type === 'fourniture' ? 'F' : 
+                                 price.type === 'pose' ? 'P' : 'PS'}
+                              </span>
+                              <span className="font-bold text-gray-900">{price.price.toLocaleString()} DZD</span>
+                            </div>
+                          ))
+                        ) : (
+                          <span className="text-xs font-black text-gray-400 italic">Aucun prix défini</span>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
