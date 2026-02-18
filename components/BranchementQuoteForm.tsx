@@ -56,11 +56,14 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
   });
 
   const [items, setItems] = useState<QuoteItem[]>([
-    { description: '', quantity: 1, unitPrice: 0 },
-    { description: '', quantity: 1, unitPrice: 0 },
     { description: '', quantity: 1, unitPrice: 0 }
   ]);
 
+  const [allArticles, setAllArticles] = useState<Article[]>([]);
+  const [filteredArticles, setFilteredArticles] = useState<Article[]>([]);
+  const [showArticleDropdown, setShowArticleDropdown] = useState<{[key: number]: boolean}>({});
+  const [searchTerms, setSearchTerms] = useState<{[key: number]: string}>({});
+  
   const [taxRate, setTaxRate] = useState(19); // 19% TVA
 
   useEffect(() => {
@@ -72,11 +75,13 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
     try {
       const data = await ArticleService.getArticles();
       setArticles(data);
+      setAllArticles(data); // Stocker tous les articles pour la recherche
       
       // Si aucun article n'existe, charger les articles par défaut
       if (data.length === 0) {
         const defaultArticles = ArticleService.getDefaultBranchementArticles();
         setArticles(defaultArticles);
+        setAllArticles(defaultArticles); // Stocker aussi les articles par défaut
         // Sauvegarder les articles par défaut
         for (const article of defaultArticles) {
           await ArticleService.saveArticle(article);
@@ -87,9 +92,38 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
       // Charger les articles par défaut en cas d'erreur
       const defaultArticles = ArticleService.getDefaultBranchementArticles();
       setArticles(defaultArticles);
+      setAllArticles(defaultArticles); // Stocker aussi les articles par défaut
     } finally {
       setLoadingArticles(false);
     }
+  };
+
+  // Fonction pour filtrer les articles basés sur la recherche
+  const filterArticles = (term: string, index: number) => {
+    if (!term) {
+      setFilteredArticles([]);
+      setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
+      return;
+    }
+
+    const filtered = allArticles.filter(article => 
+      article.name.toLowerCase().includes(term.toLowerCase()) ||
+      article.description.toLowerCase().includes(term.toLowerCase())
+    );
+
+    setFilteredArticles(filtered);
+    setShowArticleDropdown(prev => ({ ...prev, [index]: filtered.length > 0 }));
+  };
+
+  // Gérer la sélection d'un article
+  const handleArticleSelect = (article: Article, index: number) => {
+    const newItems = [...items];
+    newItems[index].description = article.name;
+    newItems[index].unitPrice = article.prices[0]?.price || 0;
+    setItems(newItems);
+    
+    setSearchTerms(prev => ({ ...prev, [index]: article.name }));
+    setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
   };
 
   // Calcul des totaux
@@ -244,19 +278,46 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
         
         <div className="space-y-4">
           {items.map((item, index) => (
-            <div key={index} className="grid grid-cols-12 gap-3 items-end bg-gray-50 p-4 rounded-xl">
-              <div className="col-span-5">
+            <div key={index} className="grid grid-cols-12 gap-3 items-end bg-gray-50 p-4 rounded-xl relative">
+              <div className="col-span-5 relative">
                 <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">
                   Description
                 </label>
                 <input
                   type="text"
-                  value={item.description}
-                  onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                  className="w-full rounded-lg border-gray-200 p-2 text-sm font-bold border bg-white"
+                  value={searchTerms[index] || item.description}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setSearchTerms(prev => ({ ...prev, [index]: value }));
+                    handleItemChange(index, 'description', value);
+                    filterArticles(value, index);
+                  }}
+                  onFocus={() => {
+                    if (searchTerms[index] && searchTerms[index].length > 0) {
+                      filterArticles(searchTerms[index], index);
+                    }
+                  }}
+                  onBlur={() => setTimeout(() => {
+                    setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
+                  }, 200)}
+                  className="w-full rounded-lg border-gray-200 p-2 text-sm font-bold border bg-white relative z-20"
                   placeholder="Description de l'article"
                   required
                 />
+                {showArticleDropdown[index] && filteredArticles.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                    {filteredArticles.map((article, idx) => (
+                      <div 
+                        key={idx}
+                        className="px-3 py-2 hover:bg-gray-50 cursor-pointer flex justify-between items-center"
+                        onMouseDown={() => handleArticleSelect(article, index)}
+                      >
+                        <span className="text-xs font-bold">{article.name}</span>
+                        <span className="text-[8px] text-gray-500">{article.prices[0]?.price || 0} DA</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               
               <div className="col-span-2">

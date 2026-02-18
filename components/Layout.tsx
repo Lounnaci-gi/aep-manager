@@ -32,7 +32,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, setView, 
   const isCHEF_CENTRE = user.role === UserRole.CHEF_CENTRE || isAdmin;
 
   const navItems: NavItem[] = [
-    { id: 'dashboard', label: 'Dashboard', show: isCHEF_CENTRE },
+    { id: 'dashboard', label: 'Dashboard', show: true },  // Modifié pour permettre l'accès à tous les utilisateurs
     { id: 'requests', label: 'Demandes', show: true, badge: requestsBadgeCount > 0 ? requestsBadgeCount : (validationsBadgeCount > 0 ? validationsBadgeCount : undefined) },
     { id: 'list', label: 'Chantiers', show: true },
     { id: 'articles', label: 'Articles', show: (user?.role === UserRole.TECHICO_COMMERCIAL || user?.role === UserRole.CHEF_CENTRE || isAdmin) },

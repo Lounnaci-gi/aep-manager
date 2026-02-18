@@ -1,7 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Quote, QuoteItem, QuoteStatus, WorkType, Client, CommercialAgency, Centre, ClientCategory } from '../types';
 import { getAIRecommendation } from '../services/geminiService';
+import { ArticleService } from '../services/articleService';
 
 interface QuoteFormProps {
   onSave: (quote: Quote) => void;
@@ -48,16 +49,60 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
   });
 
   const [items, setItems] = useState<QuoteItem[]>(
-    initialData?.items || [
-      { description: 'Frais de dossier et étude technique AEP', quantity: 1, unitPrice: 3500, total: 3500 }
-    ]
+    initialData?.items && initialData.items.length > 0 
+      ? initialData.items 
+      : [{ description: '', quantity: 1, unitPrice: 0, total: 0 }]
   );
 
   const [loadingAI, setLoadingAI] = useState(false);
   const [aiRec, setAiRec] = useState(initialData?.aiNotes || '');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [articles, setArticles] = useState<any[]>([]);
+  const [filteredArticles, setFilteredArticles] = useState<any[]>([]);
+  const [showArticleDropdown, setShowArticleDropdown] = useState<{[key: number]: boolean}>({});
+  const [searchTerm, setSearchTerm] = useState<{[key: number]: string}>({});
 
   const isLegal = formData.category === ClientCategory.LEGAL;
+
+  // Charger les articles disponibles
+  useEffect(() => {
+    const loadArticles = async () => {
+      try {
+        const loadedArticles = await ArticleService.getArticles();
+        setArticles(loadedArticles);
+      } catch (error) {
+        console.error('Erreur chargement articles:', error);
+      }
+    };
+    loadArticles();
+  }, []);
+
+  // Fonction pour filtrer les articles basés sur la recherche
+  const filterArticles = (term: string, index: number) => {
+    if (!term) {
+      setFilteredArticles([]);
+      setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
+      return;
+    }
+
+    const filtered = articles.filter(article => 
+      article.name.toLowerCase().includes(term.toLowerCase()) ||
+      article.description.toLowerCase().includes(term.toLowerCase())
+    );
+
+    setFilteredArticles(filtered);
+    setShowArticleDropdown(prev => ({ ...prev, [index]: filtered.length > 0 }));
+  };
+
+  // Gérer la sélection d'un article
+  const handleArticleSelect = (article: any, index: number) => {
+    const newItems = [...items];
+    newItems[index].description = article.name;
+    newItems[index].unitPrice = article.prices[0]?.price || 0;
+    setItems(newItems);
+    setSearchTerm(prev => ({ ...prev, [index]: article.name }));
+    setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
+  };
 
   useEffect(() => {
     if (!initialData && workTypes.length > 0 && !formData.serviceType) {
@@ -237,7 +282,41 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
               <tbody className="divide-y divide-gray-100">
                 {items.map((item, index) => (
                   <tr key={index}>
-                    <td className="px-2 py-2"><input type="text" className="w-full border-none p-2 text-xs font-bold bg-transparent" value={item.description} onChange={e => updateItem(index, 'description', e.target.value)} /></td>
+                    <td className="px-2 py-2 relative">
+                      <input 
+                        type="text" 
+                        className="w-full border-none p-2 text-xs font-bold bg-transparent relative z-20" 
+                        value={searchTerm[index] || item.description} 
+                        onChange={e => {
+                          const value = e.target.value;
+                          setSearchTerm(prev => ({ ...prev, [index]: value }));
+                          updateItem(index, 'description', value);
+                          filterArticles(value, index);
+                        }}
+                        onFocus={() => {
+                          if (searchTerm[index] && searchTerm[index].length > 0) {
+                            filterArticles(searchTerm[index], index);
+                          }
+                        }}
+                        onBlur={() => setTimeout(() => {
+                          setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
+                        }, 200)}
+                      />
+                      {showArticleDropdown[index] && filteredArticles.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                          {filteredArticles.map((article, idx) => (
+                            <div 
+                              key={idx}
+                              className="px-3 py-2 hover:bg-gray-50 cursor-pointer flex justify-between items-center"
+                              onMouseDown={() => handleArticleSelect(article, index)}
+                            >
+                              <span className="text-xs font-bold">{article.name}</span>
+                              <span className="text-[8px] text-gray-500">{article.prices[0]?.price || 0} DA</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </td>
                     <td className="px-2 py-2 text-center"><input type="number" className="w-16 border-none text-xs font-bold text-center bg-transparent" value={item.quantity} onChange={e => updateItem(index, 'quantity', parseFloat(e.target.value) || 0)} /></td>
                     <td className="px-2 py-2 text-right"><input type="number" className="w-28 border-none text-xs font-bold text-right bg-transparent" value={item.unitPrice} onChange={e => updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)} /></td>
                     <td className="px-4 py-2 text-xs font-black text-right">{item.total.toLocaleString()} DA</td>

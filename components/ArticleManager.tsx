@@ -174,12 +174,12 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
     setFormData({
       name: '',
       description: '',
-      category: 'CANALISATIONS (TUBES PEHD)',
-      unit: 'U',
-      material: '',
-      class: '',
-      nominalPressure: '',
-      color: ''
+      category: 'CANALISATIONS (TUBES PEHD)', // Valeur par défaut pour la liste déroulante catégorie
+      unit: 'U', // Valeur par défaut pour la liste déroulante unité
+      material: '', // Champ texte vidé mais la liste des matériaux reste accessible
+      class: '', // Champ texte vidé mais la liste des classes reste accessible
+      nominalPressure: '', // Champ texte vidé mais la liste des pressions reste accessible
+      color: '' // Champ texte vidé mais la liste des couleurs reste accessible
     });
     setArticlePrices([
       { type: 'fourniture', price: 0 },
