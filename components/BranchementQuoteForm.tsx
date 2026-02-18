@@ -117,6 +117,20 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
 
   // Gérer la sélection d'un article
   const handleArticleSelect = (article: Article, index: number) => {
+    // Vérifier si l'article est déjà dans le devis
+    const isAlreadyAdded = items.some(item => item.description === article.name);
+    if (isAlreadyAdded) {
+      Swal.fire({
+        title: 'Article déjà ajouté',
+        text: `L'article "${article.name}" est déjà présent dans ce devis.`,
+        icon: 'warning',
+        confirmButtonColor: '#dc2626'
+      });
+      setSearchTerms(prev => ({ ...prev, [index]: '' }));
+      setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
+      return;
+    }
+    
     const newItems = [...items];
     newItems[index].description = article.name;
     
@@ -137,18 +151,22 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
     } else if (validPrices.length === 1) {
       // Un seul prix valide, l'utiliser directement
       newItems[index].unitPrice = validPrices[0].price;
+      // Ajouter l'indicateur de type de prix
+      newItems[index].priceTypeIndicator = validPrices[0].type === 'fourniture' ? 'F' : 
+                                          validPrices[0].type === 'pose' ? 'P' : 'PS';
       setItems(newItems);
       setSearchTerms(prev => ({ ...prev, [index]: article.name }));
       setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
     } else {
       // Plusieurs prix valides, demander à l'utilisateur de choisir
-      const options: Array<{id: string, value: string | number, label: string, price: number}> = [
+      const options: Array<{id: string, value: string | number, label: string, price: number, type: string}> = [
         ...validPrices.map((price, i) => ({
           id: `price-${i}`,
           value: i,
           label: `${price.type === 'fourniture' ? 'Fourniture' : 
                   price.type === 'pose' ? 'Pose' : 'Prestation'}`,
-          price: price.price
+          price: price.price,
+          type: price.type
         }))
       ];
       
@@ -158,7 +176,8 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
           id: 'combined',
           value: 'combined',
           label: 'Fourniture + Pose',
-          price: fourniturePrice.price + posePrice.price
+          price: fourniturePrice.price + posePrice.price,
+          type: 'combined'
         });
       }
       
@@ -192,10 +211,14 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
           if (selectedValue === 'combined') {
             // Prix combiné
             newItems[index].unitPrice = fourniturePrice!.price + posePrice!.price;
+            newItems[index].priceTypeIndicator = 'F/P';
           } else {
             // Prix individuel
             const selectedIndex = parseInt(selectedValue);
-            newItems[index].unitPrice = validPrices[selectedIndex].price;
+            const selectedPrice = validPrices[selectedIndex];
+            newItems[index].unitPrice = selectedPrice.price;
+            newItems[index].priceTypeIndicator = selectedPrice.type === 'fourniture' ? 'F' : 
+                                               selectedPrice.type === 'pose' ? 'P' : 'PS';
           }
           setItems(newItems);
           setSearchTerms(prev => ({ ...prev, [index]: article.name }));
@@ -433,9 +456,16 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
                 <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">
                   Total
                 </label>
-                <p className="font-black text-emerald-600">
-                  {(item.quantity * item.unitPrice).toFixed(2)} DZD
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="font-black text-emerald-600 flex-1">
+                    {(item.quantity * item.unitPrice).toFixed(2)} DZD
+                  </p>
+                  {item.priceTypeIndicator && (
+                    <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-bold rounded-full">
+                      {item.priceTypeIndicator}
+                    </span>
+                  )}
+                </div>
               </div>
               
               {items.length > 1 && (

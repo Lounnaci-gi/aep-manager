@@ -97,6 +97,20 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
 
   // Gérer la sélection d'un article
   const handleArticleSelect = (article: any, index: number) => {
+    // Vérifier si l'article est déjà dans le devis
+    const isAlreadyAdded = items.some(item => item.description === article.name);
+    if (isAlreadyAdded) {
+      Swal.fire({
+        title: 'Article déjà ajouté',
+        text: `L'article "${article.name}" est déjà présent dans ce devis.`,
+        icon: 'warning',
+        confirmButtonColor: '#dc2626'
+      });
+      setSearchTerm(prev => ({ ...prev, [index]: '' }));
+      setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
+      return;
+    }
+    
     const newItems = [...items];
     newItems[index].description = article.name;
     
@@ -117,18 +131,22 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
     } else if (validPrices.length === 1) {
       // Un seul prix valide, l'utiliser directement
       newItems[index].unitPrice = validPrices[0].price;
+      // Ajouter l'indicateur de type de prix
+      newItems[index].priceTypeIndicator = validPrices[0].type === 'fourniture' ? 'F' : 
+                                          validPrices[0].type === 'pose' ? 'P' : 'PS';
       setItems(newItems);
       setSearchTerm(prev => ({ ...prev, [index]: article.name }));
       setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
     } else {
       // Plusieurs prix valides, demander à l'utilisateur de choisir
-      const options: Array<{id: string, value: string | number, label: string, price: number}> = [
+      const options: Array<{id: string, value: string | number, label: string, price: number, type: string}> = [
         ...validPrices.map((price: any, i: number) => ({
           id: `price-${i}`,
           value: i,
           label: `${price.type === 'fourniture' ? 'Fourniture' : 
                   price.type === 'pose' ? 'Pose' : 'Prestation'}`,
-          price: price.price
+          price: price.price,
+          type: price.type
         }))
       ];
       
@@ -138,7 +156,8 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
           id: 'combined',
           value: 'combined',
           label: 'Fourniture + Pose',
-          price: fourniturePrice.price + posePrice.price
+          price: fourniturePrice.price + posePrice.price,
+          type: 'combined'
         });
       }
       
@@ -172,10 +191,14 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
           if (selectedValue === 'combined') {
             // Prix combiné
             newItems[index].unitPrice = fourniturePrice!.price + posePrice!.price;
+            newItems[index].priceTypeIndicator = 'F/P';
           } else {
             // Prix individuel
             const selectedIndex = parseInt(selectedValue);
-            newItems[index].unitPrice = validPrices[selectedIndex].price;
+            const selectedPrice = validPrices[selectedIndex];
+            newItems[index].unitPrice = selectedPrice.price;
+            newItems[index].priceTypeIndicator = selectedPrice.type === 'fourniture' ? 'F' : 
+                                               selectedPrice.type === 'pose' ? 'P' : 'PS';
           }
           setItems(newItems);
           setSearchTerm(prev => ({ ...prev, [index]: article.name }));
@@ -484,7 +507,21 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                 <thead><tr className="border-b-2 border-gray-900 text-[10px] font-black text-gray-900 uppercase tracking-widest"><th className="py-4 text-left">Désignation</th><th className="py-4 px-4 text-center w-20">Qté</th><th className="py-4 text-right">P.U HT</th><th className="py-4 text-right">Total HT</th></tr></thead>
                 <tbody className="divide-y divide-gray-100">
                   {items.map((item, i) => (
-                    <tr key={i}><td className="py-4 text-sm font-bold uppercase text-gray-800">{item.description}</td><td className="py-4 px-4 text-sm text-center font-bold">{item.quantity}</td><td className="py-4 text-sm text-right">{item.unitPrice.toFixed(2)}</td><td className="py-4 text-sm font-black text-right">{item.total.toFixed(2)} DA</td></tr>
+                    <tr key={i}>
+                      <td className="py-4 text-sm font-bold uppercase text-gray-800">{item.description}</td>
+                      <td className="py-4 px-4 text-sm text-center font-bold">{item.quantity}</td>
+                      <td className="py-4 text-sm text-right">{item.unitPrice.toFixed(2)}</td>
+                      <td className="py-4 text-sm font-black text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <span>{item.total.toFixed(2)} DA</span>
+                          {item.priceTypeIndicator && (
+                            <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-bold rounded-full">
+                              {item.priceTypeIndicator}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
                   ))}
                 </tbody>
               </table>

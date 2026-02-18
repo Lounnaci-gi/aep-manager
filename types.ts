@@ -112,6 +112,7 @@ export interface QuoteItem {
   description: string;
   quantity: number;
   unitPrice: number;
+  priceTypeIndicator?: string;
 }
 
 export interface ArticlePrice {
