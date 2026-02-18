@@ -119,11 +119,90 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
   const handleArticleSelect = (article: Article, index: number) => {
     const newItems = [...items];
     newItems[index].description = article.name;
-    newItems[index].unitPrice = article.prices[0]?.price || 0;
-    setItems(newItems);
     
-    setSearchTerms(prev => ({ ...prev, [index]: article.name }));
-    setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
+    // Filtrer les prix non nuls
+    const validPrices = article.prices.filter(price => price.price > 0);
+    
+    // Vérifier si on a à la fois pose et fourniture
+    const fourniturePrice = article.prices.find(p => p.type === 'fourniture' && p.price > 0);
+    const posePrice = article.prices.find(p => p.type === 'pose' && p.price > 0);
+    const hasBothFournitureAndPose = fourniturePrice && posePrice;
+    
+    if (validPrices.length === 0) {
+      // Aucun prix valide
+      newItems[index].unitPrice = 0;
+      setItems(newItems);
+      setSearchTerms(prev => ({ ...prev, [index]: article.name }));
+      setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
+    } else if (validPrices.length === 1) {
+      // Un seul prix valide, l'utiliser directement
+      newItems[index].unitPrice = validPrices[0].price;
+      setItems(newItems);
+      setSearchTerms(prev => ({ ...prev, [index]: article.name }));
+      setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
+    } else {
+      // Plusieurs prix valides, demander à l'utilisateur de choisir
+      const options: Array<{id: string, value: string | number, label: string, price: number}> = [
+        ...validPrices.map((price, i) => ({
+          id: `price-${i}`,
+          value: i,
+          label: `${price.type === 'fourniture' ? 'Fourniture' : 
+                  price.type === 'pose' ? 'Pose' : 'Prestation'}`,
+          price: price.price
+        }))
+      ];
+      
+      // Ajouter l'option combinée si les deux prix existent
+      if (hasBothFournitureAndPose) {
+        options.push({
+          id: 'combined',
+          value: 'combined',
+          label: 'Fourniture + Pose',
+          price: fourniturePrice.price + posePrice.price
+        });
+      }
+      
+      Swal.fire({
+        title: 'Choisir le type de prix',
+        html: `
+          <div class="text-left">
+            <p class="mb-3">Sélectionnez le type de prix pour "${article.name}":</p>
+            ${options.map((option, i) => `
+              <div class="flex items-center mb-2">
+                <input type="radio" id="${option.id}" name="priceType" value="${option.value}" 
+                       class="mr-2" ${i === 0 ? 'checked' : ''}>
+                <label for="${option.id}" class="flex-1">
+                  <span class="font-medium">${option.label}</span>
+                  <span class="ml-2 text-gray-600">(${option.price.toLocaleString()} DA)</span>
+                </label>
+              </div>
+            `).join('')}
+          </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Sélectionner',
+        cancelButtonText: 'Annuler',
+        preConfirm: () => {
+          const selectedRadio = document.querySelector('input[name="priceType"]:checked') as HTMLInputElement;
+          return selectedRadio ? selectedRadio.value : '0';
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const selectedValue = result.value;
+          if (selectedValue === 'combined') {
+            // Prix combiné
+            newItems[index].unitPrice = fourniturePrice!.price + posePrice!.price;
+          } else {
+            // Prix individuel
+            const selectedIndex = parseInt(selectedValue);
+            newItems[index].unitPrice = validPrices[selectedIndex].price;
+          }
+          setItems(newItems);
+          setSearchTerms(prev => ({ ...prev, [index]: article.name }));
+          setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
+        }
+      });
+    }
   };
 
   // Calcul des totaux
@@ -342,7 +421,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
                   type="number"
                   min="0"
                   step="0.01"
-                  value={item.unitPrice}
+                  value={item.unitPrice.toFixed(2)}
                   onChange={(e) => handleItemChange(index, 'unitPrice', parseFloat(e.target.value) || 0)}
                   className="w-full rounded-lg border-gray-200 p-2 text-sm font-bold border bg-white"
                   placeholder="0.00"
