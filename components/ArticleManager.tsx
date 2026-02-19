@@ -167,6 +167,17 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
     
     setArticlePrices(initialPrices);
     setShowForm(true);
+    
+    // Faire défiler doucement vers le formulaire
+    setTimeout(() => {
+      const formElement = document.getElementById('article-form');
+      if (formElement) {
+        formElement.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    }, 100);
   };
 
   const resetForm = () => {
@@ -268,6 +279,354 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
     }
   };
 
+  const addTubesPEHD = async () => {
+    const result = await Swal.fire({
+      title: 'Ajouter les tubes PEHD ?',
+      text: 'Ceci ajoutera tous les tubes PEHD de différentes tailles et classes.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Oui, ajouter',
+      cancelButtonText: 'Annuler'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const tubesPEHD = [
+          { designation: 'Tubes PEHD PN10 Ø20', unite: 'ML', diametre: '20', matiere: 'PEHD', classe: 'PN10', pression: '10', couleur: null },
+          { designation: 'Tubes PEHD PN10 Ø25', unite: 'ML', diametre: '25', matiere: 'PEHD', classe: 'PN10', pression: '10', couleur: null },
+          { designation: 'Tubes PEHD PN10 Ø32', unite: 'ML', diametre: '32', matiere: 'PEHD', classe: 'PN10', pression: '10', couleur: null },
+          { designation: 'Tubes PEHD PN10 Ø40', unite: 'ML', diametre: '40', matiere: 'PEHD', classe: 'PN10', pression: '10', couleur: null },
+          { designation: 'Tubes PEHD PN10 Ø50', unite: 'ML', diametre: '50', matiere: 'PEHD', classe: 'PN10', pression: '10', couleur: null },
+          { designation: 'Tubes PEHD PN10 Ø63', unite: 'ML', diametre: '63', matiere: 'PEHD', classe: 'PN10', pression: '10', couleur: null },
+          { designation: 'Tubes PEHD PN10 Ø75', unite: 'ML', diametre: '75', matiere: 'PEHD', classe: 'PN10', pression: '10', couleur: null },
+          { designation: 'Tubes PEHD PN10 Ø90', unite: 'ML', diametre: '90', matiere: 'PEHD', classe: 'PN10', pression: '10', couleur: null },
+          { designation: 'Tubes PEHD PN10 Ø110', unite: 'ML', diametre: '110', matiere: 'PEHD', classe: 'PN10', pression: '10', couleur: null },
+          { designation: 'Tubes PEHD PN10 Ø125', unite: 'ML', diametre: '125', matiere: 'PEHD', classe: 'PN10', pression: '10', couleur: null },
+          { designation: 'Tubes PEHD PN10 Ø160', unite: 'ML', diametre: '160', matiere: 'PEHD', classe: 'PN10', pression: '10', couleur: null },
+          { designation: 'Tubes PEHD PN16 Ø20', unite: 'ML', diametre: '20', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Tubes PEHD PN16 Ø25', unite: 'ML', diametre: '25', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Tubes PEHD PN16 Ø32', unite: 'ML', diametre: '32', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Tubes PEHD PN16 Ø40', unite: 'ML', diametre: '40', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Tubes PEHD PN16 Ø50', unite: 'ML', diametre: '50', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Tubes PEHD PN16 Ø63', unite: 'ML', diametre: '63', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Tubes PEHD PN16 Ø75', unite: 'ML', diametre: '75', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Tubes PEHD PN16 Ø90', unite: 'ML', diametre: '90', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Tubes PEHD PN16 Ø110', unite: 'ML', diametre: '110', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Tubes PEHD PN16 Ø125', unite: 'ML', diametre: '125', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Tubes PEHD PN16 Ø160', unite: 'ML', diametre: '160', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Tubes PEHD PN16 Ø200', unite: 'ML', diametre: '200', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Tubes PEHD PN16 Ø250', unite: 'ML', diametre: '250', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Tubes PEHD PN16 Ø315', unite: 'ML', diametre: '315', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null }
+        ];
+
+        for (const tube of tubesPEHD) {
+          const article: Article = {
+            id: `ART-TUBE-${tube.designation.replace(/\s+/g, '-').replace(/[Ø]/g, 'D')}-${Date.now()}`,
+            name: tube.designation,
+            description: `Tube en PEHD diamètre ${tube.diametre}mm, classe ${tube.classe}, pression nominale ${tube.pression}`,
+            prices: [
+              { type: 'fourniture' as const, price: 0 }, // Prix à définir selon les besoins
+              { type: 'pose' as const, price: 0 }        // Prix à définir selon les besoins
+            ],
+            category: 'TRAVAUX DE TERRASSEMENT & VOIRIE',
+            unit: tube.unite as 'M²' | 'M3' | 'ML' | 'U' | 'NULL',
+            material: tube.matiere,
+            class: tube.classe,
+            nominalPressure: tube.pression,
+            color: tube.couleur || undefined,
+            createdAt: new Date().toISOString(),
+            defaultPriceType: 'fourniture' as const
+          };
+
+          await ArticleService.saveArticle(article);
+        }
+
+        await loadArticles(); // Recharger la liste des articles
+
+        Swal.fire('Succès', 'Les tubes PEHD ont été ajoutés avec succès !', 'success');
+      } catch (error) {
+        console.error('Erreur lors de l\'ajout des tubes PEHD:', error);
+        Swal.fire('Erreur', 'Impossible d\'ajouter les tubes PEHD', 'error');
+      }
+    }
+  };
+
+  const addSpecialPieces = async () => {
+    const result = await Swal.fire({
+      title: 'Ajouter les pièces spéciales ?',
+      text: 'Ceci ajoutera toutes les pièces spéciales de différentes tailles et types.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Oui, ajouter',
+      cancelButtonText: 'Annuler'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const specialPieces = [
+          { designation: 'Collier de Prise en Charge PEHD Ø 32 3/4" (25)', unite: 'U', diametre: '32', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 40 3/4" (25)', unite: 'U', diametre: '40', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 50 3/4" (25)', unite: 'U', diametre: '50', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 63 1.1/2" (50)', unite: 'U', diametre: '63', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 63 3/4" (25)', unite: 'U', diametre: '63', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 75 1/2" (50)', unite: 'U', diametre: '75', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 75 3/4" (25)', unite: 'U', diametre: '75', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 90 1/2" (50)', unite: 'U', diametre: '90', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 90 3/4" (25)', unite: 'U', diametre: '90', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 110 3/4" (25)', unite: 'U', diametre: '110', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 110 1/2" (50)', unite: 'U', diametre: '110', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 110 2" (63)', unite: 'U', diametre: '110', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 125 3/4" (25)', unite: 'U', diametre: '125', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 125 1/4" (40)', unite: 'U', diametre: '125', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 125 1/2" (50)', unite: 'U', diametre: '125', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 160 1.1/2 (50)', unite: 'U', diametre: '160', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 160 2" (63)', unite: 'U', diametre: '160', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 160 3/4" (25)', unite: 'U', diametre: '160', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 200 3/4" (25)', unite: 'U', diametre: '200', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 200 1.1/2" (50)', unite: 'U', diametre: '200', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 200 2" (63)', unite: 'U', diametre: '200', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 250X 3/4" (25)', unite: 'U', diametre: '250', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 250X 1.1/4" (40)', unite: 'U', diametre: '250', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 250X 2" (63)', unite: 'U', diametre: '250', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 250X 1.1/2" (50)', unite: 'U', diametre: '250', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 315X 1/2" (50)', unite: 'U', diametre: '315', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 315X 3/4" (25)', unite: 'U', diametre: '315', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 315X 1.1/4" (40)', unite: 'U', diametre: '315', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 315X 1.1/2" (50)', unite: 'U', diametre: '315', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 315X 2" (63)', unite: 'U', diametre: '315', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 315X 3" (75)', unite: 'U', diametre: '315', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 350X 3/4" (25)', unite: 'U', diametre: '350', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 350X 4" (110)', unite: 'U', diametre: '350', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 350X 1.1/2" (50)', unite: 'U', diametre: '350', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 350X 2" (63)', unite: 'U', diametre: '350', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 350X 3" (75)', unite: 'U', diametre: '350', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 350X 1.1/2" (50)', unite: 'U', diametre: '350', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge PEHD Ø 350X 4" (110)', unite: 'U', diametre: '350', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge ACIER Collier de Prise en Charge ACIER Ø 40/33', unite: 'U', diametre: '40', matiere: 'ACIER', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge ACIER Ø 50/33', unite: 'U', diametre: '50', matiere: 'ACIER', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge ACIER Ø 63/33', unite: 'U', diametre: '63', matiere: 'ACIER', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge ACIER Ø 80/33', unite: 'U', diametre: '80', matiere: 'ACIER', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge ACIER Ø 100/20', unite: 'U', diametre: '100', matiere: 'ACIER', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge ACIER Ø 100/33', unite: 'U', diametre: '100', matiere: 'ACIER', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge ACIER Ø 125/20', unite: 'U', diametre: '125', matiere: 'ACIER', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge ACIER Ø 125/33', unite: 'U', diametre: '125', matiere: 'ACIER', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge ACIER Ø 150/40', unite: 'U', diametre: '150', matiere: 'ACIER', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge ACIER Ø 200/33', unite: 'U', diametre: '200', matiere: 'ACIER', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge ACIER Ø 250/33', unite: 'U', diametre: '250', matiere: 'ACIER', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge ACIER Ø 300/33', unite: 'U', diametre: '300', matiere: 'ACIER', classe: null, pression: null, couleur: null },
+          { designation: 'Collier de Prise en Charge ACIER Ø 350/33', unite: 'U', diametre: '350', matiere: 'ACIER', classe: null, pression: null, couleur: null },
+          { designation: 'Robinet de Branchement ACIER Ø 70', unite: 'U', diametre: '70', matiere: 'ACIER', classe: null, pression: null, couleur: null },
+          { designation: 'Robinet de Branchement ACIER Ø 90', unite: 'U', diametre: '90', matiere: 'ACIER', classe: null, pression: null, couleur: null },
+          { designation: 'Selle Te de Branchement PEHD ÉLECTROFUSION Ø 32/20 PE 100 SDR 11 PN 16', unite: 'U', diametre: '32', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Selle Te de Branchement PEHD ÉLECTROFUSION Ø 32/25 PE 100 SDR 11 PN 16', unite: 'U', diametre: '32', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Selle Te de Branchement PEHD ÉLECTROFUSION Ø 63/25 PE 100 SDR 11 PN 16', unite: 'U', diametre: '63', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Selle Te de Branchement PEHD ÉLECTROFUSION Ø 75/25 PE 100 SDR 11 PN 16', unite: 'U', diametre: '75', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Selle Te de Branchement PEHD ÉLECTROFUSION Ø 90/25 PE 100 SDR 11 PN 16', unite: 'U', diametre: '90', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Selle Te de Branchement PEHD ÉLECTROFUSION Ø 110/25 PE 100 SDR 11 PN 16', unite: 'U', diametre: '110', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Selle Te de Branchement PEHD ÉLECTROFUSION Ø 110/32 PE 100 SDR 11 PN 16', unite: 'U', diametre: '110', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Selle Te de Branchement PEHD ÉLECTROFUSION Ø 110/40 PE 100 SDR 11 PN 16', unite: 'U', diametre: '110', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Selle Te de Branchement PEHD ÉLECTROFUSION Ø 110/63 PE 100 SDR 11 PN 16', unite: 'U', diametre: '110', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Selle Te de Branchement PEHD ÉLECTROFUSION Ø 125/25 PE 100 SDR 11 PN 16', unite: 'U', diametre: '125', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Selle Te de Branchement PEHD ÉLECTROFUSION Ø 125/32 PE 100 SDR 11 PN 16', unite: 'U', diametre: '125', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Selle Te de Branchement PEHD ÉLECTROFUSION Ø 125/40 PE 100 SDR 11 PN 16', unite: 'U', diametre: '125', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Selle Te de Branchement PEHD ÉLECTROFUSION Ø 125/63 PE 100 SDR 11 PN 16', unite: 'U', diametre: '125', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Selle Te de Branchement PEHD ÉLECTROFUSION Ø 150/63 PE 100 SDR 11 PN 16', unite: 'U', diametre: '150', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Selle Te de Branchement PEHD ÉLECTROFUSION Ø 200/63 PE 100 SDR 11 PN 16', unite: 'U', diametre: '200', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Selle Te de Branchement PEHD ÉLECTROFUSION Selle Te PE Ø 250/63 PN 16', unite: 'U', diametre: '250', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Selle Te de Branchement PEHD ÉLECTROFUSION Selle Te PE Ø 350/63 PN 16', unite: 'U', diametre: '350', matiere: 'PEHD', classe: 'PN16', pression: '16', couleur: null },
+          { designation: 'Bouchon d\'Extrémité en PEHD Ø 20', unite: 'U', diametre: '20', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Bouchon d\'Extrémité en PEHD Ø 25', unite: 'U', diametre: '25', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Bouchon d\'Extrémité en PEHD Ø 32', unite: 'U', diametre: '32', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Bouchon d\'Extrémité en PEHD Ø 40', unite: 'U', diametre: '40', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Bouchon d\'Extrémité en PEHD Ø 50', unite: 'U', diametre: '50', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Bouchon d\'Extrémité en PEHD Ø 63', unite: 'U', diametre: '63', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Bouchon d\'Extrémité en PEHD Ø 75', unite: 'U', diametre: '75', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Bouchon d\'Extrémité en PEHD Ø 90', unite: 'U', diametre: '90', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Bouchon d\'Extrémité en PEHD Ø 110', unite: 'U', diametre: '110', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Coudes Mécaniques PP 90° (S/R) Ø20', unite: 'U', diametre: '20', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Coudes Mécaniques PP 90° (S/R) Ø25', unite: 'U', diametre: '25', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Coudes Mécaniques PP 90° (S/R) Ø32', unite: 'U', diametre: '32', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Coudes Mécaniques PP 90° (S/R) Ø40', unite: 'U', diametre: '40', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Coudes Mécaniques PP 90° (S/R) Ø50', unite: 'U', diametre: '50', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Coudes Mécaniques PP 90° (S/R) Ø63', unite: 'U', diametre: '63', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Coudes Mécaniques PP 90° (S/R) Ø75', unite: 'U', diametre: '75', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Coudes Mécaniques PP 90° (S/R) Ø90', unite: 'U', diametre: '90', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Coudes Mécaniques PP 90° (S/R) Ø110', unite: 'U', diametre: '110', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Coudes Mécaniques PP 90° (S/R) Ø150', unite: 'U', diametre: '150', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Coudes Mécaniques  Tarraudé Ø20X1/2" 20', unite: 'U', diametre: '20', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Coudes Mécaniques  Tarraudé Ø25X3/4" 25', unite: 'U', diametre: '25', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Coudes Mécaniques  Tarraudé Ø32X1" 32', unite: 'U', diametre: '32', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Coudes Mécaniques  Tarraudé Ø40X1.1/4" 40', unite: 'U', diametre: '40', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Coudes Mécaniques  Tarraudé Ø50X1.1/2" 50', unite: 'U', diametre: '50', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Coudes Mécaniques  Tarraudé Ø63X2.1/2" 63', unite: 'U', diametre: '63', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Coudes Mécaniques  Tarraudé Ø75X2.1/2" 75', unite: 'U', diametre: '75', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Coudes Mécaniques  Tarraudé Ø90X3" 90', unite: 'U', diametre: '90', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Coudes Mécaniques  Tarraudé Ø110X4" 110', unite: 'U', diametre: '110', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Coudes en PE ÉLECTROFUSION Ø 110', unite: 'U', diametre: '110', matiere: 'PE', classe: null, pression: null, couleur: null },
+          { designation: 'Coudes en PE ÉLECTROFUSION Ø 125', unite: 'U', diametre: '125', matiere: 'PE', classe: null, pression: null, couleur: null },
+          { designation: 'Coudes en PE ÉLECTROFUSION Ø 160', unite: 'U', diametre: '160', matiere: 'PE', classe: null, pression: null, couleur: null },
+          { designation: 'Coudes en PE ÉLECTROFUSION Ø 200', unite: 'U', diametre: '200', matiere: 'PE', classe: null, pression: null, couleur: null },
+          { designation: 'Coudes en PE ÉLECTROFUSION Ø 250', unite: 'U', diametre: '250', matiere: 'PE', classe: null, pression: null, couleur: null },
+          { designation: 'Coudes en PE ÉLECTROFUSION Ø 315', unite: 'U', diametre: '315', matiere: 'PE', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon Mécanique en PEHD (S/R) Egal Ø 20', unite: 'U', diametre: '20', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon Mécanique en PEHD (S/R) Egal Ø 25', unite: 'U', diametre: '25', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon Mécanique en PEHD (S/R) Egal Ø 32', unite: 'U', diametre: '32', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon Mécanique en PEHD (S/R) Egal Ø 40', unite: 'U', diametre: '40', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon Mécanique en PEHD (S/R) Egal Ø 50', unite: 'U', diametre: '50', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon Mécanique en PEHD (S/R) Egal Ø 63', unite: 'U', diametre: '63', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon Mécanique en PEHD (S/R) Egal Ø 75', unite: 'U', diametre: '75', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon Mécanique en PEHD (S/R) Egal Ø 90', unite: 'U', diametre: '90', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon Mécanique en PEHD (S/R) Egal Ø 110', unite: 'U', diametre: '110', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP Électrosoudable Egal Ø 110', unite: 'U', diametre: '110', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP Électrosoudable Egal Ø 125', unite: 'U', diametre: '125', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP Électrosoudable Egal Ø 160', unite: 'U', diametre: '160', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP Électrosoudable Egal Ø 200', unite: 'U', diametre: '200', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP Électrosoudable Egal Ø 250', unite: 'U', diametre: '250', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP Électrosoudable Egal Ø 315', unite: 'U', diametre: '315', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP Électrosoudable Egal Ø 350', unite: 'U', diametre: '350', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP (S/R) Réduit Ø25/20', unite: 'U', diametre: '25', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP (S/R) Réduit Ø32/25', unite: 'U', diametre: '32', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP (S/R) Réduit Ø32/20', unite: 'U', diametre: '32', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP (S/R) Réduit Ø40/32', unite: 'U', diametre: '40', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP (S/R) Réduit Ø50/25', unite: 'U', diametre: '50', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP (S/R) Réduit Ø50/32', unite: 'U', diametre: '50', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP (S/R) Réduit Ø50/40', unite: 'U', diametre: '50', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP (S/R) Réduit Ø63/32', unite: 'U', diametre: '63', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP (S/R) Réduit Ø63/40', unite: 'U', diametre: '63', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP (S/R) Réduit Ø75/63', unite: 'U', diametre: '75', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP (S/R) Réduit Ø75/50', unite: 'U', diametre: '75', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP (S/R) Réduit Ø90/63', unite: 'U', diametre: '90', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP (S/R) Réduit Ø90/75', unite: 'U', diametre: '90', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP (S/R) Réduit Ø110/75', unite: 'U', diametre: '110', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP (S/R) Réduit Ø110/90', unite: 'U', diametre: '110', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP Électrosoudable Réduit Ø125/110', unite: 'U', diametre: '125', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP Électrosoudable Réduit Ø160/125', unite: 'U', diametre: '160', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP Électrosoudable Réduit Ø200/160', unite: 'U', diametre: '200', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP Électrosoudable Réduit Ø250/200', unite: 'U', diametre: '250', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP Électrosoudable Réduit Ø315/250', unite: 'U', diametre: '315', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Manchon en PP Électrosoudable Réduit Ø400/315', unite: 'U', diametre: '400', matiere: 'PP', classe: null, pression: null, couleur: null },
+          { designation: 'Raccord Fileté en PEHD (S/R) Ø20X1/2" (20)', unite: 'U', diametre: '20', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Raccord Fileté en PEHD (S/R) Ø25X3/4" (25)', unite: 'U', diametre: '25', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Raccord Fileté en PEHD (S/R) Ø32X1" (32)', unite: 'U', diametre: '32', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Raccord Fileté en PEHD (S/R) Ø40X1.1/4" (40)', unite: 'U', diametre: '40', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Raccord Fileté en PEHD (S/R) Ø50X1.1/2" (50)', unite: 'U', diametre: '50', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Raccord Fileté en PEHD (S/R) Ø63X2.1/2" (63)', unite: 'U', diametre: '63', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Raccord Fileté en PEHD (S/R) Ø75X2.1/2" (75)', unite: 'U', diametre: '75', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Raccord Fileté en PEHD (S/R) Ø90X3" (90)', unite: 'U', diametre: '90', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Raccord Fileté en PEHD (S/R) Ø110X4" (110)', unite: 'U', diametre: '110', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Raccord Tarraudé en PEHD Ø20X1/2" (20)', unite: 'U', diametre: '20', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Raccord Tarraudé en PEHD Ø25X3/4" (25)', unite: 'U', diametre: '25', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Raccord Tarraudé en PEHD Ø32X1" (32)', unite: 'U', diametre: '32', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Raccord Tarraudé en PEHD Ø40X1.1/4" (40)', unite: 'U', diametre: '40', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Raccord Tarraudé en PEHD Ø50X1.1/2" (50)', unite: 'U', diametre: '50', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Raccord Tarraudé en PEHD Ø63X2.1/2" (63)', unite: 'U', diametre: '63', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Raccord Tarraudé en PEHD Ø75X2.1/2" (75)', unite: 'U', diametre: '75', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Raccord Tarraudé en PEHD Ø90X3" (90)', unite: 'U', diametre: '90', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Raccord Tarraudé en PEHD Ø110X4" (110)', unite: 'U', diametre: '110', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Raccord à Bride en PEHD (S/R) Ø 40', unite: 'U', diametre: '40', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Raccord à Bride en PEHD (S/R) Ø 50', unite: 'U', diametre: '50', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Raccord à Bride en PEHD (S/R) Ø 63', unite: 'U', diametre: '63', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Raccord à Bride en PEHD (S/R) Ø 75', unite: 'U', diametre: '75', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Raccord à Bride en PEHD (S/R) Ø 90', unite: 'U', diametre: '90', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Raccord à Bride en PEHD (S/R) Ø 110', unite: 'U', diametre: '110', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Té en PEHD Électrosoudable Egal Ø 110', unite: 'U', diametre: '110', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Té en PEHD Électrosoudable Egal Ø 125', unite: 'U', diametre: '125', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Té en PEHD Électrosoudable Egal Ø 160', unite: 'U', diametre: '160', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Té en PEHD Électrosoudable Egal Ø 200', unite: 'U', diametre: '200', matiere: 'PEHD', classe: null, pression: null, couleur: null },
+          { designation: 'Té en PEHD Électrosoudable Egal Ø 250', unite: 'U', diametre: '250', matiere: 'PEHD', classe: null, pression: null, couleur: null }
+        ];
+
+        for (const piece of specialPieces) {
+          const article: Article = {
+            id: `ART-PIECE-${piece.designation.replace(/\s+/g, '-').replace(/[Ø]/g, 'D')}-${Date.now()}`,
+            name: piece.designation,
+            description: `Pièce spéciale en ${piece.matiere}${piece.diametre ? `, diamètre ${piece.diametre}mm` : ''}${piece.classe ? `, classe ${piece.classe}` : ''}${piece.pression ? `, pression nominale ${piece.pression}` : ''}`,
+            prices: [
+              { type: 'fourniture' as const, price: 0 }, // Prix à définir selon les besoins
+              { type: 'pose' as const, price: 0 }        // Prix à définir selon les besoins
+            ],
+            category: 'PIÈCES SPÉCIALES',
+            unit: piece.unite as 'M²' | 'M3' | 'ML' | 'U' | 'NULL',
+            material: piece.matiere,
+            class: piece.classe || undefined,
+            nominalPressure: piece.pression || undefined,
+            color: piece.couleur || undefined,
+            createdAt: new Date().toISOString(),
+            defaultPriceType: 'fourniture' as const
+          };
+
+          await ArticleService.saveArticle(article);
+        }
+
+        await loadArticles(); // Recharger la liste des articles
+
+        Swal.fire('Succès', 'Les pièces spéciales ont été ajoutées avec succès !', 'success');
+      } catch (error) {
+        console.error('Erreur lors de l\'ajout des pièces spéciales:', error);
+        Swal.fire('Erreur', 'Impossible d\'ajouter les pièces spéciales', 'error');
+      }
+    }
+  };
+
+  const addAdditionalPieces = async () => {
+    const result = await Swal.fire({
+      title: 'Ajouter les pièces spéciales complémentaires ?',
+      text: 'Ceci ajoutera les pièces spéciales supplémentaires comme Tabernacle, Bouche à clé, Portes de niche, etc.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Oui, ajouter',
+      cancelButtonText: 'Annuler'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const additionalPieces = [
+          { designation: 'Tabernacle (plaque d\'assise)', unite: 'U', diametre: null, matiere: null, classe: null, pression: null, couleur: null },
+          { designation: 'Bouche à clé & socle en béton', unite: 'U', diametre: null, matiere: null, classe: null, pression: null, couleur: null },
+          { designation: 'Porte de niche PM (dn 25mm)', unite: 'U', diametre: '25', matiere: null, classe: null, pression: null, couleur: null },
+          { designation: 'Porte de niche GM (dn 32-40mm)', unite: 'U', diametre: '32-40', matiere: null, classe: null, pression: null, couleur: null },
+          { designation: 'Coffret de comptage A.E.P (P/01 compteur)', unite: 'U', diametre: null, matiere: null, classe: null, pression: null, couleur: null },
+          { designation: 'Grillage avertisseur (maille de signalisation)', unite: 'ML', diametre: null, matiere: null, classe: null, pression: null, couleur: null }
+        ];
+
+        for (const piece of additionalPieces) {
+          const article: Article = {
+            id: `ART-ADD-${piece.designation.replace(/\s+/g, '-').replace(/[^\w\s-]/g, '')}-${Date.now()}`,
+            name: piece.designation,
+            description: piece.designation, // Utilisation de la désignation comme description
+            prices: [
+              { type: 'fourniture' as const, price: 0 }, // Prix à définir selon les besoins
+              { type: 'pose' as const, price: 0 }        // Prix à définir selon les besoins
+            ],
+            category: 'PIÈCES SPÉCIALES',
+            unit: piece.unite as 'M²' | 'M3' | 'ML' | 'U' | 'NULL',
+            material: piece.matiere || undefined,
+            class: piece.classe || undefined,
+            nominalPressure: piece.pression || undefined,
+            color: piece.couleur || undefined,
+            createdAt: new Date().toISOString(),
+            defaultPriceType: 'fourniture' as const
+          };
+
+          await ArticleService.saveArticle(article);
+        }
+
+        await loadArticles(); // Recharger la liste des articles
+
+        Swal.fire('Succès', 'Les pièces spéciales complémentaires ont été ajoutées avec succès !', 'success');
+      } catch (error) {
+        console.error('Erreur lors de l\'ajout des pièces spéciales complémentaires:', error);
+        Swal.fire('Erreur', 'Impossible d\'ajouter les pièces spéciales complémentaires', 'error');
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -313,7 +672,7 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
       </div>
 
       {showForm && (
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 mb-6">
+        <div id="article-form" className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 mb-6">
           <h2 className="text-lg font-black text-gray-900 uppercase tracking-tight mb-4">
             {editingArticle ? 'Modifier Article' : 'Nouvel Article'}
           </h2>
