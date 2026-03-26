@@ -458,11 +458,14 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
 
             <div className="p-16 space-y-12 bg-white">
               <div className="flex justify-between items-start border-b-2 border-gray-900 pb-8">
-                <div>
-                  <div className="text-3xl font-black text-blue-600 tracking-tighter mb-2 uppercase">AEP MANAGER</div>
-                  <div className="text-[10px] font-black text-gray-400 uppercase space-y-1">
-                    <p>{activeCentre?.name}</p>
-                    <p>{activeAgency?.name}</p>
+                <div className="flex items-center gap-4">
+                  <img src="/ade.png" alt="ADE Logo" className="h-16 md:h-20 w-auto object-contain" />
+                  <div>
+                    <div className="text-3xl font-black text-blue-600 tracking-tighter mb-2 uppercase">ADE MANAGER</div>
+                    <div className="text-[10px] font-black text-gray-400 uppercase space-y-1">
+                      <p>{activeCentre?.name}</p>
+                      <p>{activeAgency?.name}</p>
+                    </div>
                   </div>
                 </div>
                 <div className="text-right">

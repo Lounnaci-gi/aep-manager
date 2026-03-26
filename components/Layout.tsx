@@ -60,7 +60,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, setView, 
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">{isMobileMenuOpen ? (<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />) : (<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />)}</svg>
               </button>
               <div className="flex-shrink-0 flex items-center">
-                <div className="bg-blue-600 p-1.5 md:p-2.5 rounded-xl md:rounded-2xl mr-2 md:mr-3 shadow-lg shadow-blue-600/20"><svg className="w-4 h-4 md:w-6 md:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg></div>
+                <img src="/ade.png" alt="ADE Logo" className="h-8 md:h-12 w-auto object-contain mr-2 md:mr-3 drop-shadow-sm" />
                 <div><span className="text-sm md:text-xl font-black text-gray-900 tracking-tighter block leading-none uppercase">ADE MANAGER</span><div className="hidden xs:flex items-center mt-0.5 md:mt-1"><span className="flex h-1.5 w-1.5 rounded-full bg-blue-500 mr-1 animate-pulse"></span><span className="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest">{dbInfo.dbName}</span></div></div>
               </div>
               <div className="hidden md:-my-px md:ml-10 md:flex md:space-x-8">
