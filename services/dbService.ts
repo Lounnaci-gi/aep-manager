@@ -182,7 +182,10 @@ export const DbService = {
   },
   
   async deleteQuote(id: string): Promise<void> {
-    await fetch(`${API_URL}/${COLLECTIONS.QUOTES}/${id}`, { method: 'DELETE' });
+    const response = await fetch(`${API_URL}/${COLLECTIONS.QUOTES}/${id}`, { method: 'DELETE' });
+    if (!response.ok) {
+      throw new Error(`Failed to delete quote: ${response.statusText}`);
+    }
   },
   
   async updateQuoteStatus(id: string, status: QuoteStatus): Promise<void> {

@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Quote, QuoteItem, QuoteStatus, WorkType, Client, CommercialAgency, Centre, ClientCategory } from '../types';
 import { getAIRecommendation } from '../services/geminiService';
+import { numberToFrenchLetters } from '../utils/numberToLetters';
 import { ArticleService } from '../services/articleService';
 import Swal from 'sweetalert2';
 
@@ -57,7 +58,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
 
   const [loadingAI, setLoadingAI] = useState(false);
   const [aiRec, setAiRec] = useState(initialData?.aiNotes || '');
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'form' | 'preview'>('form');
   const [articles, setArticles] = useState<any[]>([]);
   const [filteredArticles, setFilteredArticles] = useState<any[]>([]);
   const [showArticleDropdown, setShowArticleDropdown] = useState<{[key: number]: boolean}>({});
@@ -294,8 +295,36 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
   const isEditMode = !!initialData;
 
   return (
-    <>
-      <form onSubmit={handleSubmit} className="space-y-8 bg-white p-8 rounded-[2.5rem] shadow-2xl border border-gray-100 max-w-4xl mx-auto mb-10 animate-in fade-in duration-300">
+    <div className="max-w-5xl mx-auto mb-10 w-full">
+      <div className="flex justify-center mb-8">
+        <div className="bg-slate-100/80 p-1.5 rounded-2xl flex items-center gap-1 shadow-inner border border-slate-200/50">
+          <button
+            type="button"
+            onClick={() => setActiveTab('form')}
+            className={`px-6 py-2.5 rounded-xl text-sm font-black tracking-widest uppercase transition-all ${
+              activeTab === 'form' 
+                ? 'bg-white text-blue-600 shadow-sm border border-slate-200/50' 
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            Édition du Devis
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('preview')}
+            className={`px-6 py-2.5 rounded-xl text-sm font-black tracking-widest uppercase transition-all ${
+              activeTab === 'preview' 
+                ? 'bg-white text-emerald-600 shadow-sm border border-slate-200/50' 
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            Aperçu PDF
+          </button>
+        </div>
+      </div>
+
+      <div className={activeTab === 'form' ? 'block' : 'hidden'}>
+      <form onSubmit={handleSubmit} className="space-y-8 bg-white p-8 rounded-[2.5rem] shadow-2xl border border-gray-100 max-w-4xl mx-auto animate-in fade-in duration-300">
         <div className="flex justify-between items-center border-b border-gray-100 pb-6">
           <div>
             <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">
@@ -305,7 +334,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
           </div>
           <div className="flex gap-2">
             <button type="button" onClick={onCancel} className="px-5 py-2.5 text-[10px] font-black text-gray-500 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 uppercase tracking-widest">Annuler</button>
-            <button type="button" onClick={() => setIsPreviewOpen(true)} className="px-5 py-2.5 text-[10px] font-black text-blue-700 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100 uppercase tracking-widest">Aperçu PDF</button>
+            <button type="button" onClick={() => setActiveTab('preview')} className="px-5 py-2.5 text-[10px] font-black text-blue-700 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100 uppercase tracking-widest">Aperçu PDF</button>
             <button type="submit" className="px-6 py-2.5 text-[10px] font-black text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-xl uppercase tracking-widest">Valider</button>
           </div>
         </div>
@@ -447,15 +476,10 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
           </div>
         </div>
       </form>
+      </div>
 
-      {isPreviewOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
-          <div className="bg-white w-full max-w-4xl rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in duration-300 my-8">
-            <div className="flex justify-between items-center px-10 py-6 border-b border-gray-100">
-              <h3 className="text-xl font-black text-gray-900 uppercase">Aperçu Devis Officiel</h3>
-              <button onClick={() => setIsPreviewOpen(false)} className="text-gray-400 hover:text-gray-900"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
-            </div>
-
+      <div className={activeTab === 'preview' ? 'block animate-in fade-in duration-500' : 'hidden'}>
+        <div className="bg-white w-full max-w-4xl mx-auto rounded-[3rem] shadow-2xl overflow-hidden mb-8 border border-gray-100">
             <div className="p-16 space-y-12 bg-white">
               <div className="flex justify-between items-start border-b-2 border-gray-900 pb-8">
                 <div className="flex items-center gap-4">
@@ -544,15 +568,20 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                   </div>
                 </div>
               </div>
+
+              <div className="mt-8 border-t border-gray-100 pt-6 text-center">
+                <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-relaxed">
+                  {numberToFrenchLetters(total)}
+                </p>
+              </div>
             </div>
 
-            <div className="px-10 py-8 bg-gray-50 border-t border-gray-100 flex justify-end gap-4">
-              <button onClick={() => setIsPreviewOpen(false)} className="px-6 py-3 text-[11px] font-black text-gray-400 uppercase tracking-widest bg-white border border-gray-200 rounded-xl">Fermer</button>
-              <button onClick={() => { setIsPreviewOpen(false); handleSubmit(); }} className="px-10 py-3 text-[11px] font-black text-white bg-blue-600 rounded-xl uppercase tracking-widest shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95">Valider & Archiver</button>
+            <div className="px-10 py-8 bg-gray-50 border-t border-gray-100 flex justify-end gap-4 rounded-b-[3rem]">
+              <button type="button" onClick={() => setActiveTab('form')} className="px-6 py-3 text-[11px] font-black text-gray-600 bg-white border border-gray-300 rounded-xl hover:bg-gray-100 uppercase tracking-widest">Retour à l'édition</button>
+              <button type="button" onClick={(e) => { setActiveTab('form'); handleSubmit(e as any); }} className="px-10 py-3 text-[11px] font-black text-white bg-blue-600 rounded-xl uppercase tracking-widest shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95">Valider & Archiver</button>
             </div>
           </div>
         </div>
-      )}
-    </>
+      </div>
   );
 };

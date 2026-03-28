@@ -176,10 +176,21 @@ const App: React.FC = () => {
   const handleDeleteQuote = async (id: string) => {
     const result = await Swal.fire({ title: 'Supprimer ce devis ?', icon: 'warning', showCancelButton: true });
     if (result.isConfirmed) {
-      await DbService.deleteQuote(id);
-      await loadData();
-      if (view === 'edit-quote') setView('list');
-      Swal.fire('Supprimé', '', 'success');
+      try {
+        const quoteToDelete = quotes.find(q => q.id === id);
+        await DbService.deleteQuote(id);
+        
+        if (quoteToDelete?.requestId) {
+          await DbService.updateRequestStatus(quoteToDelete.requestId, RequestStatus.VALIDATED);
+        }
+        
+        await loadData();
+        if (view === 'edit-quote') setView('list');
+        Swal.fire('Supprimé', '', 'success');
+      } catch (error) {
+        console.error("Erreur de suppression:", error);
+        Swal.fire('Erreur', 'Impossible de supprimer car le serveur est injoignable.', 'error');
+      }
     }
   };
 
