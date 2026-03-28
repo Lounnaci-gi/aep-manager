@@ -425,7 +425,8 @@ const App: React.FC = () => {
             workTypes={workTypes}
             onDelete={handleDeleteQuote} 
             onUpdateStatus={handleUpdateStatus} 
-            onEdit={(q) => { setEditingQuote(q); setView('edit-quote'); }} 
+            onEdit={(q) => { setEditingQuote(q); setView('edit-quote'); }}
+            currentUser={currentUser}
           />
         )}
         {view === 'branchement-quote' && quoteRequest && (

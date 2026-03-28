@@ -251,7 +251,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
     setItems(newItems);
   };
 
-  const handleSubmit = (e?: React.FormEvent) => {
+  const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     
     // Validation
@@ -264,6 +264,21 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
       });
       return;
     }
+
+    // Confirmation avant enregistrement
+    const result = await Swal.fire({
+      title: 'Confirmer l\'enregistrement ?',
+      text: "Voulez-vous vraiment enregistrer ce devis de branchement ?",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#059669', // emerald-600
+      cancelButtonColor: '#64748b', // slate-500
+      confirmButtonText: 'Oui, enregistrer',
+      cancelButtonText: 'Non, annuler',
+      reverseButtons: true
+    });
+
+    if (!result.isConfirmed) return;
 
     const quote: Quote = {
       id: `DEV-${Date.now().toString().slice(-6)}`,

@@ -270,8 +270,23 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
     return val.toLocaleString('fr-DZ', { style: 'currency', currency: 'DZD' });
   };
 
-  const handleSubmit = (e?: React.FormEvent) => {
+  const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    
+    const result = await Swal.fire({
+      title: 'Confirmer l\'enregistrement ?',
+      text: "Voulez-vous vraiment enregistrer ce devis ?",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#059669',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Oui, enregistrer',
+      cancelButtonText: 'Non, annuler',
+      reverseButtons: true
+    });
+
+    if (!result.isConfirmed) return;
+
     const quoteData: Quote = {
       id: initialData?.id || `AEP-${Date.now().toString().slice(-6)}`,
       ...formData,
@@ -335,7 +350,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
           <div className="flex gap-2">
             <button type="button" onClick={onCancel} className="px-5 py-2.5 text-[10px] font-black text-gray-500 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 uppercase tracking-widest">Annuler</button>
             <button type="button" onClick={() => setActiveTab('preview')} className="px-5 py-2.5 text-[10px] font-black text-blue-700 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100 uppercase tracking-widest">Aperçu PDF</button>
-            <button type="submit" className="px-6 py-2.5 text-[10px] font-black text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-xl uppercase tracking-widest">Valider</button>
+            <button type="submit" className="px-6 py-2.5 text-[10px] font-black text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 shadow-xl uppercase tracking-widest">Valider</button>
           </div>
         </div>
 
@@ -473,6 +488,12 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
              <div className="flex justify-between text-[10px] opacity-60 uppercase"><span>Total HT</span><span>{formatCurrency(subtotal)}</span></div>
              <div className="flex justify-between text-[10px] opacity-60 uppercase"><span>TVA (19%)</span><span>{formatCurrency(tax)}</span></div>
              <div className="flex justify-between text-2xl font-black border-t border-white/10 pt-4 mt-4 uppercase tracking-tighter"><span>Total TTC</span><span className="text-blue-400">{formatCurrency(total)}</span></div>
+          </div>
+          
+          <div className="pt-6">
+            <button type="submit" className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-200 active:scale-[0.98]">
+              Enregistrer le Devis
+            </button>
           </div>
         </div>
       </form>

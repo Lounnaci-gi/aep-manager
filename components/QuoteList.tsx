@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import Swal from 'sweetalert2';
-import { Quote, QuoteStatus, Centre, CommercialAgency, WorkType } from '../types';
+import { Quote, QuoteStatus, Centre, CommercialAgency, WorkType, User, UserRole } from '../types';
 
 interface QuoteListProps {
   quotes: Quote[];
@@ -11,11 +11,12 @@ interface QuoteListProps {
   onDelete: (id: string) => void;
   onUpdateStatus: (id: string, status: QuoteStatus) => void;
   onEdit: (quote: Quote) => void;
+  currentUser?: User;
 }
 
 type SortDirection = 'asc' | 'desc' | 'none';
 
-export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies, workTypes, onDelete, onUpdateStatus, onEdit }) => {
+export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies, workTypes, onDelete, onUpdateStatus, onEdit, currentUser }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -203,9 +204,14 @@ export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies,
                       >
                         {Object.values(QuoteStatus).map(s => <option key={s} value={s}>{s}</option>)}
                       </select>
-                      <button onClick={() => onDelete(quote.id)} className="text-gray-200 hover:text-rose-500 p-2 hover:bg-rose-50 rounded-xl transition-all">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                      </button>
+                      {(currentUser?.role === UserRole.ADMIN || 
+                        currentUser?.role === UserRole.CHEF_CENTRE || 
+                        currentUser?.role === UserRole.CHEF_AGENCE || 
+                        currentUser?.role === UserRole.TECHICO_COMMERCIAL) && (
+                        <button onClick={() => onDelete(quote.id)} className="text-gray-200 hover:text-rose-500 p-2 hover:bg-rose-50 rounded-xl transition-all" title="Supprimer le devis">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
