@@ -12,6 +12,7 @@ interface WorkRequestFormProps {
   initialData?: WorkRequest;
   currentUserAgencyId?: string;
   currentUser?: { role: UserRole; agencyId?: string };
+  requests: WorkRequest[];
 }
 
 export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({ 
@@ -23,7 +24,8 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
   centres,
   initialData,
   currentUserAgencyId,
-  currentUser
+  currentUser,
+  requests
 }) => {
   const [formData, setFormData] = useState({
     category: initialData?.category || ClientCategory.PHYSICAL,
@@ -53,6 +55,34 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
     installationPhone: initialData?.installationPhone || '',
     installationEmail: initialData?.installationEmail || '',
   });
+
+  const isLegal = formData.category === ClientCategory.LEGAL;
+  const isBranchementEau = formData.serviceType === "Branchement d'eau Potable";
+  const isServiceTypeSelected = formData.serviceType && formData.serviceType.trim() !== "";
+
+  const [matchingRequests, setMatchingRequests] = useState<WorkRequest[]>([]);
+
+  // Détection de doublons (demandes non validées pour le même nom)
+  useEffect(() => {
+    const searchName = isLegal ? formData.businessName : formData.clientName;
+    
+    if (searchName.trim().length >= 3) {
+      const matches = requests.filter(req => {
+        // Ignorer la demande actuelle si on est en mode édition
+        if (initialData && req.id === initialData.id) return false;
+        
+        // Uniquement les demandes non validées/facturées
+        const isNotValidated = req.status !== RequestStatus.VALIDATED && req.status !== RequestStatus.QUOTED;
+        if (!isNotValidated) return false;
+
+        const targetName = (isLegal ? req.businessName : req.clientName) || '';
+        return targetName.toLowerCase().includes(searchName.toLowerCase());
+      });
+      setMatchingRequests(matches);
+    } else {
+      setMatchingRequests([]);
+    }
+  }, [formData.clientName, formData.businessName, requests, isLegal, initialData]);
 
   // Filtrer les types de travaux selon les permissions de l'utilisateur
   const getFilteredWorkTypes = (): WorkType[] => {
@@ -136,16 +166,13 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
     onSave(request);
   };
 
-  const isLegal = formData.category === ClientCategory.LEGAL;
-  const isBranchementEau = formData.serviceType === "Branchement d'eau Potable";
-  const isServiceTypeSelected = formData.serviceType && formData.serviceType.trim() !== "";
-  
 
   
 
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl border border-gray-100 max-w-4xl mx-auto animate-in slide-in-from-bottom duration-300">
+    <div className="max-w-4xl mx-auto space-y-6 pb-12">
+      <form onSubmit={handleSubmit} className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl border border-gray-100 animate-in slide-in-from-bottom duration-300">
       <div className="mb-10 border-b border-gray-100 pb-8">
         <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">
           {initialData ? 'Modification de Demande' : 'Saisie Demande de Travaux'}
@@ -371,6 +398,79 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
         <button type="button" onClick={onCancel} className="px-6 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-gray-900 transition-colors">Annuler</button>
         <button type="submit" className="px-12 py-4 text-[10px] font-black text-white bg-blue-600 rounded-2xl hover:bg-blue-700 shadow-2xl shadow-blue-200 transition-all uppercase tracking-widest">Valider la Demande</button>
       </div>
-    </form>
+      </form>
+
+      {/* Liste des demandes existantes (Doublons potentiels) - Affichée en dehors du formulaire sous forme de tableau */}
+      {matchingRequests.length > 0 && (
+        <div className="bg-white p-6 rounded-[2.5rem] shadow-xl border border-amber-100 animate-in slide-in-from-top duration-500 overflow-hidden relative">
+          <div className="absolute top-0 right-0 p-6 opacity-5">
+            <svg className="w-16 h-16 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+          </div>
+          
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-amber-100 rounded-xl">
+              <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-xs font-black text-gray-900 uppercase tracking-tight">Liste des Doublons Potentiels</h3>
+              <p className="text-[9px] text-amber-600 font-bold uppercase tracking-widest">{matchingRequests.length} demande(s) en cours trouvée(s)</p>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto border border-gray-100 rounded-2xl">
+            <table className="min-w-full divide-y divide-gray-100">
+              <thead className="bg-amber-50/50">
+                <tr>
+                  <th className="px-4 py-2 text-left text-[9px] font-black text-amber-700 uppercase tracking-widest">N° Demande</th>
+                  <th className="px-4 py-2 text-left text-[9px] font-black text-amber-700 uppercase tracking-widest">Client</th>
+                  <th className="px-4 py-2 text-left text-[9px] font-black text-amber-700 uppercase tracking-widest">Date</th>
+                  <th className="px-4 py-2 text-left text-[9px] font-black text-amber-700 uppercase tracking-widest">Prestation</th>
+                  <th className="px-4 py-2 text-left text-[9px] font-black text-amber-700 uppercase tracking-widest">Commune</th>
+                  <th className="px-4 py-2 text-right text-[9px] font-black text-amber-700 uppercase tracking-widest">Statut</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-50">
+                {matchingRequests.map(req => (
+                  <tr key={req.id} className="hover:bg-amber-50/30 transition-colors">
+                    <td className="px-4 py-2 whitespace-nowrap text-[10px] font-black text-gray-900">
+                      #{req.id.replace('TEMP-', 'T-')}
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap">
+                      <div className="text-[10px] font-black text-gray-900">{req.businessName || req.clientName}</div>
+                      {req.businessName && <div className="text-[7px] text-gray-400 font-bold uppercase tracking-widest">Moral</div>}
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap text-[9px] text-gray-500 font-bold uppercase">
+                      {new Date(req.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap text-[9px] font-black text-blue-600 uppercase tracking-tighter">
+                      {req.serviceType}
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap text-[9px] text-gray-400 font-bold uppercase">
+                      {req.commune || req.installationCommune}
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap text-right">
+                      <span className="px-2 py-0.5 text-[8px] font-black rounded-full border bg-amber-50 text-amber-700 border-amber-100 uppercase">
+                        {req.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-4 flex items-center gap-2 p-2.5 bg-amber-50/50 rounded-xl border border-amber-100/50">
+            <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></div>
+            <p className="text-[8px] text-amber-700 font-bold italic leading-relaxed">
+              Merci de vérifier s'il s'agit d'un doublon avant de valider ce formulaire.
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };

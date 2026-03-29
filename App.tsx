@@ -407,6 +407,7 @@ const App: React.FC = () => {
         {view === 'request-form' && (
           <WorkRequestForm 
             clients={clients} 
+            requests={requests}
             workTypes={workTypes} 
             agencies={agencies}
             centres={centres}
