@@ -71,8 +71,8 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
     }
     if (validationFilter === 'validated') {
       return requests.filter(req => 
-        req.serviceType === "Branchement d'eau potable" && 
-        req.status === RequestStatus.VALIDATED
+        (req.serviceType === "Branchement d'eau potable" || req.assignedValidations?.length > 0) && 
+        (req.status === RequestStatus.VALIDATED || req.status === RequestStatus.QUOTED)
       );
     }
     return requests;
@@ -148,7 +148,28 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
     setSortBy('date-desc');
   };
 
-  const handleValidation = (req: WorkRequest, validationType: ValidationType, status: 'validated' | 'rejected') => {
+  const handleValidation = async (req: WorkRequest, validationType: ValidationType, status: 'validated' | 'rejected') => {
+    let reason = '';
+    if (status === 'rejected') {
+      const { value: text } = await Swal.fire({
+        title: 'Motif du rejet',
+        input: 'textarea',
+        inputLabel: 'Veuillez justifier le rejet de cette demande',
+        inputPlaceholder: 'Saisissez ici le motif...',
+        showCancelButton: true,
+        confirmButtonText: 'Rejeter',
+        cancelButtonText: 'Annuler',
+        inputValidator: (value) => {
+          if (!value) {
+            return 'Le motif est obligatoire pour un rejet !'
+          }
+        }
+      });
+      
+      if (!text) return;
+      reason = text;
+    }
+
     const newValidation: ValidationRecord = {
       type: validationType,
       status: status,
@@ -156,7 +177,8 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
       userName: currentUser?.fullName || 'Utilisateur inconnu',
       validatedAt: new Date().toISOString(),
       date: new Date().toISOString(),
-      user: currentUser?.fullName || 'Utilisateur inconnu'
+      user: currentUser?.fullName || 'Utilisateur inconnu',
+      reason: reason
     };
 
     const updatedValidations = req.validations ? [...req.validations] : [];
@@ -164,12 +186,14 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
     filteredValidations.push(newValidation);
 
     const allValidated = filteredValidations.every(v => v.status === 'validated');
-    const newStatus = allValidated ? RequestStatus.VALIDATED : req.status;
+    const hasRejection = filteredValidations.some(v => v.status === 'rejected');
+    const newStatus = allValidated ? RequestStatus.VALIDATED : (hasRejection ? RequestStatus.REJECTED : req.status);
 
     const updatedRequest = {
       ...req,
       validations: filteredValidations,
-      status: newStatus
+      status: newStatus,
+      rejectionReason: hasRejection ? reason : (allValidated ? '' : req.rejectionReason)
     };
 
     if (onUpdateRequestWithValidations) {
@@ -179,7 +203,36 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
     }
   };
 
-  const handleCancelValidation = (req: WorkRequest, validationType: ValidationType) => {
+  const handleCancelValidation = async (req: WorkRequest, validationType: ValidationType) => {
+    // Si un devis a déjà été créé, on ne peut pas annuler la validation sans supprimer le devis d'abord
+    if (req.status === RequestStatus.QUOTED) {
+      Swal.fire({
+        title: 'Action Impossible',
+        text: 'Un devis a déjà été établi pour cette demande. Veuillez d\'abord supprimer le devis pour pouvoir annuler la validation de la demande.',
+        icon: 'warning',
+        confirmButtonColor: '#3085d6',
+        confirmButtonText: 'Compris'
+      });
+      return;
+    }
+
+    const { value: text } = await Swal.fire({
+      title: 'Motif d\'annulation',
+      input: 'textarea',
+      inputLabel: 'Pourquoi annulez-vous la validation de cette demande ?',
+      inputPlaceholder: 'Saisissez ici le motif d\'annulation...',
+      showCancelButton: true,
+      confirmButtonText: 'Annuler la validation',
+      cancelButtonText: 'Ignorer',
+      inputValidator: (value) => {
+        if (!value) {
+          return 'Le motif est obligatoire pour annuler une validation !'
+        }
+      }
+    });
+
+    if (!text) return;
+
     const updatedValidations = req.validations ? [...req.validations] : [];
     const filteredValidations = updatedValidations.filter(v => v.type !== validationType);
     const newStatus = RequestStatus.RECEIVED;
@@ -187,7 +240,8 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
     const updatedRequest = {
       ...req,
       validations: filteredValidations,
-      status: newStatus
+      status: newStatus,
+      rejectionReason: `Annulée: ${text}`
     };
 
     if (onUpdateRequestWithValidations) {
@@ -205,6 +259,20 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
       timer: 2000,
       showConfirmButton: false
     });
+  };
+
+  const handleDeleteClick = (req: WorkRequest) => {
+    if (req.status === RequestStatus.QUOTED) {
+      Swal.fire({
+        title: 'Action Impossible',
+        text: 'Un devis a déjà été établi pour cette demande. Veuillez d\'abord supprimer le devis pour pouvoir supprimer la demande.',
+        icon: 'warning',
+        confirmButtonColor: '#3085d6',
+        confirmButtonText: 'Compris'
+      });
+      return;
+    }
+    onDelete(req.id);
   };
 
   return (
@@ -265,22 +333,22 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
             <div className="md:col-span-1 lg:col-span-2">
-              <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Recherche Rapide</label>
+              <label className="block text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Recherche Rapide</label>
               <input 
                 type="text"
                 placeholder="Nom ou Réf..."
-                className="w-full rounded-xl border-gray-200 bg-white p-2.5 text-[10px] font-bold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border transition-all"
+                className="w-full rounded-lg border-gray-200 bg-white p-2 text-[9px] font-bold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border transition-all"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
 
             <div>
-              <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">État du dossier</label>
+              <label className="block text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">État du dossier</label>
               <select
-                className="w-full rounded-xl border-gray-200 bg-white p-2.5 text-[10px] font-black uppercase focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border transition-all"
+                className="w-full rounded-lg border-gray-200 bg-white p-2 text-[9px] font-black uppercase focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border transition-all"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as RequestStatus | '')}
               >
@@ -290,9 +358,9 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
             </div>
 
             <div>
-              <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Ordre d'affichage</label>
+              <label className="block text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Ordre d'affichage</label>
               <select
-                className="w-full rounded-xl border-gray-200 bg-white p-2.5 text-[10px] font-black uppercase focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border transition-all"
+                className="w-full rounded-lg border-gray-200 bg-white p-2 text-[9px] font-black uppercase focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border transition-all"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
               >
@@ -304,19 +372,19 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
 
             <div className="sm:col-span-2 md:col-span-2 lg:col-span-2 grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Du</label>
+                <label className="block text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Du</label>
                 <input 
                   type="date"
-                  className="w-full rounded-xl border-gray-200 bg-white p-2.5 text-[10px] font-bold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border transition-all"
+                  className="w-full rounded-lg border-gray-200 bg-white p-2 text-[9px] font-bold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border transition-all"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Au</label>
+                <label className="block text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Au</label>
                 <input 
                   type="date"
-                  className="w-full rounded-xl border-gray-200 bg-white p-2.5 text-[10px] font-bold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border transition-all"
+                  className="w-full rounded-lg border-gray-200 bg-white p-2 text-[9px] font-bold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border transition-all"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                 />
@@ -329,42 +397,48 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
           <table className="min-w-full divide-y divide-gray-100">
             <thead className="bg-gray-50/30">
               <tr>
-                <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Réf / Agence</th>
-                <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Abonné</th>
-                <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Prestation</th>
-                <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Statut</th>
-                <th className="px-6 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Actions</th>
+                <th className="px-4 py-2 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest">Réf / Agence</th>
+                <th className="px-4 py-2 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest">Abonné</th>
+                <th className="px-4 py-2 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest">Prestation</th>
+                <th className="px-4 py-2 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest">Statut</th>
+                <th className="px-4 py-2 text-right text-[9px] font-black text-gray-400 uppercase tracking-widest">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-50">
               {filteredAndSortedRequests.map(req => (
                 <tr key={req.id} className="hover:bg-blue-50/30 transition-colors group">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-black text-gray-900 tracking-tight">{req.id}</div>
+                  <td className="px-4 py-2 whitespace-nowrap">
+                    <div className="text-[11px] font-black text-gray-900 tracking-tight">{req.id}</div>
                     {getAgencyTag(req.agencyId)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-black text-gray-900">{req.clientName}</div>
-                    <div className="text-[10px] text-gray-500 font-medium italic truncate max-w-[200px]">{req.address}</div>
+                  <td className="px-4 py-2 whitespace-nowrap">
+                    <div className="text-[11px] font-black text-gray-900">{req.clientName}</div>
+                    <div className="text-[9px] text-gray-500 font-medium italic truncate max-w-[180px]">{req.address}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-[10px] font-black text-blue-600 uppercase tracking-tighter">{req.serviceType}</div>
+                  <td className="px-4 py-2 whitespace-nowrap">
+                    <div className="text-[9px] font-black text-blue-600 uppercase tracking-tighter">{req.serviceType}</div>
                     {req.serviceType === "Branchement d'eau potable" && req.branchementType && (
-                      <div className="text-[9px] text-emerald-600 font-bold mt-1">
+                      <div className="text-[8px] text-emerald-600 font-bold mt-1">
                         {req.branchementType === BranchementType.AUTRE && req.branchementDetails 
                           ? `${req.branchementType}: ${req.branchementDetails}` 
                           : req.branchementType}
                       </div>
                     )}
-                    <div className="text-[9px] text-gray-400 font-bold uppercase mt-1">{new Date(req.createdAt).toLocaleDateString()}</div>
+                    <div className="text-[8px] text-gray-400 font-bold uppercase mt-1">{new Date(req.createdAt).toLocaleDateString()}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2.5 py-1 text-[9px] font-black rounded-full uppercase border ${getStatusBadge(req.status)}`}>
+                  <td className="px-4 py-2 whitespace-nowrap">
+                    <span className={`px-2 py-0.5 text-[8px] font-black rounded-full uppercase border ${getStatusBadge(req.status)}`}>
                       {req.status}
                     </span>
+                    {req.rejectionReason && (
+                      <div className="text-[8px] text-rose-500 font-bold uppercase mt-1.5 max-w-[120px] whitespace-normal italic bg-rose-50 px-1.5 py-0.5 rounded border border-rose-100 shadow-sm leading-tight">
+                        <span className="text-[7px] text-rose-300 block mb-0.5">Motif:</span>
+                        {req.rejectionReason}
+                      </div>
+                    )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <div className="flex justify-end items-center gap-3">
+                  <td className="px-4 py-2 whitespace-nowrap text-right">
+                    <div className="flex justify-end items-center gap-2">
                       {req.assignedValidations && req.assignedValidations.length > 0 && (
                         <>
                           {req.assignedValidations.includes(ValidationType.AGENCY) && 
@@ -374,13 +448,13 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                                 <>
                                   <button 
                                     onClick={() => handleValidation(req, ValidationType.AGENCY, 'validated')}
-                                    className="bg-green-600 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg shadow-green-100/50"
+                                    className="bg-green-600 text-white px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg shadow-green-100/50"
                                   >
                                     Valider Chef Agence
                                   </button>
                                   <button 
                                     onClick={() => handleValidation(req, ValidationType.AGENCY, 'rejected')}
-                                    className="bg-rose-600 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100/50"
+                                    className="bg-rose-600 text-white px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100/50"
                                   >
                                     Rejeter
                                   </button>
@@ -388,7 +462,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                               ) : (
                                 <button 
                                   onClick={() => handleCancelValidation(req, ValidationType.AGENCY)}
-                                  className="bg-amber-600 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-100/50 flex items-center gap-1"
+                                  className="bg-amber-600 text-white px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-100/50 flex items-center gap-1"
                                 >
                                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                                   Annuler Validation
@@ -404,13 +478,13 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                                 <>
                                   <button 
                                     onClick={() => handleValidation(req, ValidationType.CUSTOMER_SERVICE, 'validated')}
-                                    className="bg-emerald-600 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100/50"
+                                    className="bg-emerald-600 text-white px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100/50"
                                   >
                                     Valider Relation Clientèle
                                   </button>
                                   <button 
                                     onClick={() => handleValidation(req, ValidationType.CUSTOMER_SERVICE, 'rejected')}
-                                    className="bg-rose-600 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100/50"
+                                    className="bg-rose-600 text-white px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100/50"
                                   >
                                     Rejeter
                                   </button>
@@ -418,7 +492,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                               ) : (
                                 <button 
                                   onClick={() => handleCancelValidation(req, ValidationType.CUSTOMER_SERVICE)}
-                                  className="bg-amber-600 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-100/50 flex items-center gap-1"
+                                  className="bg-amber-600 text-white px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-100/50 flex items-center gap-1"
                                 >
                                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                                   Annuler Validation
@@ -434,13 +508,13 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                                 <>
                                   <button 
                                     onClick={() => handleValidation(req, ValidationType.LAWYER, 'validated')}
-                                    className="bg-purple-600 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-purple-700 transition-all shadow-lg shadow-purple-100/50"
+                                    className="bg-purple-600 text-white px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-purple-700 transition-all shadow-lg shadow-purple-100/50"
                                   >
                                     Valider Juriste
                                   </button>
                                   <button 
                                     onClick={() => handleValidation(req, ValidationType.LAWYER, 'rejected')}
-                                    className="bg-rose-600 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100/50"
+                                    className="bg-rose-600 text-white px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100/50"
                                   >
                                     Rejeter
                                   </button>
@@ -448,7 +522,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                               ) : (
                                 <button 
                                   onClick={() => handleCancelValidation(req, ValidationType.LAWYER)}
-                                  className="bg-amber-600 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-100/50 flex items-center gap-1"
+                                  className="bg-amber-600 text-white px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-100/50 flex items-center gap-1"
                                 >
                                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                                   Annuler Validation
@@ -465,7 +539,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                        (currentUser?.role === UserRole.TECHICO_COMMERCIAL || currentUser?.role === UserRole.CHEF_CENTRE) && (
                         <button 
                           onClick={() => onCreateQuote(req)}
-                          className="bg-emerald-600 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100/50 flex items-center gap-1.5"
+                          className="bg-emerald-600 text-white px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100/50 flex items-center gap-1.5"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                           Établir Devis
@@ -475,20 +549,20 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                       {(currentUser?.role === UserRole.AGENT || currentUser?.role === UserRole.CHEF_AGENCE) && req.serviceType.toLowerCase().includes("branchement") && (
                         <button 
                           onClick={() => onEdit(req)} 
-                          className="text-blue-400 hover:text-blue-600 transition-colors p-2 hover:bg-blue-50 rounded-lg"
+                          className="text-blue-400 hover:text-blue-600 transition-colors p-1.5 hover:bg-blue-50 rounded-lg"
                           title="Modifier la demande"
                         >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                         </button>
                       )}
                       
                       {req.serviceType.toLowerCase().includes("branchement") === false && (
                         <button 
                           onClick={() => onEdit(req)} 
-                          className="text-blue-400 hover:text-blue-600 transition-colors p-2 hover:bg-blue-50 rounded-lg"
+                          className="text-blue-400 hover:text-blue-600 transition-colors p-1.5 hover:bg-blue-50 rounded-lg"
                           title="Modifier la demande"
                         >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                         </button>
                       )}
                       
@@ -504,21 +578,21 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                       
                       {currentUser?.role === UserRole.AGENT && req.serviceType.toLowerCase().includes("branchement") && (
                         <button 
-                          onClick={() => onDelete(req.id)} 
-                          className="text-gray-200 hover:text-rose-600 transition-colors p-2 hover:bg-rose-50 rounded-lg"
+                          onClick={() => handleDeleteClick(req)} 
+                          className="text-gray-200 hover:text-rose-600 transition-colors p-1.5 hover:bg-rose-50 rounded-lg"
                           title="Supprimer la demande"
                         >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                         </button>
                       )}
                       
                       {req.serviceType.toLowerCase().includes("branchement") === false && (
                         <button 
-                          onClick={() => onDelete(req.id)} 
-                          className="text-gray-200 hover:text-rose-600 transition-colors p-2 hover:bg-rose-50 rounded-lg"
+                          onClick={() => handleDeleteClick(req)} 
+                          className="text-gray-200 hover:text-rose-600 transition-colors p-1.5 hover:bg-rose-50 rounded-lg"
                           title="Supprimer la demande"
                         >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                         </button>
                       )}
 
@@ -530,10 +604,10 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                             setPrintingRequest(req);
                           }
                         }} 
-                        className="text-gray-400 hover:text-blue-600 transition-colors p-2 hover:bg-blue-50 rounded-lg"
+                        className="text-gray-400 hover:text-blue-600 transition-colors p-1.5 hover:bg-blue-50 rounded-lg"
                         title="Imprimer la demande"
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
                       </button>
                     </div>
                   </td>

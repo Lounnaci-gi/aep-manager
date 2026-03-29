@@ -32,6 +32,7 @@ export interface ValidationRecord {
   status: 'pending' | 'validated' | 'rejected';
   date?: string;
   user?: string;
+  reason?: string;
 }
 
 export enum UserRole {
@@ -193,6 +194,7 @@ export interface WorkRequest {
   // Nouveau système de validation
   validations?: ValidationRecord[];
   assignedValidations?: ValidationType[]; // Validations assignées à cette demande
+  rejectionReason?: string;
 }
 
 export interface Quote {
