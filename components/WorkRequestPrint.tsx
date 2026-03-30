@@ -37,11 +37,11 @@ export const WorkRequestPrint: React.FC<WorkRequestPrintProps> = ({ request, age
       </div>
 
       {/* Document Content */}
-      <div className="max-w-[210mm] mx-auto p-8 md:p-16 bg-white text-gray-900 print:p-0 print:m-0">
+      <div className="max-w-[210mm] mx-auto p-6 md:p-10 bg-white text-gray-900 print:p-0 print:m-0">
         {/* Header */}
-        <div className="flex justify-between items-start border-b-4 border-gray-900 pb-8 mb-10">
+        <div className="flex justify-between items-start border-b-4 border-gray-900 pb-6 mb-6">
           <div className="flex items-center gap-6">
-            <img src="/ade.png" alt="ADE Logo" className="h-24 w-auto object-contain" />
+            <img src="/ade.png" alt="ADE Logo" className="h-32 w-auto object-contain" />
             <div className="space-y-1">
               <h1 className="text-3xl font-black text-blue-700 tracking-tighter uppercase leading-none">ALGÉRIENNE DES EAUX</h1>
               <p className="text-sm font-black text-gray-500 uppercase tracking-widest">Unité de {centre?.name || '---'}</p>
@@ -58,12 +58,12 @@ export const WorkRequestPrint: React.FC<WorkRequestPrintProps> = ({ request, age
         </div>
 
         {/* Content Body */}
-        <div className="space-y-10">
+        <div className="space-y-8">
           {/* Section 1: Client */}
           <section>
             <h3 className="text-sm font-black bg-gray-100 px-4 py-2 border-l-8 border-blue-700 uppercase tracking-widest mb-4">1. ÉTAT CIVIL DE L'ABONNÉ</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 px-4">
-              <div className="space-y-3">
+              <div className="space-y-6">
                 <div className="flex flex-col">
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Nom et Prénom / Raison Sociale</span>
                   <span className="text-lg font-black uppercase text-gray-900">
@@ -83,15 +83,15 @@ export const WorkRequestPrint: React.FC<WorkRequestPrintProps> = ({ request, age
                   <span className="text-sm font-bold text-gray-700">{request.type}</span>
                 </div>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-6">
                 <div className="flex flex-col">
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Adresse de correspondance</span>
                   <span className="text-sm font-bold text-gray-700 uppercase">{request.address}, {request.commune}</span>
                 </div>
                 <div className="flex flex-col">
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Coordonnées</span>
-                  <span className="text-sm font-bold text-gray-700">Tél : {request.clientPhone}</span>
-                  {request.clientEmail && <span className="text-sm font-bold text-gray-700">{request.clientEmail}</span>}
+                  <span className="text-sm font-bold text-gray-700 leading-relaxed">Tél : {request.clientPhone}</span>
+                  {request.clientEmail && <span className="text-sm font-bold text-gray-700 leading-relaxed">{request.clientEmail}</span>}
                 </div>
               </div>
             </div>
@@ -101,7 +101,7 @@ export const WorkRequestPrint: React.FC<WorkRequestPrintProps> = ({ request, age
           <section>
             <h3 className="text-sm font-black bg-gray-100 px-4 py-2 border-l-8 border-amber-500 uppercase tracking-widest mb-4">2. LOCALISATION ET NATURE DES TRAVAUX</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 px-4">
-              <div className="space-y-3">
+              <div className="space-y-6 leading-relaxed">
                 <div className="flex flex-col">
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Lieu des travaux</span>
                   <span className="text-base font-black uppercase text-gray-900">{request.installationAddress}</span>
@@ -119,11 +119,17 @@ export const WorkRequestPrint: React.FC<WorkRequestPrintProps> = ({ request, age
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex flex-col">
                       <span className="text-[9px] font-black text-gray-400 uppercase">Usage</span>
-                      <span className="text-[10px] font-black uppercase text-gray-900">{request.branchementType}</span>
+                      <span className="text-[10px] font-black uppercase text-gray-900">
+                        {request.branchementType} {request.branchementType === 'Autre' && request.branchementDetails ? `(${request.branchementDetails})` : ''}
+                      </span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-[9px] font-black text-gray-400 uppercase">Diamètre</span>
-                      <span className="text-[10px] font-black uppercase text-gray-900">{request.diameter || '---'}</span>
+                      <span className="text-[10px] font-black uppercase text-gray-900">{request.diameter ? `${request.diameter} mm` : '---'}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[9px] font-black text-gray-400 uppercase">Débit</span>
+                      <span className="text-[10px] font-black uppercase text-gray-900">{request.flowRate || '---'}</span>
                     </div>
                   </div>
                 </div>
@@ -143,7 +149,7 @@ export const WorkRequestPrint: React.FC<WorkRequestPrintProps> = ({ request, age
             
             <div className="grid grid-cols-3 gap-6">
               {/* Box 1: Chef d'Agence */}
-              <div className="border border-gray-200 rounded-xl p-4 h-48 flex flex-col">
+              <div className="border border-gray-200 rounded-xl p-3 h-32 flex flex-col">
                 <h4 className="text-[9px] font-black text-gray-800 uppercase tracking-wider mb-2 text-center border-b pb-1">Visa Chef d'Agence</h4>
                 <div className="flex-1 flex flex-col justify-center items-center text-center">
                   {request.validations?.find(v => v.type === ValidationType.AGENCY && v.status === 'validated') ? (
@@ -159,7 +165,7 @@ export const WorkRequestPrint: React.FC<WorkRequestPrintProps> = ({ request, age
               </div>
 
               {/* Box 2: Relation Clientèle */}
-              <div className="border border-gray-200 rounded-xl p-4 h-48 flex flex-col">
+              <div className="border border-gray-200 rounded-xl p-3 h-32 flex flex-col">
                 <h4 className="text-[9px] font-black text-gray-800 uppercase tracking-wider mb-2 text-center border-b pb-1">Visa Relation Clientèle</h4>
                 <div className="flex-1 flex flex-col justify-center items-center text-center">
                   {request.validations?.find(v => v.type === ValidationType.CUSTOMER_SERVICE && v.status === 'validated') ? (
@@ -175,7 +181,7 @@ export const WorkRequestPrint: React.FC<WorkRequestPrintProps> = ({ request, age
               </div>
 
               {/* Box 3: Direction / Juriste */}
-              <div className="border border-gray-200 rounded-xl p-4 h-48 flex flex-col">
+              <div className="border border-gray-200 rounded-xl p-3 h-32 flex flex-col">
                 <h4 className="text-[9px] font-black text-gray-800 uppercase tracking-wider mb-2 text-center border-b pb-1">Direction / Juriste</h4>
                 <div className="flex-1 flex flex-col justify-center items-center text-center">
                   {request.validations?.find(v => v.type === ValidationType.LAWYER && v.status === 'validated') ? (
@@ -194,7 +200,7 @@ export const WorkRequestPrint: React.FC<WorkRequestPrintProps> = ({ request, age
         </div>
 
         {/* Footer */}
-        <div className="mt-20 pt-8 border-t border-gray-100 flex justify-between items-center opacity-70 italic">
+        <div className="mt-8 pt-6 border-t border-gray-100 flex justify-between items-center opacity-70 italic">
           <p className="text-[8px] font-bold text-gray-500">Document généré par ADE-MANAGER le {new Date().toLocaleString('fr-DZ')}</p>
           <p className="text-[8px] font-black text-blue-700 tracking-widest uppercase">www.ade.dz</p>
         </div>
