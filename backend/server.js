@@ -243,21 +243,17 @@ COLLECTIONS.forEach(colName => {
           const year = parts[3];
           
           // Trouver le dernier numéro utilisé pour ce centre et cette année
-          const allRequests = await db.collection('requests').find({}).toArray();
-          const currentYearRequests = allRequests.filter(req => {
-            // Vérifier que l'ID est au bon format xxxx/prefix/yyyy
-            const idParts = req.id.split('/');
-            return idParts.length === 3 && idParts[1] === prefix && idParts[2] === year;
-          });
+          const regex = new RegExp(`^\\d{4}/${prefix}/${year}$`);
+          const latestRequests = await db.collection('requests')
+            .find({ id: regex })
+            .sort({ id: -1 })
+            .limit(1)
+            .toArray();
           
-          // Trouver le plus grand numéro
           let maxNum = 0;
-          for (const req of currentYearRequests) {
-            const idParts = req.id.split('/');
-            const num = parseInt(idParts[0]);
-            if (!isNaN(num) && num > maxNum) {
-              maxNum = num;
-            }
+          if (latestRequests.length > 0) {
+            const idParts = latestRequests[0].id.split('/');
+            maxNum = parseInt(idParts[0]) || 0;
           }
           
           // Générer le nouvel ID incrémental

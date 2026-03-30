@@ -321,7 +321,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
   const activeAgency = agencies.find(a => a.id === formData.agencyId);
 
   return (
-    <div className="max-w-6xl mx-auto mb-10 w-full animate-in fade-in duration-300">
+    <div className="max-w-full mx-auto mb-10 w-full animate-in fade-in duration-300">
       <div className="flex justify-center mb-8">
         <div className="bg-slate-100/80 p-1.5 rounded-2xl flex items-center gap-1 shadow-inner border border-slate-200/50">
           <button
@@ -350,12 +350,12 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
       </div>
 
       <div className={activeTab === 'form' ? 'block' : 'hidden'}>
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 max-w-6xl mx-auto">
+      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 max-w-full mx-auto">
       <div className="mb-8 border-b border-gray-200 pb-6">
-        <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">
+        <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">
           Établissement de Devis - Branchement d'Eau
         </h2>
-        <p className="text-sm text-gray-500 font-medium mt-2">
+        <p className="text-base text-gray-500 font-medium mt-2">
           Devis pour la demande n°{request.id} - {request.clientName}
         </p>
       </div>
@@ -370,24 +370,24 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
           <div className="bg-gray-50 p-4 rounded-xl">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
+                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5">
                   Client
                 </label>
-                <p className="font-bold text-gray-900">{formData.clientName}</p>
+                <p className="font-bold text-gray-900 text-lg">{formData.clientName}</p>
               </div>
               <div>
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
+                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5">
                   Qualité
                 </label>
-                <p className="font-bold text-gray-900">{formData.type}</p>
+                <p className="font-bold text-gray-900 text-lg">{formData.type}</p>
               </div>
             </div>
             
-            <div className="mt-4">
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
+            <div className="mt-5">
+              <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5">
                 Adresse de branchement
               </label>
-              <p className="font-bold text-gray-900">{formData.installationAddress}, {formData.installationCommune}</p>
+              <p className="font-bold text-gray-900 text-base">{formData.installationAddress}, {formData.installationCommune}</p>
             </div>
           </div>
         </div>
@@ -401,24 +401,24 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
           <div className="bg-amber-50 p-4 rounded-xl space-y-3">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1">
+                <label className="block text-xs font-black text-amber-600 uppercase tracking-widest mb-1.5">
                   Type de branchement
                 </label>
-                <p className="font-bold text-amber-900">{formData.branchementType}</p>
+                <p className="font-bold text-amber-900 text-lg">{formData.branchementType}</p>
               </div>
               <div>
-                <label className="block text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1">
+                <label className="block text-xs font-black text-amber-600 uppercase tracking-widest mb-1.5">
                   Diamètre
                 </label>
-                <p className="font-bold text-amber-900">{formData.diameter}</p>
+                <p className="font-bold text-amber-900 text-lg">{formData.diameter}</p>
               </div>
             </div>
             
             <div>
-              <label className="block text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1">
+              <label className="block text-xs font-black text-amber-600 uppercase tracking-widest mb-1.5">
                 Débit moyen horaire
               </label>
-              <p className="font-bold text-amber-900">{formData.flowRate}</p>
+              <p className="font-bold text-amber-900 text-lg">{formData.flowRate}</p>
             </div>
           </div>
         </div>
@@ -434,7 +434,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
           {items.map((item, index) => (
             <div key={index} className="grid grid-cols-12 gap-2 items-end bg-gray-50 p-3 rounded-lg relative">
               <div className="col-span-4 relative">
-                <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5">
+                <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1.5">
                   Description
                 </label>
                 <input
@@ -454,7 +454,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
                   onBlur={() => setTimeout(() => {
                     setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
                   }, 200)}
-                  className="w-full rounded-md border-gray-200 p-1.5 text-xs font-bold border bg-white relative z-20 shadow-sm"
+                  className="w-full rounded-md border-gray-200 p-2 text-sm font-bold border bg-white relative z-20 shadow-sm"
                   placeholder="Description de l'article"
                   required
                 />
@@ -466,8 +466,8 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
                         className="px-3 py-1.5 hover:bg-gray-50 cursor-pointer flex justify-between items-center"
                         onMouseDown={() => handleArticleSelect(article, index)}
                       >
-                        <span className="text-xs font-bold">{article.name}</span>
-                        <span className="text-[8px] text-gray-500">{article.prices[0]?.price || 0} DA</span>
+                        <span className="text-sm font-bold">{article.name}</span>
+                        <span className="text-[10px] text-gray-500">{article.prices[0]?.price || 0} DA</span>
                       </div>
                     ))}
                   </div>
@@ -475,7 +475,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
               </div>
               
               <div className="col-span-2">
-                <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5">
+                <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1.5">
                   Qté
                 </label>
                 <input
@@ -483,13 +483,13 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
                   min="1"
                   value={item.quantity}
                   onChange={(e) => handleItemChange(index, 'quantity', parseInt(e.target.value) || 1)}
-                  className="w-full rounded-md border-gray-200 p-1.5 text-xs font-bold border bg-white shadow-sm"
+                  className="w-full rounded-md border-gray-200 p-2 text-sm font-bold border bg-white shadow-sm"
                   required
                 />
               </div>
               
               <div className="col-span-2">
-                <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5">
+                <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1.5">
                   Prix Unitaire (DZD)
                 </label>
                 <input
@@ -498,14 +498,14 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
                   step="0.01"
                   value={item.unitPrice.toFixed(2)}
                   onChange={(e) => handleItemChange(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                  className="w-full rounded-md border-gray-200 p-1.5 text-xs font-bold border bg-white shadow-sm"
+                  className="w-full rounded-md border-gray-200 p-2 text-sm font-bold border bg-white shadow-sm"
                   placeholder="0.00"
                   required
                 />
               </div>
               
               <div className="col-span-2">
-                <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5">
+                <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1.5">
                   Total
                 </label>
                 <div className="flex items-center gap-2 h-7 mt-0.5">
@@ -570,8 +570,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
                 <span className="font-bold">{tax.toFixed(2)} DZD</span>
               </div>
               <div className="flex justify-between border-t border-gray-200 pt-2 mt-2">
-                <span className="font-black text-gray-900">TOTAL:</span>
-                <span className="font-black text-emerald-600 text-lg">{total.toFixed(2)} DZD</span>
+                <span className="font-black text-emerald-600 text-xl">{total.toFixed(2)} DZD</span>
               </div>
             </div>
           </div>

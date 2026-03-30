@@ -9,6 +9,7 @@ import { ClientList } from './components/ClientList';
 import { ClientForm } from './components/ClientForm';
 import { WorkRequestList } from './components/WorkRequestList';
 import { WorkRequestForm } from './components/WorkRequestForm';
+import { WorkRequestSuccess } from './components/WorkRequestSuccess';
 import { BranchementQuoteForm } from './components/BranchementQuoteForm';
 import { ArticleManager } from './components/ArticleManager';
 import { StructureManager } from './components/StructureManager';
@@ -27,11 +28,12 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : null;
   });
 
-  const [view, setView] = useState<'dashboard' | 'requests' | 'request-form' | 'list' | 'create' | 'edit-quote' | 'clients' | 'client-form' | 'settings' | 'users' | 'user-form' | 'structure' | 'agencies' | 'branchement-quote' | 'articles'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'requests' | 'request-form' | 'request-success' | 'list' | 'create' | 'edit-quote' | 'clients' | 'client-form' | 'settings' | 'users' | 'user-form' | 'structure' | 'agencies' | 'branchement-quote' | 'articles'>('dashboard');
   const [editingClient, setEditingClient] = useState<Client | undefined>(undefined);
   const [editingUser, setEditingUser] = useState<User | undefined>(undefined);
   const [editingQuote, setEditingQuote] = useState<Quote | undefined>(undefined);
   const [editingRequest, setEditingRequest] = useState<WorkRequest | undefined>(undefined);
+  const [lastSavedRequest, setLastSavedRequest] = useState<WorkRequest | undefined>(undefined);
   const [quoteRequest, setQuoteRequest] = useState<WorkRequest | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   
@@ -201,11 +203,25 @@ const App: React.FC = () => {
   };
 
   const handleSaveRequest = async (request: WorkRequest) => {
-    await DbService.saveRequest(request);
-    await loadData();
-    setView('requests');
-    setEditingRequest(undefined);
-    Swal.fire({ title: 'Demande Enregistrée', icon: 'success', timer: 2000, showConfirmButton: false });
+    try {
+      const saved = await DbService.saveRequest(request);
+      // 'saved' contient maintenant l'ID définitif généré par le serveur
+      await loadData();
+      
+      // Si c'est une nouvelle demande (pas une modification d'archive)
+      if (!editingRequest) {
+        setLastSavedRequest(saved);
+        setEditingRequest(undefined);
+        setView('request-success');
+      } else {
+        setView('requests');
+        setEditingRequest(undefined);
+        Swal.fire({ title: 'Demande Mise à jour', icon: 'success', timer: 2000, showConfirmButton: false });
+      }
+    } catch (error) {
+      console.error("Erreur d'enregistrement:", error);
+      Swal.fire('Erreur', "Échec de l'enregistrement de la demande.", 'error');
+    }
   };
 
   const handleDeleteRequest = async (id: string) => {
@@ -370,7 +386,7 @@ const App: React.FC = () => {
       requestsBadgeCount={newRequestsCount}
       validationsBadgeCount={pendingValidationsCount}
     >
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <main className="max-w-[94%] mx-auto py-6 sm:px-6 lg:px-8">
         {view === 'dashboard' && <Dashboard quotes={quotes} requests={requests} workTypes={workTypes} />}
 
         {view === 'structure' && (
@@ -428,6 +444,14 @@ const App: React.FC = () => {
             onUpdateStatus={handleUpdateStatus} 
             onEdit={(q) => { setEditingQuote(q); setView('edit-quote'); }}
             currentUser={currentUser}
+          />
+        )}
+        {view === 'request-success' && lastSavedRequest && (
+          <WorkRequestSuccess 
+            request={lastSavedRequest}
+            agencies={agencies}
+            centres={centres}
+            onBack={() => { setView('requests'); setLastSavedRequest(undefined); }}
           />
         )}
         {view === 'branchement-quote' && quoteRequest && (

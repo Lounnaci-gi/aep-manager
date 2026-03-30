@@ -2,7 +2,7 @@
 import { Quote, QuoteStatus, Client, WorkType, User, UserRole, WorkRequest, RequestStatus, Centre, CommercialAgency, Article, ArticlePrice } from '../types';
 import { hashPasswordWithSalt, verifyPassword } from './passwordUtils';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const DB_CONFIG = {
   dbName: 'GestionEau',
@@ -155,8 +155,9 @@ export const DbService = {
     return await apiRequest<WorkRequest[]>('GET', COLLECTIONS.REQUESTS);
   },
   
-  async saveRequest(request: WorkRequest): Promise<void> {
-    await apiRequest('POST', COLLECTIONS.REQUESTS, request);
+  async saveRequest(request: WorkRequest): Promise<WorkRequest> {
+    const response = await apiRequest<{ success: boolean; id: string }>('POST', COLLECTIONS.REQUESTS, request);
+    return { ...request, id: response.id || request.id };
   },
   
   async deleteRequest(id: string): Promise<void> {

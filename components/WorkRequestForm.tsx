@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { WorkRequest, RequestStatus, WorkType, Client, CommercialAgency, Centre, ClientCategory, UserRole, WORK_TYPE_PERMISSIONS, BranchementType, ValidationType } from '../types';
 
 interface WorkRequestFormProps {
@@ -61,6 +61,35 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
   const isServiceTypeSelected = formData.serviceType && formData.serviceType.trim() !== "";
 
   const [matchingRequests, setMatchingRequests] = useState<WorkRequest[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Diamètre dropdown state
+  const DIAMETER_OPTIONS = ['15','20','25','32','40','50','63','75','90','110','125','140','160','180','200','225','250','280','315','355','400'];
+  const [diameterDropdownOpen, setDiameterDropdownOpen] = useState(false);
+  const [diameterSearch, setDiameterSearch] = useState(formData.diameter || '');
+  const diameterRef = useRef<HTMLDivElement>(null);
+  const filteredDiameters = DIAMETER_OPTIONS.filter(d => d.includes(diameterSearch));
+
+  // Débit dropdown state
+  const FLOW_RATE_OPTIONS = ['1,0 m³/h','1,6 m³/h','2,6 m³/h','4,0 m³/h','6,4 m³/h','10,2 m³/h','14,5 m³/h','21,0 m³/h','31,5 m³/h'];
+  const [flowRateDropdownOpen, setFlowRateDropdownOpen] = useState(false);
+  const [flowRateSearch, setFlowRateSearch] = useState(formData.flowRate || '');
+  const flowRateRef = useRef<HTMLDivElement>(null);
+  const filteredFlowRates = FLOW_RATE_OPTIONS.filter(f => f.toLowerCase().includes(flowRateSearch.toLowerCase()));
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (diameterRef.current && !diameterRef.current.contains(e.target as Node)) {
+        setDiameterDropdownOpen(false);
+      }
+      if (flowRateRef.current && !flowRateRef.current.contains(e.target as Node)) {
+        setFlowRateDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Détection de doublons (demandes non validées pour le même nom)
   useEffect(() => {
@@ -163,7 +192,13 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
       })),
       createdAt: initialData?.createdAt || new Date().toISOString(),
     };
-    onSave(request);
+    setIsSaving(true);
+    try {
+      onSave(request);
+    } catch (error) {
+      console.error(error);
+      setIsSaving(false);
+    }
   };
 
 
@@ -171,22 +206,22 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
 
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-12">
+    <div className="max-w-full mx-auto space-y-6 pb-12 w-full">
       <form onSubmit={handleSubmit} className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl border border-gray-100 animate-in slide-in-from-bottom duration-300">
       <div className="mb-10 border-b border-gray-100 pb-8">
-        <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">
+        <h2 className="text-4xl font-black text-gray-900 uppercase tracking-tighter">
           {initialData ? 'Modification de Demande' : 'Saisie Demande de Travaux'}
         </h2>
-        <p className="text-sm text-gray-500 font-medium mt-1">Capture des informations administratives, juridiques et techniques.</p>
+        <p className="text-base text-gray-500 font-medium mt-1.5">Capture des informations administratives, juridiques et techniques.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-        <div className="space-y-6">
-          <h3 className="text-[11px] font-black text-blue-600 uppercase tracking-widest border-l-4 border-blue-600 pl-3">Client & Qualité</h3>
+        <div className="space-y-8">
+          <h3 className="text-xs font-black text-blue-600 uppercase tracking-widest border-l-4 border-blue-600 pl-4">Client & Qualité</h3>
           
           {!isServiceTypeSelected && (
-            <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-center">
-              <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest">
+            <div className="p-5 bg-amber-50 border border-amber-200 rounded-xl text-center">
+              <p className="text-xs font-black text-amber-700 uppercase tracking-widest">
                 ⚠️ Veuillez d'abord sélectionner un type de travaux
               </p>
             </div>
@@ -195,11 +230,11 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
 
 
           <div className={`bg-blue-50/30 p-4 rounded-2xl border border-blue-100 space-y-4 ${!isServiceTypeSelected ? 'opacity-50' : ''}`}>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-3">
                <button 
                  type="button" 
                  onClick={() => isServiceTypeSelected && setFormData({...formData, category: ClientCategory.PHYSICAL})} 
-                 className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase border transition-all ${!isLegal ? 'bg-blue-600 text-white' : 'bg-white text-gray-400'} ${!isServiceTypeSelected ? 'cursor-not-allowed' : ''}`}
+                 className={`flex-1 py-2 rounded-lg text-xs font-black uppercase border transition-all ${!isLegal ? 'bg-blue-600 text-white shadow-lg' : 'bg-white text-gray-400'} ${!isServiceTypeSelected ? 'cursor-not-allowed' : ''}`}
                  disabled={!isServiceTypeSelected}
                >
                  Physique
@@ -207,7 +242,7 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                <button 
                  type="button" 
                  onClick={() => isServiceTypeSelected && setFormData({...formData, category: ClientCategory.LEGAL})} 
-                 className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase border transition-all ${isLegal ? 'bg-indigo-600 text-white' : 'bg-white text-gray-400'} ${!isServiceTypeSelected ? 'cursor-not-allowed' : ''}`}
+                 className={`flex-1 py-2 rounded-lg text-xs font-black uppercase border transition-all ${isLegal ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white text-gray-400'} ${!isServiceTypeSelected ? 'cursor-not-allowed' : ''}`}
                  disabled={!isServiceTypeSelected}
                >
                  Morale
@@ -219,7 +254,7 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 required 
                 type="text" 
                 placeholder="Raison Sociale" 
-                className={`w-full rounded-xl border-gray-200 p-3 text-sm font-black border bg-white ${!isServiceTypeSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`w-full rounded-xl border-gray-200 p-3.5 text-base font-black border bg-white ${!isServiceTypeSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
                 value={formData.businessName} 
                 onChange={e => isServiceTypeSelected && setFormData({ ...formData, businessName: e.target.value })}
                 disabled={!isServiceTypeSelected}
@@ -229,7 +264,7 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
             <div className="grid grid-cols-4 gap-2">
               {!isLegal && (
                 <select 
-                  className={`col-span-1 rounded-xl border-gray-200 p-2.5 text-xs font-black border bg-white ${!isServiceTypeSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`col-span-1 rounded-xl border-gray-200 p-3 text-sm font-black border bg-white ${!isServiceTypeSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
                   value={formData.civility} 
                   onChange={e => isServiceTypeSelected && setFormData({ ...formData, civility: e.target.value })}
                   disabled={!isServiceTypeSelected}
@@ -242,7 +277,7 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 required 
                 type="text" 
                 placeholder={isLegal ? "Responsable" : "Nom & Prénom"} 
-                className={`${isLegal ? 'col-span-4' : 'col-span-3'} rounded-xl border-gray-200 p-2.5 text-sm font-black border bg-white ${!isServiceTypeSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`${isLegal ? 'col-span-4' : 'col-span-3'} rounded-xl border-gray-200 p-3 text-base font-black border bg-white ${!isServiceTypeSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
                 value={formData.clientName} 
                 onChange={e => isServiceTypeSelected && setFormData({ ...formData, clientName: e.target.value })}
                 disabled={!isServiceTypeSelected}
@@ -250,11 +285,11 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
             </div>
 
             {!isLegal && (
-              <div className="pt-2 border-t border-blue-100 space-y-2">
-                <p className="text-[8px] font-black text-blue-500 uppercase tracking-widest ml-1">Pièce d'identité</p>
+              <div className="pt-3 border-t border-blue-100 space-y-3">
+                <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest ml-1">Pièce d'identité</p>
                 <div className="grid grid-cols-2 gap-2">
                   <select 
-                    className={`col-span-1 rounded-lg border-blue-100 p-2 text-[10px] font-black border bg-white ${!isServiceTypeSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`col-span-1 rounded-lg border-blue-100 p-2.5 text-[11px] font-black border bg-white ${!isServiceTypeSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
                     value={formData.idDocumentType}
                     onChange={e => isServiceTypeSelected && setFormData({ ...formData, idDocumentType: e.target.value })}
                     disabled={!isServiceTypeSelected}
@@ -266,7 +301,7 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                     required 
                     type="text" 
                     placeholder="N° Pièce" 
-                    className={`rounded-lg border-blue-100 p-2 text-[10px] font-black border bg-white ${!isServiceTypeSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`rounded-lg border-blue-100 p-2.5 text-[11px] font-black border bg-white ${!isServiceTypeSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
                     value={formData.idDocumentNumber} 
                     onChange={e => isServiceTypeSelected && setFormData({ ...formData, idDocumentNumber: e.target.value })}
                     disabled={!isServiceTypeSelected}
@@ -276,7 +311,7 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                   <input 
                     required 
                     type="date" 
-                    className={`rounded-lg border-blue-100 p-2 text-[10px] font-black border bg-white ${!isServiceTypeSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`rounded-lg border-blue-100 p-2.5 text-[11px] font-black border bg-white ${!isServiceTypeSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
                     value={formData.idDocumentIssueDate} 
                     onChange={e => isServiceTypeSelected && setFormData({ ...formData, idDocumentIssueDate: e.target.value })}
                     disabled={!isServiceTypeSelected}
@@ -285,7 +320,7 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                     required 
                     type="text" 
                     placeholder="Délivré par" 
-                    className={`rounded-lg border-blue-100 p-2 text-[10px] font-black border bg-white ${!isServiceTypeSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`rounded-lg border-blue-100 p-2.5 text-[11px] font-black border bg-white ${!isServiceTypeSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
                     value={formData.idDocumentIssuer} 
                     onChange={e => isServiceTypeSelected && setFormData({ ...formData, idDocumentIssuer: e.target.value })}
                     disabled={!isServiceTypeSelected}
@@ -295,9 +330,9 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
             )}
 
             <div>
-              <label className="block text-[9px] font-black text-emerald-600 uppercase mb-1 ml-1">Qualité de l'abonné</label>
+              <label className="block text-xs font-black text-emerald-600 uppercase mb-1.5 ml-1">Qualité de l'abonné</label>
               <select 
-                className={`w-full rounded-xl border-emerald-200 p-2.5 text-xs font-black border bg-white ${!isServiceTypeSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`w-full rounded-xl border-emerald-200 p-3 text-sm font-black border bg-white ${!isServiceTypeSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
                 value={formData.type} 
                 onChange={e => isServiceTypeSelected && setFormData({ ...formData, type: e.target.value as any })}
                 disabled={!isServiceTypeSelected}
@@ -312,43 +347,162 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
           {isBranchementEau && (
             <div className="space-y-3 p-4 bg-gray-50 border border-gray-100 rounded-2xl">
               {/* Adresse de correspondance */}
-              <div className="border-b border-gray-200 pb-3 mb-3">
-                <h5 className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-2">Adresse de correspondance</h5>
-                <input required type="text" placeholder="Rue" className="w-full rounded-xl border-gray-200 p-3 text-sm font-bold border mb-2" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} />
-                <input required type="text" placeholder="Commune" className="w-full rounded-xl border-gray-200 p-3 text-sm font-bold border mb-2" value={formData.commune} onChange={e => setFormData({ ...formData, commune: e.target.value })} />
-                <input type="text" placeholder="Téléphone (facultatif)" className="w-full rounded-xl border-gray-200 p-3 text-sm font-bold border mb-2" value={formData.correspondencePhone} onChange={e => setFormData({ ...formData, correspondencePhone: e.target.value })} />
-                <input type="email" placeholder="Email (facultatif)" className="w-full rounded-xl border-gray-200 p-3 text-sm font-bold border" value={formData.correspondenceEmail} onChange={e => setFormData({ ...formData, correspondenceEmail: e.target.value })} />
+              <div className="border-b border-gray-200 pb-4 mb-4">
+                <h5 className="text-[11px] font-black text-gray-600 uppercase tracking-widest mb-3">Adresse de correspondance</h5>
+                <input required type="text" placeholder="Rue" className="w-full rounded-xl border-gray-200 p-3.5 text-base font-bold border mb-3" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} />
+                <input required type="text" placeholder="Commune" className="w-full rounded-xl border-gray-200 p-3.5 text-base font-bold border mb-3" value={formData.commune} onChange={e => setFormData({ ...formData, commune: e.target.value })} />
+                <input type="text" placeholder="Téléphone (facultatif)" className="w-full rounded-xl border-gray-200 p-3.5 text-base font-bold border mb-3" value={formData.correspondencePhone} onChange={e => setFormData({ ...formData, correspondencePhone: e.target.value })} />
+                <input type="email" placeholder="Email (facultatif)" className="w-full rounded-xl border-gray-200 p-3.5 text-base font-bold border" value={formData.correspondenceEmail} onChange={e => setFormData({ ...formData, correspondenceEmail: e.target.value })} />
               </div>
               
               {/* Adresse de branchement */}
-              <div className="border-b border-gray-200 pb-3 mb-3">
-                <h5 className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-2">Adresse de branchement</h5>
-                <input required type="text" placeholder="Rue" className="w-full rounded-xl border-gray-200 p-3 text-sm font-bold border mb-2" value={formData.installationAddress} onChange={e => setFormData({ ...formData, installationAddress: e.target.value })} />
-                <input required type="text" placeholder="Commune" className="w-full rounded-xl border-gray-200 p-3 text-sm font-bold border mb-2" value={formData.installationCommune} onChange={e => setFormData({ ...formData, installationCommune: e.target.value })} />
+              <div className="border-b border-gray-200 pb-4 mb-4">
+                <h5 className="text-[11px] font-black text-gray-600 uppercase tracking-widest mb-3">Adresse de branchement</h5>
+                <input required type="text" placeholder="Rue" className="w-full rounded-xl border-gray-200 p-3.5 text-base font-bold border mb-3" value={formData.installationAddress} onChange={e => setFormData({ ...formData, installationAddress: e.target.value })} />
+                <input required type="text" placeholder="Commune" className="w-full rounded-xl border-gray-200 p-3.5 text-base font-bold border mb-3" value={formData.installationCommune} onChange={e => setFormData({ ...formData, installationCommune: e.target.value })} />
               </div>
               
               {/* Diamètre et Débit */}
               <div>
-                <h5 className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-2">Caractéristiques du branchement</h5>
-                <input required type="text" placeholder="Diamètre du branchement" className="w-full rounded-xl border-gray-200 p-3 text-sm font-bold border mb-2" value={formData.diameter || ''} onChange={e => setFormData({ ...formData, diameter: e.target.value })} />
-                <input required type="text" placeholder="Débit moyen horaire" className="w-full rounded-xl border-gray-200 p-3 text-sm font-bold border" value={formData.flowRate || ''} onChange={e => setFormData({ ...formData, flowRate: e.target.value })} />
+                <h5 className="text-[11px] font-black text-gray-600 uppercase tracking-widest mb-3">Caractéristiques du branchement</h5>
+                <div ref={diameterRef} className="relative mb-3">
+                  {/* Hidden input enforces required validation on the selected value */}
+                  <input type="hidden" required value={formData.diameter || ''} />
+                  <input
+                    type="text"
+                    placeholder="Diamètre du branchement"
+                    className={`w-full rounded-xl p-3.5 text-base font-bold border pr-10 ${
+                      diameterSearch && !DIAMETER_OPTIONS.includes(diameterSearch)
+                        ? 'border-red-400 bg-red-50/30 focus:ring-red-300'
+                        : 'border-gray-200'
+                    }`}
+                    value={diameterSearch}
+                    onChange={e => {
+                      setDiameterSearch(e.target.value);
+                      setDiameterDropdownOpen(true);
+                      // Only set diameter if exact match from list
+                      if (DIAMETER_OPTIONS.includes(e.target.value)) {
+                        setFormData({ ...formData, diameter: e.target.value });
+                      } else {
+                        setFormData({ ...formData, diameter: '' });
+                      }
+                    }}
+                    onFocus={() => setDiameterDropdownOpen(true)}
+                    autoComplete="off"
+                  />
+                  {diameterSearch && !DIAMETER_OPTIONS.includes(diameterSearch) && !diameterDropdownOpen && (
+                    <p className="text-[10px] text-red-500 font-bold mt-1 ml-1">⚠ Veuillez sélectionner un diamètre de la liste</p>
+                  )}
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    onClick={() => setDiameterDropdownOpen(!diameterDropdownOpen)}
+                    tabIndex={-1}
+                  >
+                    <svg className={`w-4 h-4 transition-transform ${diameterDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {diameterDropdownOpen && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                      {filteredDiameters.length > 0 ? filteredDiameters.map(d => (
+                        <button
+                          key={d}
+                          type="button"
+                          className={`w-full text-left px-4 py-2.5 text-sm font-bold hover:bg-blue-50 hover:text-blue-700 transition-colors ${
+                            formData.diameter === d ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                          }`}
+                          onClick={() => {
+                            setFormData({ ...formData, diameter: d });
+                            setDiameterSearch(d);
+                            setDiameterDropdownOpen(false);
+                          }}
+                        >
+                          {d} mm
+                        </button>
+                      )) : (
+                        <div className="px-4 py-3 text-xs text-gray-400 font-bold text-center">Aucun diamètre trouvé</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div ref={flowRateRef} className="relative">
+                  {/* Hidden input enforces required validation on the selected value */}
+                  <input type="hidden" required value={formData.flowRate || ''} />
+                  <input
+                    type="text"
+                    placeholder="Débit moyen horaire"
+                    className={`w-full rounded-xl p-3.5 text-base font-bold border pr-10 ${
+                      flowRateSearch && !FLOW_RATE_OPTIONS.includes(flowRateSearch)
+                        ? 'border-red-400 bg-red-50/30 focus:ring-red-300'
+                        : 'border-gray-200'
+                    }`}
+                    value={flowRateSearch}
+                    onChange={e => {
+                      setFlowRateSearch(e.target.value);
+                      setFlowRateDropdownOpen(true);
+                      if (FLOW_RATE_OPTIONS.includes(e.target.value)) {
+                        setFormData({ ...formData, flowRate: e.target.value });
+                      } else {
+                        setFormData({ ...formData, flowRate: '' });
+                      }
+                    }}
+                    onFocus={() => setFlowRateDropdownOpen(true)}
+                    autoComplete="off"
+                  />
+                  {flowRateSearch && !FLOW_RATE_OPTIONS.includes(flowRateSearch) && !flowRateDropdownOpen && (
+                    <p className="text-[10px] text-red-500 font-bold mt-1 ml-1">⚠ Veuillez sélectionner un débit de la liste</p>
+                  )}
+                  <button
+                    type="button"
+                    className="absolute right-3 top-[18px] -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    onClick={() => setFlowRateDropdownOpen(!flowRateDropdownOpen)}
+                    tabIndex={-1}
+                  >
+                    <svg className={`w-4 h-4 transition-transform ${flowRateDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {flowRateDropdownOpen && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                      {filteredFlowRates.length > 0 ? filteredFlowRates.map(f => (
+                        <button
+                          key={f}
+                          type="button"
+                          className={`w-full text-left px-4 py-2.5 text-sm font-bold hover:bg-blue-50 hover:text-blue-700 transition-colors ${
+                            formData.flowRate === f ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                          }`}
+                          onClick={() => {
+                            setFormData({ ...formData, flowRate: f });
+                            setFlowRateSearch(f);
+                            setFlowRateDropdownOpen(false);
+                          }}
+                        >
+                          {f}
+                        </button>
+                      )) : (
+                        <div className="px-4 py-3 text-xs text-gray-400 font-bold text-center">Aucun débit trouvé</div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
         </div>
 
-        <div className="space-y-6">
-          <h3 className="text-[11px] font-black text-amber-600 uppercase tracking-widest border-l-4 border-amber-600 pl-3">Lieu des Travaux</h3>
+        <div className="space-y-8">
+          <h3 className="text-xs font-black text-amber-600 uppercase tracking-widest border-l-4 border-amber-600 pl-4">Lieu des Travaux</h3>
           
-          <select className="w-full rounded-xl border-gray-200 p-3 text-sm font-black border bg-amber-50/20" value={formData.serviceType} onChange={e => setFormData({ ...formData, serviceType: e.target.value })}>
+          <select className="w-full rounded-xl border-gray-200 p-3.5 text-base font-black border bg-amber-50/20" value={formData.serviceType} onChange={e => setFormData({ ...formData, serviceType: e.target.value })}>
             {filteredWorkTypes.map(s => <option key={s.id} value={s.label}>{s.label}</option>)}
           </select>
 
           {isBranchementEau && (
-            <div className="space-y-3 p-4 bg-blue-50/30 border border-blue-100 rounded-2xl">
-              <h4 className="text-[11px] font-black text-blue-600 uppercase tracking-widest">Type de Branchement</h4>
+            <div className="space-y-4 p-5 bg-blue-50/30 border border-blue-100 rounded-2xl">
+              <h4 className="text-xs font-black text-blue-600 uppercase tracking-widest">Type de Branchement</h4>
               <select 
-                className="w-full rounded-xl border-blue-200 p-3 text-sm font-black border bg-white" 
+                className="w-full rounded-xl border-blue-200 p-3.5 text-base font-black border bg-white" 
                 value={formData.branchementType} 
                 onChange={e => setFormData({ ...formData, branchementType: e.target.value as BranchementType })}
               >
@@ -365,7 +519,7 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <input 
                   type="text" 
                   placeholder="Précisez le type de branchement" 
-                  className="w-full rounded-xl border-blue-200 p-3 text-sm font-medium border bg-white mt-2" 
+                  className="w-full rounded-xl border-blue-200 p-3.5 text-base font-medium border bg-white mt-3" 
                   value={formData.branchementDetails} 
                   onChange={e => setFormData({ ...formData, branchementDetails: e.target.value })}
                 />
@@ -376,18 +530,18 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
           <div className="space-y-3 p-4 bg-gray-50 border border-gray-100 rounded-2xl">
             {isBranchementEau ? (
               <>
-                <input required type="text" placeholder="Adresse précise du site" className="w-full rounded-xl border-gray-200 p-3 text-sm font-bold border" value={formData.installationAddress} onChange={e => setFormData({ ...formData, installationAddress: e.target.value })} />
-                <input required type="text" placeholder="Commune du site" className="w-full rounded-xl border-gray-200 p-3 text-sm font-black border" value={formData.installationCommune} onChange={e => setFormData({ ...formData, installationCommune: e.target.value })} />
+                <input required type="text" placeholder="Adresse précise du site" className="w-full rounded-xl border-gray-200 p-3.5 text-base font-bold border" value={formData.installationAddress} onChange={e => setFormData({ ...formData, installationAddress: e.target.value })} />
+                <input required type="text" placeholder="Commune du site" className="w-full rounded-xl border-gray-200 p-3.5 text-base font-black border" value={formData.installationCommune} onChange={e => setFormData({ ...formData, installationCommune: e.target.value })} />
               </>
             ) : (
               <>
-                <input required type="text" placeholder="Adresse précise du site" className="w-full rounded-xl border-gray-200 p-3 text-sm font-bold border" value={formData.installationAddress} onChange={e => setFormData({ ...formData, installationAddress: e.target.value })} />
-                <input required type="text" placeholder="Commune du site" className="w-full rounded-xl border-gray-200 p-3 text-sm font-black border" value={formData.installationCommune} onChange={e => setFormData({ ...formData, installationCommune: e.target.value })} />
+                <input required type="text" placeholder="Adresse précise du site" className="w-full rounded-xl border-gray-200 p-3.5 text-base font-bold border" value={formData.installationAddress} onChange={e => setFormData({ ...formData, installationAddress: e.target.value })} />
+                <input required type="text" placeholder="Commune du site" className="w-full rounded-xl border-gray-200 p-3.5 text-base font-black border" value={formData.installationCommune} onChange={e => setFormData({ ...formData, installationCommune: e.target.value })} />
               </>
             )}
           </div>
 
-          <textarea rows={3} className="w-full rounded-xl border-gray-200 p-3 text-sm font-medium border" placeholder="Détails techniques du projet (facultatif)" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
+          <textarea rows={4} className="w-full rounded-xl border-gray-200 p-4 text-base font-medium border" placeholder="Détails techniques du projet (facultatif)" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
 
 
 
@@ -395,8 +549,19 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
       </div>
 
       <div className="mt-12 flex justify-end gap-4 pt-8 border-t border-gray-50">
-        <button type="button" onClick={onCancel} className="px-6 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-gray-900 transition-colors">Annuler</button>
-        <button type="submit" className="px-12 py-4 text-[10px] font-black text-white bg-blue-600 rounded-2xl hover:bg-blue-700 shadow-2xl shadow-blue-200 transition-all uppercase tracking-widest">Valider la Demande</button>
+        <button type="button" onClick={onCancel} className="px-8 py-3.5 text-xs font-black text-gray-400 uppercase tracking-widest hover:text-gray-900 transition-colors">Annuler</button>
+        <button 
+          type="submit" 
+          disabled={isSaving}
+          className={`px-16 py-5 text-xs font-black text-white bg-blue-600 rounded-2xl hover:bg-blue-700 shadow-2xl shadow-blue-200 transition-all uppercase tracking-widest ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+          {isSaving ? (
+            <div className="flex items-center gap-2">
+              <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+              Enregistrement...
+            </div>
+          ) : 'Valider la Demande'}
+        </button>
       </div>
       </form>
 

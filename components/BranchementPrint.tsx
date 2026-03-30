@@ -55,7 +55,7 @@ export const BranchementPrint: React.FC<BranchementPrintProps> = ({ request, age
         @media print {
           @page {
             size: A4;
-            margin: 10mm 15mm;
+            margin: 8mm 12mm;
           }
           body * {
             visibility: hidden;
@@ -72,13 +72,13 @@ export const BranchementPrint: React.FC<BranchementPrintProps> = ({ request, age
           }
         }
         .branchement-print-doc {
-          font-family: 'Times New Roman', Times, serif;
+          font-family: Arial, Helvetica, sans-serif;
           color: #000;
-          line-height: 1.4;
+          line-height: 1.25;
         }
         .branchement-print-doc .field-line {
           border-bottom: 1px solid #000;
-          min-height: 22px;
+          min-height: 18px;
           display: inline-block;
           padding: 0 4px;
           font-weight: bold;
@@ -105,45 +105,45 @@ export const BranchementPrint: React.FC<BranchementPrintProps> = ({ request, age
       `}</style>
 
       {/* Document Content */}
-      <div className="branchement-print-doc max-w-[210mm] mx-auto p-8 md:p-12 bg-white print:p-0 print:m-0" style={{ fontSize: '11pt' }}>
+      <div className="branchement-print-doc max-w-[210mm] mx-auto p-6 md:p-8 bg-white print:p-0 print:m-0" style={{ fontSize: '10pt' }}>
         
         {/* === HEADER === */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
-          <div style={{ textAlign: 'left', lineHeight: 1.3 }}>
-            <div style={{ fontSize: '11pt', fontWeight: 'bold' }}>|ALGERIENNE DES EAUX</div>
-            <div style={{ fontSize: '10pt', fontWeight: 'bold', paddingLeft: '8px' }}>Zone d'Alger</div>
-            <div style={{ fontSize: '10pt', fontWeight: 'bold', paddingLeft: '8px' }}>Unité de {centre?.name || 'Médéa'}</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2px' }}>
+          <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+            <div style={{ fontSize: '10pt', fontWeight: 'bold' }}>|ALGERIENNE DES EAUX</div>
+            <div style={{ fontSize: '9pt', fontWeight: 'bold', paddingLeft: '8px' }}>Zone d'Alger</div>
+            <div style={{ fontSize: '9pt', fontWeight: 'bold', paddingLeft: '8px' }}>Unité de {centre?.name || 'Médéa'}</div>
           </div>
           <div style={{ textAlign: 'center' }}>
-            <img src="/ade.png" alt="ADE Logo" style={{ height: '60px', margin: '0 auto' }} />
+            <img src="/ade.png" alt="ADE Logo" style={{ height: '70px', margin: '0 auto' }} />
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '11pt', fontWeight: 'bold' }}>Agence de {agencyName.toUpperCase()}</div>
+            <div style={{ fontSize: '10pt', fontWeight: 'bold' }}>Agence de {agencyName.toUpperCase()}</div>
           </div>
         </div>
 
         {/* === TITLE === */}
-        <div style={{ textAlign: 'center', marginBottom: '4px', marginTop: '10px' }}>
-          <h1 style={{ fontSize: '18pt', fontWeight: 'bold', margin: 0, letterSpacing: '1px' }}>DEMANDE DE BRANCHEMENT D'EAU POTABLE</h1>
-          <p style={{ fontSize: '7pt', fontWeight: 'bold', margin: '2px 0 0 0', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+        <div style={{ textAlign: 'center', marginBottom: '2px', marginTop: '4px' }}>
+          <h1 style={{ fontSize: '16pt', fontWeight: 'bold', margin: 0, letterSpacing: '1px' }}>DEMANDE DE BRANCHEMENT D'EAU POTABLE</h1>
+          <p style={{ fontSize: '7pt', fontWeight: 'bold', margin: '4px 0', letterSpacing: '0.5px', textTransform: 'uppercase', backgroundColor: '#000', color: '#fff', padding: '3px 0', width: '100%', textAlign: 'center' }}>
             DOCUMENT A RETOURNER AU SERVICE DES EAUX DUMENT REMPLI ET SIGNÉ
           </p>
         </div>
 
-        <div style={{ borderTop: '3px solid #000', marginTop: '8px', marginBottom: '12px' }}></div>
+        <div style={{ borderTop: '3px solid #000', marginTop: '4px', marginBottom: '6px' }}></div>
 
         {/* Réf */}
-        <div style={{ textAlign: 'right', fontSize: '9pt', marginBottom: '4px' }}>
+        <div style={{ textAlign: 'right', fontSize: '9pt', marginBottom: '2px' }}>
           <strong>Réf : </strong><span className="field-line" style={{ width: '150px' }}>{request.id}</span>
         </div>
 
         {/* === JE SOUSSIGNÉ === */}
-        <div style={{ marginBottom: '12px' }}>
-          <p style={{ fontWeight: 'bold', fontSize: '10.5pt', marginBottom: '6px' }}>
-            Je soussigné (e) <span style={{ fontSize: '9pt', fontStyle: 'italic' }}>Madame, Mademoiselle, Monsieur (rayer les mentions inutiles)</span>
+        <div style={{ marginBottom: '6px' }}>
+          <p style={{ fontWeight: 'bold', fontSize: '10pt', marginBottom: '3px' }}>
+            Je soussigné (e) <span style={{ fontSize: '8.5pt', fontStyle: 'italic' }}>Madame, Mademoiselle, Monsieur (rayer les mentions inutiles)</span>
           </p>
           
-          <div style={{ display: 'flex', gap: '0', marginBottom: '6px' }}>
+          <div style={{ display: 'flex', gap: '0', marginBottom: '3px' }}>
             <span style={{ fontSize: '9pt', textDecoration: 'underline', whiteSpace: 'nowrap' }}>Nom</span>
             <span style={{ fontSize: '9pt', whiteSpace: 'nowrap' }}>&nbsp;(ou Raison sociale)</span>
             <span className="field-line" style={{ flex: 1, marginLeft: '4px' }}>
@@ -151,54 +151,54 @@ export const BranchementPrint: React.FC<BranchementPrintProps> = ({ request, age
             </span>
           </div>
           
-          <div style={{ display: 'flex', gap: '0', marginBottom: '6px' }}>
+          <div style={{ display: 'flex', gap: '0', marginBottom: '3px' }}>
             <span style={{ fontSize: '9pt' }}>Prénom</span>
             <span className="field-line" style={{ flex: 1, marginLeft: '4px' }}>
               {request.clientName?.split(' ').slice(1).join(' ') || ''}
             </span>
           </div>
 
-          <div style={{ marginBottom: '2px' }}>
+          <div style={{ marginBottom: '1px' }}>
             <span style={{ fontSize: '9pt', textDecoration: 'underline' }}>Adresse de correspondance</span><span style={{ fontSize: '9pt' }}>:</span>
           </div>
           
-          <div style={{ display: 'flex', marginBottom: '4px' }}>
+          <div style={{ display: 'flex', marginBottom: '2px' }}>
             <span style={{ fontSize: '9pt', whiteSpace: 'nowrap' }}>Rue</span>
             <span className="field-line" style={{ flex: 1, marginLeft: '4px' }}>{request.address || ''}</span>
           </div>
           
-          <div style={{ display: 'flex', marginBottom: '4px' }}>
+          <div style={{ display: 'flex', marginBottom: '2px' }}>
             <span style={{ fontSize: '9pt', whiteSpace: 'nowrap' }}>Commune</span>
             <span className="field-line" style={{ flex: 1, marginLeft: '4px' }}>{request.commune || ''}</span>
           </div>
           
-          <div style={{ display: 'flex', marginBottom: '6px' }}>
+          <div style={{ display: 'flex', marginBottom: '3px' }}>
             <span style={{ fontSize: '9pt', whiteSpace: 'nowrap' }}>Tél</span>
             <span className="field-line" style={{ flex: 1, marginLeft: '4px' }}>{request.clientPhone || request.correspondencePhone || ''}</span>
           </div>
         </div>
 
         {/* === QUALITÉ === */}
-        <div style={{ marginBottom: '12px' }}>
-          <p style={{ fontSize: '10pt', marginBottom: '8px' }}>
+        <div style={{ marginBottom: '4px' }}>
+          <p style={{ fontSize: '9.5pt', marginBottom: '2px' }}>
             <strong>Et agissant en qualité de : </strong>
             <span>{request.type || 'Propriétaire'}</span>, Locataire, Mandataire <span style={{ fontSize: '8pt', fontStyle: 'italic' }}>(rayer les mentions inutiles)</span>
           </p>
         </div>
 
         {/* === TYPE DE BRANCHEMENT === */}
-        <div style={{ marginBottom: '12px' }}>
-          <p style={{ fontSize: '10pt', marginBottom: '4px' }}>
+        <div style={{ marginBottom: '4px' }}>
+          <p style={{ fontSize: '9.5pt', marginBottom: '2px' }}>
             <strong>Et après avoir pris connaissance du règlement général du service public d'alimentation en eau potable en vigueur, demande à l'Algérienne des Eaux qu'il me soit consenti, un raccordement au réseau d'alimentation en eau potable de type : </strong>
             <span>{branchementCategory === 'Ordinaire' ? <strong>Ordinaire</strong> : 'Ordinaire'}</span>, {branchementCategory === 'Temporaire' ? <strong>Temporaire</strong> : 'Temporaire'}, {branchementCategory === 'Spécial' ? <strong>Spécial</strong> : 'Spécial'} <span style={{ fontSize: '8pt', fontStyle: 'italic' }}>(rayer les mentions inutiles)</span>
           </p>
         </div>
 
         {/* === POUR DES BESOINS === */}
-        <div style={{ marginBottom: '16px', paddingLeft: '20px' }}>
-          <p style={{ fontSize: '10pt', fontWeight: 'bold', marginBottom: '6px' }}>Pour des besoins : <span style={{ fontSize: '8pt', fontWeight: 'normal', fontStyle: 'italic' }}>(cocher la case correspondante)</span></p>
+        <div style={{ marginBottom: '6px', paddingLeft: '20px' }}>
+          <p style={{ fontSize: '9.5pt', fontWeight: 'bold', marginBottom: '3px' }}>Pour des besoins : <span style={{ fontSize: '8pt', fontWeight: 'normal', fontStyle: 'italic' }}>(cocher la case correspondante)</span></p>
           
-          <div style={{ paddingLeft: '10px', lineHeight: '1.8', fontSize: '10pt' }}>
+          <div style={{ paddingLeft: '10px', lineHeight: '1.5', fontSize: '9.5pt' }}>
             <div>
               <span className={`checkbox ${isDomestiqueMaison ? 'checked' : ''}`}></span>
               <span style={{ textDecoration: 'underline' }}>Domestiques</span>: Maison individuelle
@@ -231,9 +231,9 @@ export const BranchementPrint: React.FC<BranchementPrintProps> = ({ request, age
         </div>
 
         {/* === ADRESSE DE BRANCHEMENT === */}
-        <div style={{ marginBottom: '16px' }}>
-          <div style={{ display: 'flex', marginBottom: '12px' }}>
-            <span style={{ fontSize: '11pt', fontWeight: 'bold', whiteSpace: 'nowrap' }}>Adresse de branchement : </span>
+        <div style={{ marginBottom: '6px' }}>
+          <div style={{ display: 'flex', marginBottom: '4px' }}>
+            <span style={{ fontSize: '10pt', fontWeight: 'bold', whiteSpace: 'nowrap' }}>Adresse de branchement : </span>
             <span className="field-line" style={{ flex: 1, marginLeft: '4px' }}>
               {request.installationAddress}{request.installationCommune ? `, ${request.installationCommune}` : ''}
             </span>
@@ -241,16 +241,16 @@ export const BranchementPrint: React.FC<BranchementPrintProps> = ({ request, age
         </div>
 
         {/* === CADRE TECHNIQUE === */}
-        <div style={{ border: '1px solid #000', padding: '12px', marginBottom: '16px' }}>
-          <p style={{ fontSize: '9.5pt', marginBottom: '8px' }}>
+        <div style={{ border: '1px solid #000', padding: '8px', marginBottom: '6px' }}>
+          <p style={{ fontSize: '9pt', marginBottom: '4px' }}>
             <strong>Dans le cadre d'un branchement lié à un besoin pour la construction d'un immeuble, à des besoins industriels ou de chantier, veuillez préciser les informations suivantes :</strong>
           </p>
-          <div style={{ display: 'flex', gap: '40px', fontSize: '10pt' }}>
+          <div style={{ display: 'flex', gap: '40px', fontSize: '9.5pt' }}>
             <div>
               Diamètre du branchement : <span className="field-line" style={{ width: '80px' }}>{request.diameter || ''}</span> mm
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '40px', fontSize: '10pt', marginTop: '4px' }}>
+          <div style={{ display: 'flex', gap: '40px', fontSize: '9.5pt', marginTop: '2px' }}>
             <div>
               Débit moyen horaire&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: <span className="field-line" style={{ width: '80px' }}>{request.flowRate || ''}</span> m³/h
             </div>
@@ -258,27 +258,27 @@ export const BranchementPrint: React.FC<BranchementPrintProps> = ({ request, age
         </div>
 
         {/* === ENGAGEMENT === */}
-        <div style={{ marginBottom: '16px' }}>
-          <p style={{ fontSize: '9.5pt', textAlign: 'justify' }}>
+        <div style={{ marginBottom: '6px' }}>
+          <p style={{ fontSize: '9pt', textAlign: 'justify' }}>
             Je m'engage à me conformer aux prescriptions du Règlement Général du Service des Eaux dont un exemplaire m'a été remis sur demande ou consulté au niveau du service « accueil clientèle » de l'Algérienne des Eaux.
           </p>
         </div>
 
         {/* === SIGNATURE === */}
-        <div style={{ marginBottom: '20px', marginTop: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10pt' }}>
+        <div style={{ marginBottom: '10px', marginTop: '10px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9.5pt' }}>
             <div>
               Fait à , _ <strong>{agencyName.toUpperCase()}</strong> ____ le <span className="field-line" style={{ width: '150px' }}>{new Date(request.createdAt).toLocaleDateString('fr-DZ')}</span>
             </div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontWeight: 'bold' }}>Signature</div>
-              <div style={{ fontSize: '9pt' }}>Lu et Approuvé</div>
+              <div style={{ fontSize: '8.5pt' }}>Lu et Approuvé</div>
             </div>
           </div>
         </div>
 
         {/* === SEPARATOR === */}
-        <div style={{ borderTop: '2px solid #000', marginTop: '30px', marginBottom: '8px' }}></div>
+        <div style={{ borderTop: '2px solid #000', marginTop: '10px', marginBottom: '4px' }}></div>
 
         {/* === PARTIE RÉSERVÉE ADE === */}
         <div style={{ fontSize: '9.5pt' }}>
