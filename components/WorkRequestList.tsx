@@ -10,6 +10,7 @@ interface WorkRequestListProps {
   requests: WorkRequest[];
   agencies: CommercialAgency[];
   centres: Centre[];
+  users: User[];
   onDelete: (id: string) => void;
   onEdit: (request: WorkRequest) => void;
   onCreateQuote: (request: WorkRequest) => void;
@@ -24,6 +25,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
   requests, 
   agencies,
   centres,
+  users,
   onDelete, 
   onEdit, 
   onCreateQuote, 
@@ -297,6 +299,115 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
     onDelete(req.id);
   };
 
+  const handleShowReason = (req: WorkRequest) => {
+    let reasonContent = '';
+    
+    // Tous les motifs des validations avec raison
+    if (req.validations && req.validations.length > 0) {
+      const validationsWithReason = req.validations.filter(v => v.reason && v.reason.trim() !== '');
+      
+      if (validationsWithReason.length > 0) {
+        reasonContent += `
+          <div class="space-y-4">
+        `;
+        
+        validationsWithReason.forEach((validation, index) => {
+          // Récupérer l'utilisateur et son rôle depuis la collection Utilisateurs
+          const validator = users.find(u => u.id === validation.userId);
+          const roleUtilisateur = validator?.role || 'Non spécifié';
+          
+          // Formatage de la date et heure
+          const dateTime = new Date(validation.validatedAt || validation.date);
+          const dateStr = dateTime.toLocaleDateString('fr-FR', { 
+            day: 'numeric', 
+            month: 'short', 
+            year: 'numeric' 
+          });
+          const timeStr = dateTime.toLocaleTimeString('fr-FR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          });
+          
+          reasonContent += `
+            <div class="border border-gray-200 rounded-lg p-4 bg-white">
+              <!-- En-tête avec statut et type -->
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                  <span class="text-lg">${validation.status === 'validated' ? '✅' : (validation.status === 'rejected' ? '❌' : '⏳')}</span>
+                  <span class="text-sm font-black uppercase tracking-wider text-gray-700">
+                    ${validation.type === 'agency' ? 'Agence' : (validation.type === 'customer_service' ? 'Service Client' : 'Juriste')}
+                  </span>
+                </div>
+                <div class="text-right">
+                  <div class="text-[10px] text-gray-500 font-bold">${dateStr}</div>
+                  <div class="text-[9px] text-gray-400 font-bold">{timeStr}</div>
+                </div>
+              </div>
+              
+              <!-- Informations utilisateur -->
+              <div class="flex items-center gap-4 mb-3 flex-wrap">
+                <div class="flex items-center gap-1.5">
+                  <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"/>
+                  </svg>
+                  <span class="text-sm font-bold text-gray-700">${validation.user || 'Inconnu'}</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <svg class="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.95 22.95 0 0110 13a22.95 22.95 0 01-10-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd"/>
+                    <path d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z"/>
+                  </svg>
+                  <span class="text-xs font-black text-blue-600 uppercase tracking-wider">${roleUtilisateur}</span>
+                </div>
+              </div>
+              
+              <!-- Motif -->
+              <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                <p class="text-sm text-gray-700 italic leading-relaxed">"${validation.reason}"</p>
+              </div>
+            </div>
+          `;
+        });
+        
+        reasonContent += `
+          </div>
+        `;
+      } else {
+        reasonContent += `
+          <div class="text-center py-8 text-gray-400">
+            <svg class="w-16 h-16 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p class="text-sm font-black uppercase tracking-widest">Aucun motif enregistré</p>
+          </div>
+        `;
+      }
+    }
+    
+    Swal.fire({
+      title: 'Historique des Motifs',
+      html: `
+        <div class="text-left max-h-[70vh] overflow-y-auto pr-2 -mr-2">
+          <div class="mb-4 pb-3 border-b-2 border-gray-200">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <div class="text-sm text-gray-500 mb-0.5">Référence</div>
+                <div class="text-xl font-black text-gray-900 tracking-tight">${req.id}</div>
+              </div>
+            </div>
+          </div>
+          ${reasonContent}
+        </div>
+      `,
+      confirmButtonText: 'Fermer',
+      confirmButtonColor: '#3B82F6',
+      width: '550px',
+      customClass: {
+        popup: 'rounded-2xl shadow-2xl'
+      }
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100 mx-2 sm:mx-0">
@@ -452,48 +563,19 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                     <span className={`px-3 py-1 text-[10px] font-black rounded-full uppercase border ${getStatusBadge(req.status)}`}>
                       {req.status}
                     </span>
-                    {req.rejectionReason && (
-                      <div className={`text-[10px] font-bold mt-2 max-w-[180px] whitespace-normal italic px-2 py-1.5 rounded border shadow-sm leading-tight ${
-                        req.rejectionReason.includes('ANNULATION') || req.rejectionReason.includes('⚠️')
-                          ? 'bg-amber-50 text-amber-700 border-amber-200'
-                          : 'bg-rose-50 text-rose-600 border-rose-100'
-                      }`}>
-                        <span className={`text-[8px] block mb-0.5 uppercase tracking-wider ${
-                          req.rejectionReason.includes('ANNULATION') || req.rejectionReason.includes('⚠️')
-                            ? 'text-amber-400'
-                            : 'text-rose-300'
-                        }`}>
-                          {req.rejectionReason.includes('ANNULATION') || req.rejectionReason.includes('⚠️') ? '🔄 Motif d\'annulation:' : '❌ Motif de rejet:'}
-                        </span>
-                        {req.rejectionReason}
-                      </div>
-                    )}
                     
-                    {/* Affichage des validations avec leurs motifs */}
-                    {req.validations && req.validations.length > 0 && (
-                      <div className="mt-2 space-y-1">
-                        {req.validations.map((validation, index) => (
-                          <div key={index} className="flex items-center gap-1.5">
-                            {validation.status === 'validated' && (
-                              <span className="text-[9px] text-emerald-600 font-black uppercase tracking-widest flex items-center gap-1">
-                                <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
-                                {validation.type}
-                              </span>
-                            )}
-                            {validation.status === 'rejected' && (
-                              <span className="text-[9px] text-rose-600 font-black uppercase tracking-widest flex items-center gap-1">
-                                <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/></svg>
-                                {validation.type}
-                              </span>
-                            )}
-                            {validation.reason && (
-                              <span className="text-[8px] text-gray-500 italic truncate max-w-[120px]" title={validation.reason}>
-                                ({validation.reason})
-                              </span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
+                    {/* Indicateur visuel pour les demandes avec motif */}
+                    {(req.rejectionReason || (req.validations && req.validations.some(v => v.reason))) && (
+                      <button
+                        onClick={() => handleShowReason(req)}
+                        className="ml-2 inline-flex items-center gap-1 text-[9px] font-bold text-amber-600 hover:text-amber-700 transition-colors"
+                        title="Voir le motif"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Voir motif
+                      </button>
                     )}
                   </td>
                   <td className="px-5 py-4 whitespace-nowrap text-right">

@@ -24,29 +24,29 @@ export const UserList: React.FC<UserListProps> = ({ users, centres, agencies, cu
   };
 
   return (
-    <div className="bg-white shadow-2xl rounded-[2rem] overflow-hidden border border-gray-100">
-      <div className="px-8 py-6 flex justify-between items-center border-b border-gray-50 bg-gray-50/50">
+    <div className="bg-white shadow-2xl rounded-[2rem] overflow-hidden border border-gray-100 mx-2 sm:mx-0">
+      <div className="px-4 sm:px-8 py-6 flex justify-between items-center border-b border-gray-50 bg-gray-50/50">
         <div>
-          <h3 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Collection : Utilisateurs</h3>
+          <h3 className="text-base sm:text-xl font-black text-gray-900 uppercase tracking-tighter">Collection : Utilisateurs</h3>
           <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Accès et Habilitations GestionEau</p>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] font-black px-4 py-1.5 bg-blue-600 text-white rounded-full uppercase tracking-widest shadow-lg shadow-blue-100">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <span className="text-[10px] font-black px-3 sm:px-4 py-1.5 bg-blue-600 text-white rounded-full uppercase tracking-widest shadow-lg shadow-blue-100">
             {users.length} Documents
           </span>
         </div>
       </div>
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-100">
-          <thead>
+        <table className="min-w-full divide-y divide-gray-100 responsive-mobile">
+          <thead className="hidden sm:table-header-group">
             <tr className="bg-gray-50/30">
-              <th className="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">ID</th>
-              <th className="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Nom & Prénom</th>
-              <th className="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Téléphone</th>
-              <th className="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Email</th>
-              <th className="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Rôle</th>
-              <th className="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Affectation Structurelle</th>
-              <th className="px-8 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Actions</th>
+              <th className="px-6 sm:px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">ID</th>
+              <th className="px-6 sm:px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Nom & Prénom</th>
+              <th className="px-6 sm:px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Téléphone</th>
+              <th className="px-6 sm:px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Email</th>
+              <th className="px-6 sm:px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Rôle</th>
+              <th className="px-6 sm:px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Affectation Structurelle</th>
+              <th className="px-6 sm:px-8 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
@@ -56,39 +56,39 @@ export const UserList: React.FC<UserListProps> = ({ users, centres, agencies, cu
               
               return (
                 <tr key={user.id} className="hover:bg-blue-50/30 transition-colors group">
-                  <td className="px-8 py-5 whitespace-nowrap">
+                  <td className="px-4 sm:px-8 py-5 whitespace-nowrap" data-label="ID">
                     <div className="text-[10px] font-mono text-gray-400">{user.id}</div>
                   </td>
-                  <td className="px-8 py-5 whitespace-nowrap">
+                  <td className="px-4 sm:px-8 py-5 whitespace-nowrap" data-label="Utilisateur">
                     <div className="flex items-center">
-                      <div className="h-10 w-10 rounded-2xl bg-slate-900 flex items-center justify-center text-white font-black text-sm">
+                      <div className="h-10 w-10 rounded-2xl bg-slate-900 flex items-center justify-center text-white font-black text-sm flex-shrink-0">
                         {user.fullName?.charAt(0).toUpperCase() || user.username.charAt(0).toUpperCase()}
                       </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-black text-gray-900 tracking-tight">{user.fullName || '-'}</div>
+                      <div className="ml-3 sm:ml-4 min-w-0">
+                        <div className="text-sm font-black text-gray-900 tracking-tight truncate">{user.fullName || '-'}</div>
                         <div className="text-[9px] text-gray-400 font-bold">@{user.username}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-8 py-5 whitespace-nowrap">
+                  <td className="px-4 sm:px-8 py-5 whitespace-nowrap" data-label="Téléphone">
                     <div className="text-[11px] font-mono text-gray-600">{user.phone || '-'}</div>
                   </td>
-                  <td className="px-8 py-5 whitespace-nowrap">
-                    <div className="text-[11px] font-bold text-gray-600">{user.email}</div>
+                  <td className="px-4 sm:px-8 py-5 whitespace-nowrap" data-label="Email">
+                    <div className="text-[11px] font-bold text-gray-600 truncate max-w-[180px] sm:max-w-none">{user.email}</div>
                   </td>
-                  <td className="px-8 py-5 whitespace-nowrap">
-                    <span className={`px-3 py-1 text-[10px] font-black rounded-full border uppercase tracking-tighter ${getRoleBadge(user.role)}`}>
+                  <td className="px-4 sm:px-8 py-5 whitespace-nowrap" data-label="Rôle">
+                    <span className={`inline-block px-3 py-1 text-[10px] font-black rounded-full border uppercase tracking-tighter ${getRoleBadge(user.role)}`}>
                       {user.role}
                     </span>
                   </td>
-                  <td className="px-8 py-5 whitespace-nowrap">
+                  <td className="px-4 sm:px-8 py-5 whitespace-nowrap" data-label="Structure">
                     <div className="space-y-1">
                       <div className="text-[10px] font-black text-gray-700 uppercase">{centre?.name || 'Siège Social'}</div>
-                      {agency && <div className="text-[9px] font-bold text-blue-500 uppercase">Agence: {agency.name}</div>}
+                      {agency && <div className="text-[9px] font-bold text-blue-500 uppercase truncate">{agency.name}</div>}
                     </div>
                   </td>
-                  <td className="px-8 py-5 whitespace-nowrap text-right">
-                    <div className="flex justify-end gap-3">
+                  <td className="px-4 sm:px-8 py-5 whitespace-nowrap text-right" data-label="Actions">
+                    <div className="flex justify-end gap-2 sm:gap-3">
                       {isAdmin && (
                         <>
                           <button onClick={() => onEdit(user)} className="text-blue-500 hover:text-blue-700 p-2 hover:bg-blue-50 rounded-xl transition-all">

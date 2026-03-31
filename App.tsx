@@ -607,6 +607,7 @@ const App: React.FC = () => {
             requests={requests} 
             agencies={agencies}
             centres={centres}
+            users={users}
             onDelete={handleDeleteRequest} 
             onEdit={(r) => { setEditingRequest(r); setView('request-form'); }}
             onCreateQuote={handleCreateQuoteFromRequest}
