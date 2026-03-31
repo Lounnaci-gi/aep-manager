@@ -2,8 +2,24 @@
 import { Quote, QuoteStatus, Client, WorkType, User, UserRole, WorkRequest, RequestStatus, Centre, CommercialAgency, Article, ArticlePrice } from '../types';
 import { hashPasswordWithSalt, verifyPassword } from './passwordUtils';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// ⚠️ IMPORTANT: URL dynamique pour supporter à la fois localhost et l'accès réseau
+// L'API URL est automatiquement déterminée en fonction de l'hôte utilisé pour accéder au frontend
+const getApiUrl = () => {
+  // En production, utiliser import.meta.env.VITE_API_URL
+  if (import.meta.env.PROD) {
+    return import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  }
+  
+  // En développement, détecter automatiquement l'hôte
+  const hostname = window.location.hostname;
+  return `http://${hostname}:5000/api`;
+};
 
+const API_URL = getApiUrl();
+
+// Configuration MongoDB - Informations de connexion sécurisées
+// ⚠️ IMPORTANT: Ne jamais commiter les vrais identifiants dans le code
+// Les variables d'environnement doivent être définies dans le fichier .env
 const DB_CONFIG = {
   dbName: 'GestionEau',
   cluster: 'Cluster0',
@@ -51,25 +67,33 @@ export const DbService = {
     return DB_CONFIG;
   },
 
+  // Vérifie la connexion au backend API
   async isConnected(): Promise<boolean> {
     try {
-      const response = await fetch(`${API_URL}/../status`);
+      // Correction: URL correct pour l'endpoint status
+      const response = await fetch(`${API_URL}/status`);
       return response.ok;
     } catch {
       return false;
     }
   },
 
+  // Récupère tous les utilisateurs depuis le backend
   async getUsers(): Promise<User[]> {
     try {
       const data = await apiRequest<User[]>('GET', COLLECTIONS.USERS);
       return data.length > 0 ? data : [INITIAL_ADMIN];
-    } catch {
+    } catch (error) {
+      console.error('Erreur lors du chargement des utilisateurs:', error);
+      // En cas d'erreur, retourner l'admin par défaut avec un avertissement
+      console.warn('⚠️ Utilisation de l\'utilisateur admin par défaut. Vérifiez la connexion au backend.');
       return [INITIAL_ADMIN];
     }
   },
   
+  // Sauvegarde un utilisateur avec hachage sécurisé du mot de passe
   async saveUser(user: User): Promise<void> { 
+    // ⚠️ SÉCURITÉ: Le mot de passe est haché avant sauvegarde
     // Vérifier s'il y a déjà un administrateur
     const existingUsers = await this.getUsers();
     const existingAdmin = existingUsers.some(u => u.role === UserRole.ADMIN && u.id !== user.id);
@@ -88,6 +112,7 @@ export const DbService = {
     await fetch(`${API_URL}/${COLLECTIONS.USERS}/${id}`, { method: 'DELETE' });
   },
   
+  // Authentifie un utilisateur avec gestion des tentatives échouées
   async authenticate(username: string, password: string): Promise<{ user?: User; error?: string; blocked?: boolean; remainingTime?: number; remainingAttempts?: number; blockedUntil?: number }> {
     try {
       const response = await fetch(`${API_URL}/auth/login`, {
@@ -109,9 +134,10 @@ export const DbService = {
           blockedUntil: data.blockedUntil
         };
       }
-    } catch (err) {
-      console.error('Erreur authentification:', err);
-      return { error: 'Erreur de connexion au serveur' };
+    } catch (error) {
+      console.error('Erreur d\'authentification:', error);
+      // Message d'erreur plus informatif pour l'utilisateur
+      return { error: 'Impossible de se connecter au serveur. Vérifiez que le backend est en cours d\'exécution.' };
     }
   },
 
@@ -183,9 +209,14 @@ export const DbService = {
   },
   
   async deleteQuote(id: string): Promise<void> {
-    const response = await fetch(`${API_URL}/${COLLECTIONS.QUOTES}/${id}`, { method: 'DELETE' });
-    if (!response.ok) {
-      throw new Error(`Failed to delete quote: ${response.statusText}`);
+    try {
+      const response = await fetch(`${API_URL}/${COLLECTIONS.QUOTES}/${id}`, { method: 'DELETE' });
+      if (!response.ok) {
+        throw new Error(`Failed to delete quote: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la suppression du devis:', error);
+      throw error; // Propager l'erreur pour gestion ultérieure
     }
   },
   
@@ -223,9 +254,11 @@ export const DbService = {
 
   async getStats() {
     try {
-      const response = await fetch(`${API_URL}/../stats`);
+      // Correction: URL correct pour l'endpoint stats
+      const response = await fetch(`${API_URL}/stats`);
       return await response.json();
-    } catch {
+    } catch (error) {
+      console.error('Erreur lors de la récupération des statistiques:', error);
       return {};
     }
   },
@@ -293,7 +326,7 @@ export const DbService = {
     });
   },
 
-  // Helper method to migrate old unit formats to new format
+  // Helper pour migrer les anciens formats d'unités vers le nouveau format standardisé
   migrateUnit(oldUnit: string): 'M²' | 'M3' | 'ML' | 'U' | 'NULL' {
     if (!oldUnit || oldUnit === 'NULL' || oldUnit === 'null') {
       return 'NULL';
@@ -317,6 +350,7 @@ export const DbService = {
     }
   },
   
+  // Sauvegarde un article avec validation de l'unité
   async saveArticle(article: Article): Promise<void> {
     // Ne pas forcer la migration si l'unité est déjà dans le bon format
     const isValidUnit = article.unit && ['M²', 'M3', 'ML', 'U', 'NULL'].includes(article.unit);
@@ -333,7 +367,7 @@ export const DbService = {
     await fetch(`${API_URL}/${COLLECTIONS.ARTICLES}/${id}`, { method: 'DELETE' });
   },
 
-  // Fonction pour extraire la matière d'un article à partir de son nom ou description
+  // Extrait la matière d'un article à partir de son nom ou description (analyse sémantique)
   extractMaterialFromArticle(article: Article): string | undefined {
     const textToSearch = `${article.name} ${article.description}`.toLowerCase();
     
@@ -361,7 +395,7 @@ export const DbService = {
     return undefined;
   },
   
-  // Migrer tous les articles pour ajouter le champ matière
+  // Migre tous les articles pour ajouter automatiquement le champ matière
   async migrateArticlesWithMaterial(): Promise<void> {
     try {
       const articles = await this.getArticles();
@@ -384,6 +418,7 @@ export const DbService = {
       console.log('Migration des matières terminée');
     } catch (error) {
       console.error('Erreur lors de la migration des matières:', error);
+      throw error; // Propager pour permettre la gestion de l'erreur
     }
   }
 };

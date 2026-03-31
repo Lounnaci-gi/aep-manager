@@ -216,32 +216,54 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
       return;
     }
 
-    const { value: text } = await Swal.fire({
+    const { value: cancellationReason } = await Swal.fire({
       title: 'Motif d\'annulation',
       input: 'textarea',
       inputLabel: 'Pourquoi annulez-vous la validation de cette demande ?',
-      inputPlaceholder: 'Saisissez ici le motif d\'annulation...',
+      inputPlaceholder: 'Saisissez ici le motif d\'annulation (obligatoire)...',
+      inputAttributes: {
+        'aria-label': 'Motif d\'annulation'
+      },
       showCancelButton: true,
       confirmButtonText: 'Annuler la validation',
       cancelButtonText: 'Ignorer',
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
       inputValidator: (value) => {
-        if (!value) {
+        if (!value || value.trim() === '') {
           return 'Le motif est obligatoire pour annuler une validation !'
         }
+        return null;
       }
     });
 
-    if (!text) return;
+    if (!cancellationReason || cancellationReason.trim() === '') return;
+
+    // Créer un enregistrement de validation pour tracer l'annulation
+    const cancellationRecord: ValidationRecord = {
+      type: validationType,
+      status: 'pending', // Statut intermédiaire pour montrer l'annulation
+      userId: currentUser?.id || '',
+      userName: currentUser?.fullName || 'Utilisateur inconnu',
+      validatedAt: new Date().toISOString(),
+      date: new Date().toISOString(),
+      user: currentUser?.fullName || 'Utilisateur inconnu',
+      reason: `❌ ANNULATION - ${cancellationReason.trim()}`
+    };
 
     const updatedValidations = req.validations ? [...req.validations] : [];
+    // Supprimer l'ancienne validation et ajouter l'enregistrement d'annulation
     const filteredValidations = updatedValidations.filter(v => v.type !== validationType);
+    filteredValidations.push(cancellationRecord);
+    
+    // Retour au statut initial
     const newStatus = RequestStatus.RECEIVED;
 
     const updatedRequest = {
       ...req,
       validations: filteredValidations,
       status: newStatus,
-      rejectionReason: `Annulée: ${text}`
+      rejectionReason: `⚠️ Validation annulée par ${currentUser?.fullName || 'Utilisateur'} : ${cancellationReason.trim()}`
     };
 
     if (onUpdateRequestWithValidations) {
@@ -252,11 +274,11 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
 
     Swal.fire({
       title: 'Validation Annulée',
-      text: 'La validation a été annulée avec succès',
+      html: `La validation a été annulée avec succès.<br/><strong>Motif:</strong> ${cancellationReason.trim()}`,
       icon: 'info',
       toast: true,
       position: 'top-end',
-      timer: 2000,
+      timer: 3000,
       showConfirmButton: false
     });
   };
@@ -431,9 +453,46 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                       {req.status}
                     </span>
                     {req.rejectionReason && (
-                      <div className="text-[10px] text-rose-500 font-bold uppercase mt-2 max-w-[150px] whitespace-normal italic bg-rose-50 px-2 py-1 rounded border border-rose-100 shadow-sm leading-tight">
-                        <span className="text-[8px] text-rose-300 block mb-0.5">Motif:</span>
+                      <div className={`text-[10px] font-bold mt-2 max-w-[180px] whitespace-normal italic px-2 py-1.5 rounded border shadow-sm leading-tight ${
+                        req.rejectionReason.includes('ANNULATION') || req.rejectionReason.includes('⚠️')
+                          ? 'bg-amber-50 text-amber-700 border-amber-200'
+                          : 'bg-rose-50 text-rose-600 border-rose-100'
+                      }`}>
+                        <span className={`text-[8px] block mb-0.5 uppercase tracking-wider ${
+                          req.rejectionReason.includes('ANNULATION') || req.rejectionReason.includes('⚠️')
+                            ? 'text-amber-400'
+                            : 'text-rose-300'
+                        }`}>
+                          {req.rejectionReason.includes('ANNULATION') || req.rejectionReason.includes('⚠️') ? '🔄 Motif d\'annulation:' : '❌ Motif de rejet:'}
+                        </span>
                         {req.rejectionReason}
+                      </div>
+                    )}
+                    
+                    {/* Affichage des validations avec leurs motifs */}
+                    {req.validations && req.validations.length > 0 && (
+                      <div className="mt-2 space-y-1">
+                        {req.validations.map((validation, index) => (
+                          <div key={index} className="flex items-center gap-1.5">
+                            {validation.status === 'validated' && (
+                              <span className="text-[9px] text-emerald-600 font-black uppercase tracking-widest flex items-center gap-1">
+                                <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
+                                {validation.type}
+                              </span>
+                            )}
+                            {validation.status === 'rejected' && (
+                              <span className="text-[9px] text-rose-600 font-black uppercase tracking-widest flex items-center gap-1">
+                                <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/></svg>
+                                {validation.type}
+                              </span>
+                            )}
+                            {validation.reason && (
+                              <span className="text-[8px] text-gray-500 italic truncate max-w-[120px]" title={validation.reason}>
+                                ({validation.reason})
+                              </span>
+                            )}
+                          </div>
+                        ))}
                       </div>
                     )}
                   </td>
@@ -533,17 +592,32 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                         </>
                       )}
                       
-                      {req.validations?.every(v => v.status === 'validated') && 
+                      {/* Bouton Établir Devis - Apparaît quand TOUTES les validations sont terminées */}
+                      {req.validations && 
+                       req.validations.length > 0 &&
+                       req.validations.every(v => v.status === 'validated') && 
                        req.status !== RequestStatus.QUOTED && 
                        req.status !== RequestStatus.REJECTED && 
                        (currentUser?.role === UserRole.TECHICO_COMMERCIAL || currentUser?.role === UserRole.CHEF_CENTRE) && (
                         <button 
                           onClick={() => onCreateQuote(req)}
-                          className="bg-emerald-600 text-white px-3 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100/50 flex items-center gap-2"
+                          className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100/50 flex items-center gap-2"
+                          title="Toutes les validations sont terminées. Créer un devis."
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                           Établir Devis
                         </button>
+                      )}
+                      
+                      {/* Message si validations en cours */}
+                      {req.validations && 
+                       req.validations.length > 0 &&
+                       !req.validations.every(v => v.status === 'validated') && 
+                       (currentUser?.role === UserRole.TECHICO_COMMERCIAL || currentUser?.role === UserRole.CHEF_CENTRE) && (
+                        <div className="text-[9px] text-amber-600 font-black uppercase tracking-widest bg-amber-50 px-3 py-2 rounded-lg border border-amber-200">
+                          <svg className="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586a1 1 0 01.293.707V19a2 2 0 01-2 2z" clipRule="evenodd"/></svg>
+                          En attente de validations
+                        </div>
                       )}
                       
                       {(currentUser?.role === UserRole.AGENT || currentUser?.role === UserRole.CHEF_AGENCE) && req.serviceType.toLowerCase().includes("branchement") && (
@@ -607,7 +681,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                         className="text-gray-400 hover:text-blue-600 transition-colors p-1.5 hover:bg-blue-50 rounded-lg"
                         title="Imprimer la demande"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v12a2 2 0 002 2h10z" /></svg>
                       </button>
                     </div>
                   </td>

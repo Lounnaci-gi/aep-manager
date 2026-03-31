@@ -2,12 +2,14 @@ const express = require('express');
 const { MongoClient } = require('mongodb');
 const cors = require('cors');
 const crypto = require('crypto');
+// ⚠️ SÉCURITÉ: Chargement des variables d'environnement pour les credentials MongoDB
 require('dotenv').config({ path: '../.env' });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const HOST = '0.0.0.0'; // Écouter sur toutes les interfaces réseau
 
-// Configuration de sécurité
+// Configuration de sécurité - Protection anti-bruteforce
 const MAX_ATTEMPTS = 3;
 const BLOCK_DURATION = 15 * 60 * 1000; // 15 minutes en millisecondes
 
@@ -15,7 +17,8 @@ const BLOCK_DURATION = 15 * 60 * 1000; // 15 minutes en millisecondes
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// Configuration MongoDB
+// ⚠️ SÉCURITÉ: Configuration MongoDB avec variables d'environnement
+// Les credentials doivent être définis dans le fichier .env (non commité dans Git)
 const uri = process.env.MONGODB_URI || '';
 const dbName = process.env.MONGODB_DB || 'GestionEau';
 
@@ -28,25 +31,41 @@ async function connectToMongoDB() {
     await client.connect();
     db = client.db(dbName);
     
-    // Créer les index nécessaires
+    // Créer les index nécessaires pour la gestion des tentatives de connexion
     await db.collection('login_attempts').createIndex({ username: 1 }, { unique: true });
     await db.collection('login_attempts').createIndex({ blockedUntil: 1 }, { expireAfterSeconds: 900 }); // TTL automatique après 15 min
     
     console.log('✅ Connecté à MongoDB Atlas');
     console.log(`   Base de données: ${dbName}`);
     console.log(`   Serveur API: http://localhost:${PORT}`);
+    console.log(`   Accès réseau: http://${getLocalIPAddress()}:${PORT}`);
   } catch (err) {
     console.error('❌ Erreur de connexion MongoDB:', err.message);
     process.exit(1);
   }
 }
 
-// Fonction de hashage SHA-256
+// Fonction pour obtenir l'adresse IP locale
+function getLocalIPAddress() {
+  const os = require('os');
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        return iface.address;
+      }
+    }
+  }
+  return 'localhost';
+}
+
+// ⚠️ SÉCURITÉ: Fonction de hashage SHA-256 avec salt pour les mots de passe
+// Le salt est généré de manière unique pour chaque utilisateur
 function hashPassword(password, salt) {
   return crypto.createHash('sha256').update(password + salt).digest('hex');
 }
 
-// Collections
+// Collections MongoDB utilisées par l'application
 const COLLECTIONS = [
   'users',
   'centres',
@@ -58,7 +77,8 @@ const COLLECTIONS = [
   'articles'
 ];
 
-// Route d'authentification avec gestion des tentatives
+// ⚠️ SÉCURITÉ: Route d'authentification avec gestion des tentatives échouées
+// Protection contre le bruteforce : blocage après 3 échecs pendant 15 minutes
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -85,7 +105,8 @@ app.post('/api/auth/login', async (req, res) => {
     const user = await users.findOne({ username });
     
     if (!user) {
-      // Incrémenter les tentatives même pour utilisateur inexistant
+      // ⚠️ SÉCURITÉ: Incrémenter les tentatives même pour utilisateur inexistant
+      // Cela empêche l'énumération des noms d'utilisateurs
       await loginAttempts.updateOne(
         { username },
         { 
@@ -119,7 +140,9 @@ app.post('/api/auth/login', async (req, res) => {
       });
     }
     
-    // Vérifier le mot de passe (hashé ou texte brut pour migration)
+    // ⚠️ SÉCURITÉ: Vérification du mot de passe avec support de migration
+    // Format actuel: salt:hash (sécurisé)
+    // Ancien format: texte brut (pour migration uniquement)
     let isValid = false;
     if (user.password && user.password.includes(':')) {
       // Nouveau format: salt:hash
@@ -165,7 +188,7 @@ app.post('/api/auth/login', async (req, res) => {
       });
     }
     
-    // Connexion réussie - réinitialiser les tentatives
+    // ⚠️ SÉCURITÉ: Connexion réussie - réinitialiser les tentatives
     await loginAttempts.updateOne(
       { username },
       { 
@@ -175,7 +198,7 @@ app.post('/api/auth/login', async (req, res) => {
       { upsert: true }
     );
     
-    // Retourner l'utilisateur sans le mot de passe
+    // Retourner l'utilisateur sans le mot de passe (sécurité)
     const { password: _, ...userWithoutPassword } = user;
     res.json({ success: true, user: userWithoutPassword });
     
@@ -263,7 +286,8 @@ COLLECTIONS.forEach(colName => {
         }
       }
       
-      // Vérification spécifique pour les utilisateurs
+      // ⚠️ SÉCURITÉ: Vérification spécifique pour les utilisateurs
+      // Empêcher la création de multiples administrateurs
       if (colName === 'users') {
         // Vérifier si c'est une création d'administrateur alors qu'un existe déjà
         if (doc.role === 'Administrateur') {
@@ -307,7 +331,7 @@ COLLECTIONS.forEach(colName => {
   });
 });
 
-// Route de statut
+// Route de statut pour vérifier la santé du serveur
 app.get('/api/status', (req, res) => {
   res.json({ 
     status: 'connected', 
@@ -316,7 +340,7 @@ app.get('/api/status', (req, res) => {
   });
 });
 
-// Route pour les statistiques
+// Route pour les statistiques (nombre de documents par collection)
 app.get('/api/stats', async (req, res) => {
   try {
     const stats = {};
@@ -331,11 +355,11 @@ app.get('/api/stats', async (req, res) => {
   }
 });
 
-// Démarrer le serveur
+// Démarrer le serveur avec connexion à MongoDB
 async function start() {
   await connectToMongoDB();
   
-  app.listen(PORT, () => {
+  app.listen(PORT, HOST, () => {
     console.log('\n🚀 Serveur API démarré');
     console.log('--------------------------');
   });
@@ -343,7 +367,7 @@ async function start() {
 
 start();
 
-// Gestion de l'arrêt
+// ⚠️ SÉCURITÉ: Gestion propre de l'arrêt du serveur pour fermer les connexions
 process.on('SIGINT', async () => {
   console.log('\n⚠️ Arrêt du serveur...');
   if (client) {

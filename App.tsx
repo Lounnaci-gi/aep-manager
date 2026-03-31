@@ -76,6 +76,16 @@ const App: React.FC = () => {
       setAgencies(agc);
     } catch (error) {
       console.error("Erreur de chargement:", error);
+      // Afficher une notification utilisateur en cas d'erreur
+      Swal.fire({
+        title: 'Erreur de Connexion',
+        text: 'Impossible de charger les données. Vérifiez que le backend est en cours d\'exécution.',
+        icon: 'error',
+        toast: true,
+        position: 'top-end',
+        timer: 5000,
+        showConfirmButton: false
+      });
     } finally {
       setLoading(false);
     }
@@ -137,42 +147,92 @@ const App: React.FC = () => {
   const newRequestsCount = requests.filter(r => r.status === RequestStatus.RECEIVED).length;
 
   const handleSaveCentre = async (centre: Centre) => {
-    await DbService.saveCentre(centre);
-    await loadData();
-    Swal.fire({ title: 'Centre Enregistré', icon: 'success', timer: 1500, showConfirmButton: false });
+    try {
+      await DbService.saveCentre(centre);
+      await loadData();
+      Swal.fire({ title: 'Centre Enregistré', icon: 'success', timer: 1500, showConfirmButton: false });
+    } catch (error) {
+      console.error('Erreur lors de l\'enregistrement du centre:', error);
+      Swal.fire({
+        title: 'Erreur',
+        text: 'Impossible d\'enregistrer le centre. Vérifiez la connexion au serveur.',
+        icon: 'error',
+        confirmButtonColor: '#dc2626'
+      });
+    }
   };
 
   const handleDeleteCentre = async (id: string) => {
     const result = await Swal.fire({ title: 'Supprimer ce centre ?', icon: 'warning', showCancelButton: true });
     if (result.isConfirmed) {
-      await DbService.deleteCentre(id);
-      await loadData();
-      Swal.fire('Supprimé !', '', 'success');
+      try {
+        await DbService.deleteCentre(id);
+        await loadData();
+        Swal.fire('Supprimé !', '', 'success');
+      } catch (error) {
+        console.error('Erreur lors de la suppression du centre:', error);
+        Swal.fire({
+          title: 'Erreur',
+          text: 'Impossible de supprimer le centre. Vérifiez la connexion au serveur.',
+          icon: 'error',
+          confirmButtonColor: '#dc2626'
+        });
+      }
     }
   };
 
   const handleSaveAgency = async (agency: CommercialAgency) => {
-    await DbService.saveAgency(agency);
-    await loadData();
-    Swal.fire({ title: 'Agence Mise à jour', icon: 'success', timer: 1500, showConfirmButton: false });
+    try {
+      await DbService.saveAgency(agency);
+      await loadData();
+      Swal.fire({ title: 'Agence Mise à jour', icon: 'success', timer: 1500, showConfirmButton: false });
+    } catch (error) {
+      console.error('Erreur lors de l\'enregistrement de l\'agence:', error);
+      Swal.fire({
+        title: 'Erreur',
+        text: 'Impossible d\'enregistrer l\'agence. Vérifiez la connexion au serveur.',
+        icon: 'error',
+        confirmButtonColor: '#dc2626'
+      });
+    }
   };
 
   const handleDeleteAgency = async (id: string) => {
     const result = await Swal.fire({ title: 'Supprimer cette agence ?', icon: 'warning', showCancelButton: true });
     if (result.isConfirmed) {
-      await DbService.deleteAgency(id);
-      await loadData();
-      Swal.fire('Supprimée', '', 'success');
+      try {
+        await DbService.deleteAgency(id);
+        await loadData();
+        Swal.fire('Supprimée', '', 'success');
+      } catch (error) {
+        console.error('Erreur lors de la suppression de l\'agence:', error);
+        Swal.fire({
+          title: 'Erreur',
+          text: 'Impossible de supprimer l\'agence. Vérifiez la connexion au serveur.',
+          icon: 'error',
+          confirmButtonColor: '#dc2626'
+        });
+      }
     }
   };
 
   const handleSaveQuote = async (quote: Quote) => {
-    await DbService.saveQuote(quote);
-    if (quote.requestId) await DbService.updateRequestStatus(quote.requestId, RequestStatus.QUOTED);
-    await loadData();
-    setView('list');
-    setEditingQuote(undefined);
-    Swal.fire({ title: 'Devis Archivé', icon: 'success' });
+    try {
+      await DbService.saveQuote(quote);
+      if (quote.requestId) await DbService.updateRequestStatus(quote.requestId, RequestStatus.QUOTED);
+      await loadData();
+      setView('list');
+      setEditingQuote(undefined);
+      Swal.fire({ title: 'Devis Archivé', icon: 'success' });
+    } catch (error) {
+      console.error('Erreur lors de l\'enregistrement du devis:', error);
+      Swal.fire({
+        title: 'Erreur',
+        text: 'Impossible d\'enregistrer le devis. Vérifiez la connexion au serveur.',
+        icon: 'error',
+        confirmButtonColor: '#dc2626'
+      });
+    }
   };
 
   const handleDeleteQuote = async (id: string) => {
@@ -197,9 +257,22 @@ const App: React.FC = () => {
   };
 
   const handleUpdateStatus = async (id: string, status: QuoteStatus) => {
-    await DbService.updateQuoteStatus(id, status);
-    await loadData();
-    Swal.fire({ title: 'Statut Mis à jour', icon: 'success', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
+    try {
+      await DbService.updateQuoteStatus(id, status);
+      await loadData();
+      Swal.fire({ title: 'Statut Mis à jour', icon: 'success', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du statut:', error);
+      Swal.fire({
+        title: 'Erreur',
+        text: 'Impossible de mettre à jour le statut.',
+        icon: 'error',
+        toast: true,
+        position: 'top-end',
+        timer: 3000,
+        showConfirmButton: false
+      });
+    }
   };
 
   const handleSaveRequest = async (request: WorkRequest) => {
@@ -220,32 +293,84 @@ const App: React.FC = () => {
       }
     } catch (error) {
       console.error("Erreur d'enregistrement:", error);
-      Swal.fire('Erreur', "Échec de l'enregistrement de la demande.", 'error');
+      Swal.fire({
+        title: 'Erreur d\'Enregistrement',
+        text: "Échec de l'enregistrement de la demande. Vérifiez que le backend est connecté.",
+        icon: 'error',
+        confirmButtonColor: '#dc2626'
+      });
     }
   };
 
   const handleDeleteRequest = async (id: string) => {
     const result = await Swal.fire({ title: 'Supprimer cette demande ?', icon: 'warning', showCancelButton: true });
     if (result.isConfirmed) {
-      await DbService.deleteRequest(id);
-      await loadData();
-      Swal.fire('Supprimée', '', 'success');
+      try {
+        await DbService.deleteRequest(id);
+        await loadData();
+        Swal.fire('Supprimée', '', 'success');
+      } catch (error) {
+        console.error('Erreur lors de la suppression de la demande:', error);
+        Swal.fire({
+          title: 'Erreur',
+          text: 'Impossible de supprimer la demande. Vérifiez la connexion au serveur.',
+          icon: 'error',
+          confirmButtonColor: '#dc2626'
+        });
+      }
     }
   };
 
   const handleUpdateRequestStatus = async (id: string, status: RequestStatus) => {
-    await DbService.updateRequestStatus(id, status);
-    await loadData();
-    Swal.fire({ title: 'Statut Mis à jour', icon: 'success', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
+    try {
+      await DbService.updateRequestStatus(id, status);
+      await loadData();
+      Swal.fire({ title: 'Statut Mis à jour', icon: 'success', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du statut de la demande:', error);
+      Swal.fire({
+        title: 'Erreur',
+        text: 'Impossible de mettre à jour le statut.',
+        icon: 'error',
+        toast: true,
+        position: 'top-end',
+        timer: 3000,
+        showConfirmButton: false
+      });
+    }
   };
 
   const handleUpdateRequestWithValidations = async (request: WorkRequest) => {
-    await DbService.saveRequest(request);
-    await loadData();
-    Swal.fire({ title: 'Validation Enregistrée', icon: 'success', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
+    try {
+      await DbService.saveRequest(request);
+      await loadData();
+      Swal.fire({ title: 'Validation Enregistrée', icon: 'success', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
+    } catch (error) {
+      console.error('Erreur lors de l\'enregistrement de la validation:', error);
+      Swal.fire({
+        title: 'Erreur',
+        text: 'Impossible d\'enregistrer la validation.',
+        icon: 'error',
+        toast: true,
+        position: 'top-end',
+        timer: 3000,
+        showConfirmButton: false
+      });
+    }
   };
 
   const handleCreateQuoteFromRequest = (request: WorkRequest) => {
+    // Notification de création de devis
+    Swal.fire({
+      title: 'Création de Devis',
+      text: 'Toutes les validations sont terminées. Vous pouvez maintenant créer le devis.',
+      icon: 'info',
+      toast: true,
+      position: 'top-end',
+      timer: 3000,
+      showConfirmButton: false
+    });
+    
     // Pour les branchements, utiliser le formulaire spécifique
     if (request.serviceType.toLowerCase().includes("branchement")) {
       setQuoteRequest(request);
@@ -282,85 +407,155 @@ const App: React.FC = () => {
   };
 
   const handleSaveClient = async (client: Client) => {
-    await DbService.saveClient(client);
-    await loadData();
-    setView('clients');
-    setEditingClient(undefined);
-    Swal.fire({ title: 'Abonné Enregistré', icon: 'success', timer: 1500, showConfirmButton: false });
+    try {
+      await DbService.saveClient(client);
+      await loadData();
+      setView('clients');
+      setEditingClient(undefined);
+      Swal.fire({ title: 'Abonné Enregistré', icon: 'success', timer: 1500, showConfirmButton: false });
+    } catch (error) {
+      console.error('Erreur lors de l\'enregistrement du client:', error);
+      Swal.fire({
+        title: 'Erreur',
+        text: 'Impossible d\'enregistrer le client. Vérifiez la connexion au serveur.',
+        icon: 'error',
+        confirmButtonColor: '#dc2626'
+      });
+    }
   };
 
   const handleDeleteClient = async (id: string) => {
     const result = await Swal.fire({ title: 'Supprimer cet abonné ?', icon: 'warning', showCancelButton: true });
     if (result.isConfirmed) {
-      await DbService.deleteClient(id);
-      await loadData();
-      Swal.fire('Supprimé', '', 'success');
+      try {
+        await DbService.deleteClient(id);
+        await loadData();
+        Swal.fire('Supprimé', '', 'success');
+      } catch (error) {
+        console.error('Erreur lors de la suppression du client:', error);
+        Swal.fire({
+          title: 'Erreur',
+          text: 'Impossible de supprimer le client. Vérifiez la connexion au serveur.',
+          icon: 'error',
+          confirmButtonColor: '#dc2626'
+        });
+      }
     }
   };
 
   const handleSaveUser = async (user: User) => {
-    // Vérifier les droits du chef de centre
-    if (currentUser?.role === UserRole.CHEF_CENTRE) {
-      if (user.centreId !== currentUser.centreId) {
+    try {
+      // Vérifier les droits du chef de centre
+      if (currentUser?.role === UserRole.CHEF_CENTRE) {
+        if (user.centreId !== currentUser.centreId) {
+          Swal.fire({
+            title: 'Action non autorisée',
+            text: 'En tant que Chef-Centre, vous ne pouvez créer des utilisateurs que dans votre propre centre.',
+            icon: 'error',
+            confirmButtonColor: '#dc2626'
+          });
+          return;
+        }
+      }
+      
+      // Vérifier s'il y a déjà un administrateur
+      const existingAdmin = users.some(u => u.role === UserRole.ADMIN && u.id !== user.id);
+      
+      if (user.role === UserRole.ADMIN && existingAdmin) {
         Swal.fire({
           title: 'Action non autorisée',
-          text: 'En tant que Chef-Centre, vous ne pouvez créer des utilisateurs que dans votre propre centre.',
+          text: 'Un administrateur existe déjà dans le système. Vous ne pouvez pas créer un second administrateur.',
           icon: 'error',
           confirmButtonColor: '#dc2626'
         });
         return;
       }
-    }
-    
-    // Vérifier s'il y a déjà un administrateur
-    const existingAdmin = users.some(u => u.role === UserRole.ADMIN && u.id !== user.id);
-    
-    if (user.role === UserRole.ADMIN && existingAdmin) {
+      
+      await DbService.saveUser(user);
+      await loadData();
+      setView('users');
+      setEditingUser(undefined);
+      Swal.fire({ title: 'Collaborateur Mis à jour', icon: 'success', timer: 1500, showConfirmButton: false });
+    } catch (error) {
+      console.error('Erreur lors de l\'enregistrement de l\'utilisateur:', error);
       Swal.fire({
-        title: 'Action non autorisée',
-        text: 'Un administrateur existe déjà dans le système. Vous ne pouvez pas créer un second administrateur.',
+        title: 'Erreur',
+        text: 'Impossible d\'enregistrer l\'utilisateur. Vérifiez la connexion au serveur.',
         icon: 'error',
         confirmButtonColor: '#dc2626'
       });
-      return;
     }
-    
-    await DbService.saveUser(user);
-    await loadData();
-    setView('users');
-    setEditingUser(undefined);
-    Swal.fire({ title: 'Collaborateur Mis à jour', icon: 'success', timer: 1500, showConfirmButton: false });
   };
 
   const handleDeleteUser = async (id: string) => {
     const result = await Swal.fire({ title: 'Révoquer l\'accès ?', icon: 'warning', showCancelButton: true });
     if (result.isConfirmed) {
-      await DbService.deleteUser(id);
-      await loadData();
-      Swal.fire('Supprimé', '', 'success');
+      try {
+        await DbService.deleteUser(id);
+        await loadData();
+        Swal.fire('Supprimé', '', 'success');
+      } catch (error) {
+        console.error('Erreur lors de la suppression de l\'utilisateur:', error);
+        Swal.fire({
+          title: 'Erreur',
+          text: 'Impossible de supprimer l\'utilisateur. Vérifiez la connexion au serveur.',
+          icon: 'error',
+          confirmButtonColor: '#dc2626'
+        });
+      }
     }
   };
 
   const handleAddWorkType = async (label: string, workType?: WorkType) => {
-    const currentTypes = await DbService.getWorkTypes();
-    const newType = workType || { id: Date.now().toString(), label };
-    const newTypes = [...currentTypes, newType];
-    await DbService.saveWorkTypes(newTypes);
-    await loadData();
+    try {
+      const currentTypes = await DbService.getWorkTypes();
+      const newType = workType || { id: Date.now().toString(), label };
+      const newTypes = [...currentTypes, newType];
+      await DbService.saveWorkTypes(newTypes);
+      await loadData();
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout du type de travail:', error);
+      Swal.fire({
+        title: 'Erreur',
+        text: 'Impossible d\'ajouter le type de travail.',
+        icon: 'error',
+        confirmButtonColor: '#dc2626'
+      });
+    }
   };
 
   const handleUpdateWorkType = async (id: string, label: string, workType?: WorkType) => {
-    const currentTypes = await DbService.getWorkTypes();
-    const newTypes = currentTypes.map(t => t.id === id ? workType || { ...t, label } : t);
-    await DbService.saveWorkTypes(newTypes);
-    await loadData();
+    try {
+      const currentTypes = await DbService.getWorkTypes();
+      const newTypes = currentTypes.map(t => t.id === id ? workType || { ...t, label } : t);
+      await DbService.saveWorkTypes(newTypes);
+      await loadData();
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du type de travail:', error);
+      Swal.fire({
+        title: 'Erreur',
+        text: 'Impossible de mettre à jour le type de travail.',
+        icon: 'error',
+        confirmButtonColor: '#dc2626'
+      });
+    }
   };
 
   const handleDeleteWorkType = async (id: string) => {
-    const currentTypes = await DbService.getWorkTypes();
-    const newTypes = currentTypes.filter(t => t.id !== id);
-    await DbService.saveWorkTypes(newTypes);
-    await loadData();
+    try {
+      const currentTypes = await DbService.getWorkTypes();
+      const newTypes = currentTypes.filter(t => t.id !== id);
+      await DbService.saveWorkTypes(newTypes);
+      await loadData();
+    } catch (error) {
+      console.error('Erreur lors de la suppression du type de travail:', error);
+      Swal.fire({
+        title: 'Erreur',
+        text: 'Impossible de supprimer le type de travail.',
+        icon: 'error',
+        confirmButtonColor: '#dc2626'
+      });
+    }
   };
 
   if (!currentUser) return <Login onLogin={handleLogin} />;
