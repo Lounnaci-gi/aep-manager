@@ -143,8 +143,41 @@ const App: React.FC = () => {
     }).length;
   };
 
+  // Calcul des demandes prêtes pour création de devis (uniquement pour ADMIN, CHEF_CENTRE, TECHICO_COMMERCIAL)
+  const getReadyForQuoteCount = () => {
+    if (!currentUser) return 0;
+    
+    // Seuls ces rôles peuvent créer des devis
+    const canCreateQuotes = currentUser.role === UserRole.ADMIN || 
+                           currentUser.role === UserRole.CHEF_CENTRE || 
+                           currentUser.role === UserRole.TECHICO_COMMERCIAL;
+    
+    if (!canCreateQuotes) return 0;
+    
+    return requests.filter(req => {
+      // La demande doit être validée ou avoir un statut QUOTED
+      if (req.status !== RequestStatus.VALIDATED && req.status !== RequestStatus.QUOTED) return false;
+      
+      // Vérifier qu'il n'y a pas encore de devis créé pour cette demande
+      const hasQuote = quotes.some(q => q.requestId === req.id);
+      if (hasQuote) return false;
+      
+      // Vérifier que toutes les validations requises sont faites
+      if (req.assignedValidations && req.assignedValidations.length > 0) {
+        const allValidated = req.assignedValidations.every(type => 
+          req.validations?.find(v => v.type === type && v.status === 'validated')
+        );
+        return allValidated;
+      }
+      
+      // Si pas de validations requises, la demande est prête
+      return true;
+    }).length;
+  };
+
   const pendingValidationsCount = getPendingValidationsCount();
   const newRequestsCount = requests.filter(r => r.status === RequestStatus.RECEIVED).length;
+  const readyForQuoteCount = getReadyForQuoteCount();
 
   const handleSaveCentre = async (centre: Centre) => {
     try {
@@ -580,6 +613,7 @@ const App: React.FC = () => {
       onEditProfile={() => { setEditingUser(currentUser || undefined); setView('user-form'); }}
       requestsBadgeCount={newRequestsCount}
       validationsBadgeCount={pendingValidationsCount}
+      quotesBadgeCount={readyForQuoteCount}
     >
       <main className="max-w-[94%] mx-auto py-6 sm:px-6 lg:px-8">
         {view === 'dashboard' && <Dashboard quotes={quotes} requests={requests} workTypes={workTypes} />}

@@ -20,9 +20,10 @@ interface LayoutProps {
   onEditProfile?: () => void;
   requestsBadgeCount?: number;
   validationsBadgeCount?: number;
+  quotesBadgeCount?: number;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, currentView, setView, user, onLogout, onEditProfile, requestsBadgeCount = 0, validationsBadgeCount = 0 }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, currentView, setView, user, onLogout, onEditProfile, requestsBadgeCount = 0, validationsBadgeCount = 0, quotesBadgeCount = 0 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
@@ -33,7 +34,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, setView, 
 
   const navItems: NavItem[] = [
     { id: 'dashboard', label: 'Dashboard', show: true },  // Modifié pour permettre l'accès à tous les utilisateurs
-    { id: 'requests', label: 'Demandes', show: true, badge: requestsBadgeCount > 0 ? requestsBadgeCount : (validationsBadgeCount > 0 ? validationsBadgeCount : undefined) },
+    { id: 'requests', label: 'Demandes', show: true, badge: (user?.role === UserRole.ADMIN || user?.role === UserRole.CHEF_CENTRE || user?.role === UserRole.TECHICO_COMMERCIAL) ? (quotesBadgeCount > 0 ? quotesBadgeCount : undefined) : (requestsBadgeCount > 0 ? requestsBadgeCount : (validationsBadgeCount > 0 ? validationsBadgeCount : undefined)) },
     { id: 'list', label: 'Chantiers', show: true },
     { id: 'articles', label: 'Articles', show: (user?.role === UserRole.TECHICO_COMMERCIAL || user?.role === UserRole.CHEF_CENTRE || isAdmin) },
     { id: 'clients', label: 'Clients', show: true },

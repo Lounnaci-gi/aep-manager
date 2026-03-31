@@ -752,19 +752,22 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                         </button>
                       )}
 
-                      <button 
-                        onClick={() => {
-                          if (req.serviceType.toLowerCase().includes('branchement')) {
-                            setPrintingBranchement(req);
-                          } else {
-                            setPrintingRequest(req);
-                          }
-                        }} 
-                        className="text-gray-400 hover:text-blue-600 transition-colors p-1.5 hover:bg-blue-50 rounded-lg"
-                        title="Imprimer la demande"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v12a2 2 0 002 2h10z" /></svg>
-                      </button>
+                      {/* Bouton Imprimer - Réservé aux utilisateurs autorisés à créer des demandes */}
+                      {(currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.CHEF_CENTRE || currentUser?.role === UserRole.TECHICO_COMMERCIAL) && (
+                        <button 
+                          onClick={() => {
+                            if (req.serviceType.toLowerCase().includes('branchement')) {
+                              setPrintingBranchement(req);
+                            } else {
+                              setPrintingRequest(req);
+                            }
+                          }} 
+                          className="text-gray-400 hover:text-blue-600 transition-colors p-1.5 hover:bg-blue-50 rounded-lg"
+                          title="Imprimer la demande"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v12a2 2 0 002 2h10z" /></svg>
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
