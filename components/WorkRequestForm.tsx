@@ -46,7 +46,7 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
     description: initialData?.description || '',
     type: initialData?.type || 'Propriétaire',
     agencyId: initialData?.agencyId || currentUserAgencyId || (agencies.length > 0 ? agencies[0].id : ''),
-    branchementType: initialData?.branchementType || BranchementType.DOMESTIQUE,
+    branchementType: initialData?.branchementType || '',
     branchementDetails: initialData?.branchementDetails || '',
     diameter: initialData?.diameter || '',
     flowRate: initialData?.flowRate || '',
@@ -178,9 +178,36 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
       assignedValidations.push(ValidationType.AGENCY, ValidationType.CUSTOMER_SERVICE, ValidationType.LAWYER);
     }
     
+    // Capitaliser la 1ère lettre de chaque mot
+    const capitalizeWords = (str: string | undefined | null) => {
+      if (typeof str !== 'string' || !str) return str;
+      return str.replace(/(?:^|\s|-|')\S/g, match => match.toUpperCase());
+    };
+
+    const formattedData = { ...formData };
+    const fieldsToCapitalize = [
+      'businessName', 'clientName', 'idDocumentIssuer', 
+      'address', 'commune', 'installationAddress', 'installationCommune',
+      'branchementDetails', 'description'
+    ] as const;
+
+    fieldsToCapitalize.forEach(field => {
+      if (typeof formattedData[field] === 'string' && formattedData[field]) {
+        (formattedData as any)[field] = capitalizeWords(formattedData[field] as string);
+      }
+    });
+
+    // Nettoyer les champs spécifiques au branchement si ce n'est pas un branchement d'eau potable
+    if (!isBranchementEau) {
+      formattedData.branchementType = '' as any;
+      formattedData.branchementDetails = '';
+      formattedData.diameter = '';
+      formattedData.flowRate = '';
+    }
+    
     const request: WorkRequest = {
       id: initialData?.id || generateTempRequestId(),
-      ...formData,
+      ...formattedData,
       status: initialData?.status || (isBranchementEau ? RequestStatus.AWAITING_AGENCY_VALIDATION : RequestStatus.RECEIVED),
       assignedValidations,
       validations: assignedValidations.map(type => ({
@@ -301,6 +328,7 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                     required 
                     type="text" 
                     placeholder="N° Pièce" 
+                    maxLength={18}
                     className={`rounded-lg border-blue-100 p-2.5 text-[11px] font-black border bg-white ${!isServiceTypeSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
                     value={formData.idDocumentNumber} 
                     onChange={e => isServiceTypeSelected && setFormData({ ...formData, idDocumentNumber: e.target.value })}
@@ -344,22 +372,24 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
             </div>
           </div>
 
+          {/* Adresse de correspondance - always shown for any request */}
+          <div className="space-y-3 p-4 bg-gray-50 border border-gray-100 rounded-2xl">
+            <div className="border-b border-gray-200 pb-4">
+              <h5 className="text-[11px] font-black text-gray-600 uppercase tracking-widest mb-3">Adresse de correspondance</h5>
+              <input required type="text" placeholder="Rue" maxLength={120} className="w-full rounded-xl border-gray-200 p-3.5 text-base font-bold border mb-3" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} />
+              <input required type="text" placeholder="Commune" maxLength={40} className="w-full rounded-xl border-gray-200 p-3.5 text-base font-bold border mb-3" value={formData.commune} onChange={e => setFormData({ ...formData, commune: e.target.value })} />
+              <input type="text" placeholder="Téléphone (facultatif)" maxLength={10} className="w-full rounded-xl border-gray-200 p-3.5 text-base font-bold border mb-3" value={formData.correspondencePhone} onChange={e => setFormData({ ...formData, correspondencePhone: e.target.value })} />
+              <input type="email" placeholder="Email (facultatif)" maxLength={50} className="w-full rounded-xl border-gray-200 p-3.5 text-base font-bold border" value={formData.correspondenceEmail} onChange={e => setFormData({ ...formData, correspondenceEmail: e.target.value })} />
+            </div>
+          </div>
+
           {isBranchementEau && (
-            <div className="space-y-3 p-4 bg-gray-50 border border-gray-100 rounded-2xl">
-              {/* Adresse de correspondance */}
-              <div className="border-b border-gray-200 pb-4 mb-4">
-                <h5 className="text-[11px] font-black text-gray-600 uppercase tracking-widest mb-3">Adresse de correspondance</h5>
-                <input required type="text" placeholder="Rue" className="w-full rounded-xl border-gray-200 p-3.5 text-base font-bold border mb-3" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} />
-                <input required type="text" placeholder="Commune" className="w-full rounded-xl border-gray-200 p-3.5 text-base font-bold border mb-3" value={formData.commune} onChange={e => setFormData({ ...formData, commune: e.target.value })} />
-                <input type="text" placeholder="Téléphone (facultatif)" className="w-full rounded-xl border-gray-200 p-3.5 text-base font-bold border mb-3" value={formData.correspondencePhone} onChange={e => setFormData({ ...formData, correspondencePhone: e.target.value })} />
-                <input type="email" placeholder="Email (facultatif)" className="w-full rounded-xl border-gray-200 p-3.5 text-base font-bold border" value={formData.correspondenceEmail} onChange={e => setFormData({ ...formData, correspondenceEmail: e.target.value })} />
-              </div>
-              
-              {/* Adresse de branchement */}
+            <div className="space-y-3 p-4 bg-blue-50/20 border border-blue-100 rounded-2xl">
+              {/* Adresse de branchement & Specs */}
               <div className="border-b border-gray-200 pb-4 mb-4">
                 <h5 className="text-[11px] font-black text-gray-600 uppercase tracking-widest mb-3">Adresse de branchement</h5>
-                <input required type="text" placeholder="Rue" className="w-full rounded-xl border-gray-200 p-3.5 text-base font-bold border mb-3" value={formData.installationAddress} onChange={e => setFormData({ ...formData, installationAddress: e.target.value })} />
-                <input required type="text" placeholder="Commune" className="w-full rounded-xl border-gray-200 p-3.5 text-base font-bold border mb-3" value={formData.installationCommune} onChange={e => setFormData({ ...formData, installationCommune: e.target.value })} />
+                <input required type="text" placeholder="Rue" maxLength={120} className="w-full rounded-xl border-gray-200 p-3.5 text-base font-bold border mb-3" value={formData.installationAddress} onChange={e => setFormData({ ...formData, installationAddress: e.target.value })} />
+                <input required type="text" placeholder="Commune" maxLength={40} className="w-full rounded-xl border-gray-200 p-3.5 text-base font-bold border mb-3" value={formData.installationCommune} onChange={e => setFormData({ ...formData, installationCommune: e.target.value })} />
               </div>
               
               {/* Diamètre et Débit */}
@@ -506,6 +536,7 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 value={formData.branchementType} 
                 onChange={e => setFormData({ ...formData, branchementType: e.target.value as BranchementType })}
               >
+                <option value="" disabled>--- Sélectionner le type ---</option>
                 <option value={BranchementType.DOMESTIQUE}>{BranchementType.DOMESTIQUE}</option>
                 <option value={BranchementType.IMMEUBLE}>{BranchementType.IMMEUBLE}</option>
                 <option value={BranchementType.COMMERCIAL}>{BranchementType.COMMERCIAL}</option>
@@ -530,13 +561,13 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
           <div className="space-y-3 p-4 bg-gray-50 border border-gray-100 rounded-2xl">
             {isBranchementEau ? (
               <>
-                <input required type="text" placeholder="Adresse précise du site" className="w-full rounded-xl border-gray-200 p-3.5 text-base font-bold border" value={formData.installationAddress} onChange={e => setFormData({ ...formData, installationAddress: e.target.value })} />
-                <input required type="text" placeholder="Commune du site" className="w-full rounded-xl border-gray-200 p-3.5 text-base font-black border" value={formData.installationCommune} onChange={e => setFormData({ ...formData, installationCommune: e.target.value })} />
+                <input required type="text" placeholder="Adresse précise du site" maxLength={120} className="w-full rounded-xl border-gray-200 p-3.5 text-base font-bold border" value={formData.installationAddress} onChange={e => setFormData({ ...formData, installationAddress: e.target.value })} />
+                <input required type="text" placeholder="Commune du site" maxLength={40} className="w-full rounded-xl border-gray-200 p-3.5 text-base font-black border" value={formData.installationCommune} onChange={e => setFormData({ ...formData, installationCommune: e.target.value })} />
               </>
             ) : (
               <>
-                <input required type="text" placeholder="Adresse précise du site" className="w-full rounded-xl border-gray-200 p-3.5 text-base font-bold border" value={formData.installationAddress} onChange={e => setFormData({ ...formData, installationAddress: e.target.value })} />
-                <input required type="text" placeholder="Commune du site" className="w-full rounded-xl border-gray-200 p-3.5 text-base font-black border" value={formData.installationCommune} onChange={e => setFormData({ ...formData, installationCommune: e.target.value })} />
+                <input required type="text" placeholder="Adresse précise du site" maxLength={120} className="w-full rounded-xl border-gray-200 p-3.5 text-base font-bold border" value={formData.installationAddress} onChange={e => setFormData({ ...formData, installationAddress: e.target.value })} />
+                <input required type="text" placeholder="Commune du site" maxLength={40} className="w-full rounded-xl border-gray-200 p-3.5 text-base font-black border" value={formData.installationCommune} onChange={e => setFormData({ ...formData, installationCommune: e.target.value })} />
               </>
             )}
           </div>

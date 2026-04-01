@@ -23,7 +23,7 @@ export const BranchementPrint: React.FC<BranchementPrintProps> = ({ request, age
   const isIndustriel = request.branchementType === BranchementType.INDUSTRIEL;
   const isChantier = request.branchementType === BranchementType.CHANTIER;
   const isIncendie = request.branchementType === BranchementType.INCENDIE;
-  const isAutre = request.branchementType === BranchementType.AUTRE;
+  const isAutre = !request.branchementType || request.branchementType === BranchementType.AUTRE;
 
   // Determine type: Ordinaire, Temporaire, Spécial
   const branchementCategory = isChantier ? 'Temporaire' : (isIncendie || isIndustriel ? 'Spécial' : 'Ordinaire');
@@ -119,7 +119,7 @@ export const BranchementPrint: React.FC<BranchementPrintProps> = ({ request, age
             <img src="/ade.png" alt="ADE Logo" style={{ height: '110px', margin: '0 auto' }} />
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '10pt', fontWeight: 'bold' }}>Agence de {agencyName.toUpperCase()}</div>
+            <div style={{ fontSize: '10pt', fontWeight: 'bold' }}>Agence de {agency?.name || '........................'}</div>
           </div>
         </div>
 
@@ -226,7 +226,9 @@ export const BranchementPrint: React.FC<BranchementPrintProps> = ({ request, age
             </div>
             <div>
               <span className={`checkbox ${isAutre ? 'checked' : ''}`}></span>
-              Autres (à préciser) : <span className="field-line" style={{ width: '200px' }}>{isAutre ? (request.branchementDetails || '') : ''}</span>
+              Autres (à préciser) : <span className="field-line" style={{ width: '200px' }}>
+                {!request.branchementType ? (request.serviceType || '') : (request.branchementType === BranchementType.AUTRE ? (request.branchementDetails || '') : '')}
+              </span>
             </div>
           </div>
         </div>
@@ -269,7 +271,7 @@ export const BranchementPrint: React.FC<BranchementPrintProps> = ({ request, age
         <div style={{ marginBottom: '50px', marginTop: '10px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9.5pt' }}>
             <div>
-              Fait à , _ <strong>{agencyName.toUpperCase()}</strong> ____ le <span className="field-line" style={{ width: '150px' }}>{new Date(request.createdAt).toLocaleDateString('fr-DZ')}</span>
+              Fait à , <strong>{agency?.name || '........................'}</strong> le <span className="field-line" style={{ width: '150px' }}>{new Date(request.createdAt).toLocaleDateString('fr-DZ')}</span>
             </div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontWeight: 'bold' }}>Signature</div>

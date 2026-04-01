@@ -383,7 +383,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                 <div className="p-3 bg-white rounded-xl border border-blue-100 space-y-2 shadow-inner">
                   <p className="text-[8px] font-black text-blue-500 uppercase tracking-widest leading-none">Pièce : {formData.idDocumentType}</p>
                   <div className="grid grid-cols-2 gap-2">
-                    <input required type="text" placeholder="N° Pièce" className="w-full border-none p-0 text-[10px] font-black bg-transparent" value={formData.idDocumentNumber} onChange={e => setFormData({ ...formData, idDocumentNumber: e.target.value })} />
+                    <input required type="text" placeholder="N° Pièce" maxLength={18} className="w-full border-none p-0 text-[10px] font-black bg-transparent" value={formData.idDocumentNumber} onChange={e => setFormData({ ...formData, idDocumentNumber: e.target.value })} />
                     <input required type="date" className="w-full border-none p-0 text-[10px] font-black bg-transparent text-right" value={formData.idDocumentIssueDate} onChange={e => setFormData({ ...formData, idDocumentIssueDate: e.target.value })} />
                   </div>
                 </div>
@@ -400,16 +400,16 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
             </div>
             
             <div className="grid grid-cols-2 gap-3">
-              <input required placeholder="Commune Domicile" type="text" className="w-full rounded-xl border-gray-200 p-3 text-sm font-bold border" value={formData.commune} onChange={e => setFormData({ ...formData, commune: e.target.value })} />
-              <input required placeholder="Téléphone" type="tel" className="w-full rounded-xl border-gray-200 p-3 text-sm font-black border" value={formData.clientPhone} onChange={e => setFormData({ ...formData, clientPhone: e.target.value })} />
+              <input required placeholder="Commune Domicile" type="text" maxLength={40} className="w-full rounded-xl border-gray-200 p-3 text-sm font-bold border" value={formData.commune} onChange={e => setFormData({ ...formData, commune: e.target.value })} />
+              <input required placeholder="Téléphone" type="tel" maxLength={10} className="w-full rounded-xl border-gray-200 p-3 text-sm font-black border" value={formData.clientPhone} onChange={e => setFormData({ ...formData, clientPhone: e.target.value })} />
             </div>
           </div>
 
           <div className="space-y-5">
             <h3 className="text-[10px] font-black text-amber-600 border-l-4 border-amber-600 pl-3 uppercase tracking-widest">Site Technique</h3>
             <div className="bg-amber-50/50 p-5 rounded-3xl border border-amber-100 space-y-4">
-              <input required type="text" placeholder="Adresse précise du site" className="w-full rounded-xl border-amber-200 p-3 text-sm font-bold bg-white shadow-sm" value={formData.installationAddress} onChange={e => setFormData({ ...formData, installationAddress: e.target.value })} />
-              <input required type="text" placeholder="Commune du site" className="w-full rounded-xl border-amber-200 p-3 text-sm font-black bg-white shadow-sm" value={formData.installationCommune} onChange={e => setFormData({ ...formData, installationCommune: e.target.value })} />
+              <input required type="text" placeholder="Adresse précise du site" maxLength={120} className="w-full rounded-xl border-amber-200 p-3 text-sm font-bold bg-white shadow-sm" value={formData.installationAddress} onChange={e => setFormData({ ...formData, installationAddress: e.target.value })} />
+              <input required type="text" placeholder="Commune du site" maxLength={40} className="w-full rounded-xl border-amber-200 p-3 text-sm font-black bg-white shadow-sm" value={formData.installationCommune} onChange={e => setFormData({ ...formData, installationCommune: e.target.value })} />
               <select className="w-full rounded-xl border-amber-200 p-3 text-xs font-black bg-white" value={formData.serviceType} onChange={e => setFormData({ ...formData, serviceType: e.target.value })}>
                 {workTypes.map(s => <option key={s.id} value={s.label}>{s.label}</option>)}
               </select>

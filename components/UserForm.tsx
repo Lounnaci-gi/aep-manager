@@ -147,6 +147,7 @@ export const UserForm: React.FC<UserFormProps> = ({ onSave, onCancel, centres, a
             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Téléphone</label>
             <input 
               required
+              maxLength={10}
               type="tel" 
               className={`w-full rounded-2xl border p-3.5 text-sm font-medium bg-gray-50/50 ${phoneError ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-200 focus:ring-blue-500 focus:border-blue-500'}`}
               value={formData.phone}
@@ -166,6 +167,7 @@ export const UserForm: React.FC<UserFormProps> = ({ onSave, onCancel, centres, a
             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Adresse Email</label>
             <input 
               required
+              maxLength={50}
               type="email" 
               className={`w-full rounded-2xl border p-3.5 text-sm font-medium bg-gray-50/50 ${emailError ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-200 focus:ring-blue-500 focus:border-blue-500'}`}
               value={formData.email}

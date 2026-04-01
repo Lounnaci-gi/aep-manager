@@ -102,10 +102,7 @@ export const WorkRequestAcknowledgement: React.FC<WorkRequestAcknowledgementProp
 
           {/* Agency Line */}
           <div className="mb-2 flex items-baseline gap-1">
-            <span className="text-[9px] font-bold whitespace-nowrap">Agence de</span>
-            <span className="flex-1 border-b border-black text-[9px] font-medium min-h-[12px]">
-              {agency?.name || '---'}
-            </span>
+            <span className="text-[9px] font-bold whitespace-nowrap">Agence de {agency?.name || '........................'}</span>
           </div>
 
           {/* Title Section */}

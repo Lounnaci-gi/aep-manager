@@ -70,7 +70,7 @@ export const QuoteEstablishmentRequestPrint: React.FC<QuoteEstablishmentRequestP
             <img src="/ade.png" alt="ADE Logo" className="h-20 w-auto object-contain" />
           </div>
           <div className="text-right w-1/3 pt-2">
-            <span>Agence de : </span><span className="font-bold uppercase text-[14px]">{agency?.name || 'BERROUAGHIA'}</span>
+            <span>Agence de : </span><span className="font-bold uppercase text-[14px]">{agency?.name || '........................'}</span>
           </div>
         </div>
 
@@ -178,7 +178,7 @@ export const QuoteEstablishmentRequestPrint: React.FC<QuoteEstablishmentRequestP
             <thead>
               <tr style={{ backgroundColor: '#808080' }}>
                 <th colSpan={3} className="py-1 border-b-[2px] border-black" style={{ borderBottom: '2px solid black' }}>
-                  <span className="text-white uppercase font-bold tracking-widest text-[12px]">VISAS</span>
+                  <span className="text-white uppercase font-bold tracking-widest text-[12px]">Fait à , {agency?.name?.toUpperCase() || '........................'} le {new Date(request.createdAt).toLocaleDateString()}</span>
                 </th>
               </tr>
               <tr className="bg-white text-black border-b-[2px] border-black" style={{ borderBottom: '2px solid black' }}>

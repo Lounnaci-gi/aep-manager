@@ -236,3 +236,97 @@ html, body {
     font-size: 2.25rem; /* 36px */
   }
 }
+
+/* OBAT.FR STYLE RESKIN - UI/UX UPDATES */
+
+:root {
+  --color-navy: #0b1e42;
+  --color-blue: #1592ef;
+  --color-blue-hover: #0d7fd4;
+  --color-blue-light: #e8f4fd;
+  --color-white: #ffffff;
+  --color-border: #e2e8f0;
+}
+
+/* Typography & Background */
+body, .bg-gray-50\/50, .min-h-screen, .bg-gray-50 {
+  background-color: var(--color-white) !important;
+  color: var(--color-navy) !important;
+  font-family: 'Inter', 'Montserrat', sans-serif !important;
+  letter-spacing: 0.01em;
+}
+
+h1, h2, h3, h4, h5, h6, .text-gray-900, .text-gray-800 {
+  color: var(--color-navy) !important;
+}
+
+/* Primary CTA Buttons — obat.fr blue */
+button.bg-blue-600,
+button.bg-emerald-600,
+.bg-blue-600,
+.bg-emerald-600 {
+  background-color: var(--color-blue) !important;
+  color: white !important;
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(21, 146, 239, 0.22) !important;
+}
+
+button.hover\:bg-blue-700:hover,
+button.hover\:bg-emerald-700:hover,
+.hover\:bg-blue-700:hover,
+.hover\:bg-emerald-700:hover {
+  background-color: var(--color-blue-hover) !important;
+}
+
+/* The rose/red badge on top of buttons — keep red */
+.bg-rose-600 { background-color: #e11d48 !important; }
+
+/* Accent text colors */
+.text-blue-600, .text-emerald-600, .text-amber-600 {
+  color: var(--color-blue) !important;
+}
+.text-blue-700 { color: var(--color-blue-hover) !important; }
+
+/* Light bg tints */
+.bg-blue-50, .bg-emerald-50, .bg-amber-50, .bg-amber-50\/20, .bg-blue-50\/30 {
+  background-color: var(--color-blue-light) !important;
+}
+
+/* Border overrides */
+.border-blue-600, .border-blue-200, .border-blue-100,
+.border-amber-600, .border-emerald-600, .border-amber-200,
+.border-emerald-200, .border-amber-100 {
+  border-color: var(--color-border) !important;
+}
+
+/* Cards — 8px border-radius */
+.rounded-\[2\.5rem\], .rounded-\[3rem\], .rounded-3xl, .rounded-2xl, .rounded-xl, .rounded-lg {
+  border-radius: 8px !important;
+}
+
+/* Card subtle shadows */
+.shadow-2xl, .shadow-xl, .shadow-lg, .shadow-md {
+  box-shadow: 0 2px 8px -2px rgba(11, 30, 66, 0.08) !important;
+  border: 1px solid var(--color-border) !important;
+}
+
+/* Ensure navbar shadow is NOT overridden by .shadow-* rule */
+nav.\!shadow-none, nav {
+  border: none !important;
+  box-shadow: none !important;
+  background-color: var(--color-white) !important;
+}
+
+/* Form elements */
+input, select, textarea {
+  border-radius: 4px !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-navy) !important;
+  background-color: var(--color-white) !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none !important;
+  border-color: var(--color-blue) !important;
+  box-shadow: 0 0 0 2px rgba(21,146,239,0.18) !important;
+}

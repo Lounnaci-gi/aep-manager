@@ -116,7 +116,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSave, onCancel, initia
             </div>
             <div className="md:col-span-6">
               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Téléphone</label>
-              <input required type="tel" className="w-full rounded-2xl border-gray-200 p-3.5 text-sm font-black bg-gray-50/50 border shadow-sm" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+              <input required type="tel" maxLength={10} className="w-full rounded-2xl border-gray-200 p-3.5 text-sm font-black bg-gray-50/50 border shadow-sm" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
             </div>
           </div>
         </div>
@@ -139,7 +139,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSave, onCancel, initia
               </div>
               <div>
                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Numéro de la pièce</label>
-                <input required type="text" className="w-full rounded-xl border-white/10 p-3 text-sm font-black bg-white/10 text-white border" value={formData.idDocumentNumber} onChange={e => setFormData({ ...formData, idDocumentNumber: e.target.value })} placeholder="Ex: 00123456..." />
+                <input required type="text" maxLength={18} className="w-full rounded-xl border-white/10 p-3 text-sm font-black bg-white/10 text-white border" value={formData.idDocumentNumber} onChange={e => setFormData({ ...formData, idDocumentNumber: e.target.value })} placeholder="Ex: 00123456..." />
               </div>
               <div>
                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Date de délivrance</label>
@@ -162,23 +162,23 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSave, onCancel, initia
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-2">
               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Adresse de Correspondance</label>
-              <input required type="text" className="w-full rounded-xl border-gray-200 p-3 text-sm font-bold bg-white border" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} />
+              <input required type="text" maxLength={120} className="w-full rounded-xl border-gray-200 p-3 text-sm font-bold bg-white border" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} />
             </div>
             <div>
               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Commune</label>
-              <input required type="text" className="w-full rounded-xl border-gray-200 p-3 text-sm font-black bg-white border" value={formData.commune} onChange={e => setFormData({ ...formData, commune: e.target.value })} />
+              <input required type="text" maxLength={40} className="w-full rounded-xl border-gray-200 p-3 text-sm font-black bg-white border" value={formData.commune} onChange={e => setFormData({ ...formData, commune: e.target.value })} />
             </div>
             <div className="md:col-span-2">
               <label className="block text-[10px] font-black text-blue-800 uppercase tracking-widest mb-1.5 ml-1">Site du futur Branchement</label>
-              <input required type="text" className="w-full rounded-xl border-blue-100 p-3 text-sm font-black bg-white border" value={formData.installationAddress} onChange={e => setFormData({ ...formData, installationAddress: e.target.value })} />
+              <input required type="text" maxLength={120} className="w-full rounded-xl border-blue-100 p-3 text-sm font-black bg-white border" value={formData.installationAddress} onChange={e => setFormData({ ...formData, installationAddress: e.target.value })} />
             </div>
             <div>
               <label className="block text-[10px] font-black text-blue-800 uppercase tracking-widest mb-1.5 ml-1">Commune Site</label>
-              <input required type="text" className="w-full rounded-xl border-blue-100 p-3 text-sm font-black bg-white border" value={formData.installationCommune} onChange={e => setFormData({ ...formData, installationCommune: e.target.value })} />
+              <input required type="text" maxLength={40} className="w-full rounded-xl border-blue-100 p-3 text-sm font-black bg-white border" value={formData.installationCommune} onChange={e => setFormData({ ...formData, installationCommune: e.target.value })} />
             </div>
             <div className="md:col-span-3">
               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Adresse Email</label>
-              <input required type="email" className="w-full rounded-xl border-gray-200 p-3 text-sm font-medium bg-gray-50/50 border" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="contact@email.com" />
+              <input required type="email" maxLength={50} className="w-full rounded-xl border-gray-200 p-3 text-sm font-medium bg-gray-50/50 border" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="contact@email.com" />
             </div>
           </div>
         </div>
