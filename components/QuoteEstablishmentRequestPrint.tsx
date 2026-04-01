@@ -46,305 +46,155 @@ export const QuoteEstablishmentRequestPrint: React.FC<QuoteEstablishmentRequestP
       </div>
 
       {/* Document Content - Format A4 */}
-      <div className="max-w-[210mm] mx-auto p-6 md:p-10 bg-white text-gray-900 print:p-0 print:m-0 print:w-[210mm]">
-        {/* En-tête */}
-        <div className="flex justify-between items-start border-b-4 border-gray-900 pb-6 mb-8">
-          <div className="flex items-center gap-6">
-            <img src="/ade.png" alt="ADE Logo" className="h-32 w-auto object-contain" />
-            <div className="space-y-1">
-              <h1 className="text-3xl font-black text-blue-700 tracking-tighter uppercase leading-none">ALGÉRIENNE DES EAUX</h1>
-              <p className="text-sm font-black text-gray-500 uppercase tracking-widest">Unité de {centre?.name || '---'}</p>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Agence : {agency?.name || '---'}</p>
-            </div>
+      <div id="quote-print-container" className="relative max-w-[210mm] mx-auto bg-white text-black min-h-[297mm] p-10 print:p-0 print:m-0 print:w-[210mm]" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
+        <style>
+          {`
+            @media print {
+              @page { size: A4 portrait; margin: 15mm; }
+              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background-color: white !important; }
+              body * { visibility: hidden; }
+              #quote-print-container, #quote-print-container * { visibility: visible; }
+              #quote-print-container { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
+            }
+          `}
+        </style>
+
+        {/* En-tête (3 colonnes) */}
+        <div className="flex justify-between items-start mb-6 text-[13px] leading-tight text-black">
+          <div className="text-center w-1/3">
+            <div>ALGERIENNE DES EAUX</div>
+            <div>Zone d'Alger</div>
+            <div>Unité de {centre?.name || 'Médéa'}</div>
           </div>
-          <div className="text-right">
-            <div className="inline-block border-4 border-emerald-600 px-6 py-2 mb-4 bg-emerald-50">
-              <h2 className="text-xl font-black uppercase tracking-tighter text-emerald-700">DEMANDE D'ÉTABLISSEMENT<br/>DE DEVIS QUANTITATIF<br/>ET ESTIMATIF</h2>
-            </div>
-            <p className="text-sm font-black text-gray-900 uppercase">Réf : <span className="text-blue-700">{request.id}</span></p>
-            <p className="text-xs font-bold text-gray-500 uppercase mt-1">Date : {new Date(request.createdAt).toLocaleDateString('fr-DZ')}</p>
+          <div className="flex justify-center w-1/3">
+            <img src="/ade.png" alt="ADE Logo" className="h-20 w-auto object-contain" />
+          </div>
+          <div className="text-right w-1/3 pt-2">
+            <span>Agence de : </span><span className="font-bold uppercase text-[14px]">{agency?.name || 'BERROUAGHIA'}</span>
           </div>
         </div>
 
-        {/* Section 1: Informations Générales */}
-        <section className="mb-8">
-          <h3 className="text-sm font-black bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-2 border-l-8 border-blue-800 uppercase tracking-widest mb-4 text-white">
-            1. DEMANDEUR / ABONNÉ
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <div className="space-y-4">
-              <div className="flex flex-col">
-                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Nom et Prénom / Raison Sociale</span>
-                <span className="text-base font-black uppercase text-gray-900">
-                  {request.businessName || `${request.civility} ${request.clientName}`}
-                </span>
-              </div>
-              {request.idDocumentNumber && (
-                <div className="flex flex-col">
-                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Pièce d'Identité</span>
-                  <span className="text-sm font-bold text-gray-700">
-                    {request.idDocumentType} N° {request.idDocumentNumber}
-                  </span>
-                </div>
-              )}
-              <div className="flex flex-col">
-                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Qualité</span>
-                <span className="text-sm font-bold text-gray-700">{request.type}</span>
-              </div>
-            </div>
-            <div className="space-y-4">
-              <div className="flex flex-col">
-                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Adresse de Correspondance</span>
-                <span className="text-sm font-bold text-gray-700 uppercase">{request.address}, {request.commune}</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Coordonnées</span>
-                <span className="text-sm font-bold text-gray-700">Tél : {request.clientPhone}</span>
-                {request.clientEmail && (
-                  <span className="text-sm font-bold text-gray-700">{request.clientEmail}</span>
-                )}
-              </div>
-            </div>
+        {/* Titre */}
+        <div className="text-center mb-6 px-4">
+          <h1 className="text-[17px] font-bold uppercase tracking-tight text-black border-b-[12px] border-black pb-2 inline-block w-full">
+            DEMANDE D'ETABLISSEMENT DE DEVIS QUANTITATIF ET ESTIMATIF
+          </h1>
+        </div>
+
+        {/* N° et Date */}
+        <div className="flex justify-between mb-8 text-[13px] px-2 text-black">
+          <div className="flex items-center">
+            <span className="mr-2">N° d'enregistrement de la demande : </span>
+            <span className="font-mono tracking-widest">{request.id || '!___!___!___!___!___!'}</span>
           </div>
-        </section>
-
-        {/* Section 2: Objet de la Demande de Devis */}
-        <section className="mb-8">
-          <h3 className="text-sm font-black bg-gradient-to-r from-emerald-600 to-emerald-700 px-4 py-2 border-l-8 border-emerald-800 uppercase tracking-widest mb-4 text-white">
-            2. OBJET DE LA DEMANDE DE DEVIS
-          </h3>
-          <div className="px-4 space-y-4">
-            <div className="bg-emerald-50 border-2 border-emerald-200 rounded-lg p-4">
-              <div className="flex flex-col mb-3">
-                <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1">Nature des Travaux Demandés</span>
-                <span className="text-xl font-black text-emerald-700 uppercase tracking-tighter">{request.serviceType}</span>
-              </div>
-              
-              <div className="flex flex-col">
-                <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1">Localisation des Travaux</span>
-                <span className="text-base font-black uppercase text-gray-900">{request.installationAddress}</span>
-                <span className="text-sm font-bold text-gray-700 uppercase">{request.installationCommune}</span>
-              </div>
-            </div>
-
-            {request.description && (
-              <div className="mt-4">
-                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Description Détaillée</span>
-                <p className="text-sm font-medium text-gray-600 mt-1 italic border-l-2 border-emerald-300 pl-3">{request.description}</p>
-              </div>
-            )}
+          <div className="flex items-center">
+            <span className="mr-4">Date</span>
+            <span className="font-mono tracking-widest">
+              {request.createdAt ? new Date(request.createdAt).toLocaleDateString('fr-DZ') : '!___!___! / !___!___! / !___!___!___!___!'}
+            </span>
           </div>
-        </section>
+        </div>
 
-        {/* Section 3: Spécifications Techniques (si branchement) */}
-        {request.serviceType.toLowerCase().includes('branchement') && (
-          <section className="mb-8">
-            <h3 className="text-sm font-black bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-2 border-l-8 border-amber-700 uppercase tracking-widest mb-4 text-white">
-              3. SPÉCIFICATIONS TECHNIQUES
-            </h3>
-            <div className="px-4">
-              <div className="bg-amber-50 border-2 border-amber-200 rounded-lg p-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="flex flex-col">
-                    <span className="text-[8px] font-black text-amber-600 uppercase">Usage</span>
-                    <span className="text-[10px] font-black uppercase text-gray-900">
-                      {request.branchementType}
-                    </span>
-                    {request.branchementDetails && (
-                      <span className="text-[8px] text-gray-500 italic mt-0.5">({request.branchementDetails})</span>
-                    )}
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[8px] font-black text-amber-600 uppercase">Diamètre</span>
-                    <span className="text-[10px] font-black uppercase text-gray-900">{request.diameter ? `${request.diameter} mm` : '---'}</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[8px] font-black text-amber-600 uppercase">Débit</span>
-                    <span className="text-[10px] font-black uppercase text-gray-900">{request.flowRate || '---'}</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[8px] font-black text-amber-600 uppercase">Type</span>
-                    <span className="text-[10px] font-black uppercase text-gray-900">{request.branchementType === 'Autre' ? 'Spécifique' : 'Standard'}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Section 4: Validations Administratives */}
-        <section className="mb-8">
-          <h3 className="text-sm font-black bg-gradient-to-r from-purple-600 to-purple-700 px-4 py-2 border-l-8 border-purple-800 uppercase tracking-widest mb-6 text-white">
-            4. VALIDATIONS ADMINISTRATIVES OBTENUES
-          </h3>
+        {/* Form Body */}
+        <div className="px-2 space-y-5 text-[12px] text-black">
           
-          <div className="px-4">
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-purple-50 border-b-2 border-purple-200">
-                    <th className="text-[9px] font-black text-purple-700 uppercase tracking-widest text-left py-3 px-3">Service Validateur</th>
-                    <th className="text-[9px] font-black text-purple-700 uppercase tracking-widest text-center py-3 px-3">Statut</th>
-                    <th className="text-[9px] font-black text-purple-700 uppercase tracking-widest text-left py-3 px-3">Validé Par</th>
-                    <th className="text-[9px] font-black text-purple-700 uppercase tracking-widest text-center py-3 px-3">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-b border-gray-100">
-                    <td className="py-3 px-3">
-                      <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
-                        </svg>
-                        <span className="text-sm font-bold text-gray-900">Chef d'Agence</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-3 text-center">
-                      {request.validations?.find(v => v.type === ValidationType.AGENCY && v.status === 'validated') ? (
-                        <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[9px] font-black uppercase">
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">✓</svg>
-                          Validé
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-400 px-3 py-1 rounded-full text-[9px] font-black uppercase">
-                          En attente
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3 px-3">
-                      <span className="text-sm font-bold text-gray-700">
-                        {request.validations?.find(v => v.type === ValidationType.AGENCY && v.status === 'validated')?.userName || '---'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 text-center">
-                      <span className="text-xs font-bold text-gray-600">
-                        {request.validations?.find(v => v.type === ValidationType.AGENCY && v.status === 'validated') 
-                          ? new Date(request.validations.find(v => v.type === ValidationType.AGENCY && v.status === 'validated')!.validatedAt!).toLocaleDateString('fr-DZ')
-                          : '---'
-                        }
-                      </span>
-                    </td>
-                  </tr>
-                  
-                  <tr className="border-b border-gray-100">
-                    <td className="py-3 px-3">
-                      <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
-                        </svg>
-                        <span className="text-sm font-bold text-gray-900">Relation Clientèle</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-3 text-center">
-                      {request.validations?.find(v => v.type === ValidationType.CUSTOMER_SERVICE && v.status === 'validated') ? (
-                        <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[9px] font-black uppercase">
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">✓</svg>
-                          Validé
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-400 px-3 py-1 rounded-full text-[9px] font-black uppercase">
-                          En attente
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3 px-3">
-                      <span className="text-sm font-bold text-gray-700">
-                        {request.validations?.find(v => v.type === ValidationType.CUSTOMER_SERVICE && v.status === 'validated')?.userName || '---'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 text-center">
-                      <span className="text-xs font-bold text-gray-600">
-                        {request.validations?.find(v => v.type === ValidationType.CUSTOMER_SERVICE && v.status === 'validated') 
-                          ? new Date(request.validations.find(v => v.type === ValidationType.CUSTOMER_SERVICE && v.status === 'validated')!.validatedAt!).toLocaleDateString('fr-DZ')
-                          : '---'
-                        }
-                      </span>
-                    </td>
-                  </tr>
-                  
-                  <tr className="border-b border-gray-100">
-                    <td className="py-3 px-3">
-                      <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
-                        </svg>
-                        <span className="text-sm font-bold text-gray-900">Direction / Juriste</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-3 text-center">
-                      {request.validations?.find(v => v.type === ValidationType.LAWYER && v.status === 'validated') ? (
-                        <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[9px] font-black uppercase">
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">✓</svg>
-                          Validé
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-400 px-3 py-1 rounded-full text-[9px] font-black uppercase">
-                          En attente
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3 px-3">
-                      <span className="text-sm font-bold text-gray-700">
-                        {request.validations?.find(v => v.type === ValidationType.LAWYER && v.status === 'validated')?.userName || '---'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 text-center">
-                      <span className="text-xs font-bold text-gray-600">
-                        {request.validations?.find(v => v.type === ValidationType.LAWYER && v.status === 'validated') 
-                          ? new Date(request.validations.find(v => v.type === ValidationType.LAWYER && v.status === 'validated')!.validatedAt!).toLocaleDateString('fr-DZ')
-                          : '---'
-                        }
-                      </span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            {allValidationsComplete && (
-              <div className="mt-4 bg-emerald-50 border-2 border-emerald-200 rounded-lg p-3">
-                <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-                  </svg>
-                  <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">
-                    ✅ TOUTES LES VALIDATIONS SONT COMPLÈTES - DOSSIER ÉLIGIBLE À L'ÉTABLISSEMENT DU DEVIS
-                  </span>
-                </div>
-              </div>
-            )}
+          <div className="font-bold mb-4 text-[11px]">
+            Veuillez établir un devis quantitatif et estimatif pour :
           </div>
-        </section>
 
-        {/* Section 5: Décision */}
-        <section className="mb-8">
-          <h3 className="text-sm font-black bg-gradient-to-r from-red-600 to-red-700 px-4 py-2 border-l-8 border-red-800 uppercase tracking-widest mb-4 text-white">
-            5. DÉCISION ET ÉTABLISSEMENT DU DEVIS
-          </h3>
-          <div className="px-4">
-            <div className="border-2 border-gray-300 rounded-lg p-6 min-h-[150px]">
-              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-3">Vu la demande ci-dessus et les validations obtenues,</p>
-              <p className="text-sm font-black text-gray-900 uppercase leading-relaxed mb-4">
-                IL EST DEMANDÉ À M./MME LE(CHEF CENTRE / RESPONSABLE COMMERCIAL) DE BIEN VOULOIR ÉTABLIR UN DEVIS QUANTITATIF ET ESTIMATIF POUR LA RÉALISATION DES TRAVAUX MENTIONNÉS.
-              </p>
-              <div className="mt-6 flex justify-between items-end">
-                <div className="text-center">
-                  <p className="text-[9px] font-black text-gray-400 uppercase mb-8">Fait à ________________, le ___/___/______</p>
-                  <p className="text-[10px] font-black text-gray-500 uppercase">Signature et Cachet</p>
+          {(() => {
+            const names = request.clientName ? request.clientName.trim().split(' ') : [''];
+            const nom = request.businessName || (names.length > 1 ? names[0] : request.clientName);
+            const prenom = request.businessName ? '' : (names.length > 1 ? names.slice(1).join(' ') : '');
+            
+            return (
+              <>
+                <div className="flex items-end">
+                  <span className="mr-2 whitespace-nowrap">Nom (ou Raison sociale)</span>
+                  <div className="flex-grow border-b border-gray-400 relative h-5">
+                    <span className="absolute bottom-0 left-4 font-bold">{nom}</span>
+                  </div>
                 </div>
-                <div className="text-center">
-                  <p className="text-[9px] font-black text-gray-400 uppercase mb-8">Le Demandeur</p>
-                  <p className="text-[10px] font-black text-gray-500 uppercase">(Signature)</p>
+                <div className="flex items-end">
+                  <span className="mr-2 whitespace-nowrap">Prénom</span>
+                  <div className="flex-grow border-b border-gray-400 relative h-5">
+                    <span className="absolute bottom-0 left-4 font-bold">{prenom}</span>
+                  </div>
                 </div>
+              </>
+            );
+          })()}
+
+          <div className="pt-4 space-y-4">
+            <div className="underline font-bold mb-2 text-[12px]">Adresse de branchement :</div>
+            <div className="flex items-end mb-2">
+              <span className="mr-2 whitespace-nowrap">Rue</span>
+              <div className="flex-grow border-b border-gray-400 relative h-5">
+                <span className="absolute bottom-0 left-4 font-bold">{request.installationAddress}</span>
+              </div>
+            </div>
+            <div className="flex items-end">
+              <span className="mr-2 whitespace-nowrap">Commune</span>
+              <div className="flex-grow border-b border-gray-400 relative h-5">
+                <span className="absolute bottom-0 left-4 font-bold">{request.installationCommune}</span>
               </div>
             </div>
           </div>
-        </section>
 
-        {/* Footer */}
-        <div className="mt-8 pt-6 border-t border-gray-100 flex justify-between items-center opacity-70 italic">
-          <p className="text-[8px] font-bold text-gray-500">Document généré par ADE-MANAGER le {new Date().toLocaleString('fr-DZ')}</p>
-          <p className="text-[8px] font-black text-emerald-700 tracking-widest uppercase">www.ade.dz</p>
+          <div className="pt-4 space-y-4">
+            <div className="underline font-bold mb-2 text-[12px]">Adresse de correspondance:</div>
+            <div className="flex items-end mb-2">
+              <span className="mr-2 whitespace-nowrap">Rue</span>
+              <div className="flex-grow border-b border-gray-400 relative h-5">
+                <span className="absolute bottom-0 left-4 font-bold">{request.address || request.installationAddress}</span>
+              </div>
+            </div>
+            <div className="flex items-end mb-2">
+              <span className="mr-2 whitespace-nowrap">Commune</span>
+              <div className="flex-grow border-b border-gray-400 relative h-5">
+                <span className="absolute bottom-0 left-4 font-bold">{request.commune || request.installationCommune}</span>
+              </div>
+            </div>
+            <div className="flex items-end">
+              <span className="mr-2 whitespace-nowrap">Tél</span>
+              <div className="flex-grow border-b border-gray-400 relative h-5">
+                <span className="absolute bottom-0 left-4 font-bold">{request.correspondencePhone || request.clientPhone}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-4">
+            <div className="underline font-bold mb-8 text-[12px]">Nature des travaux demandés :</div>
+            <div className="w-full border-b border-gray-400 relative h-6">
+              <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 font-bold text-[13px]">{request.serviceType}</span>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Visas */}
+        <div className="mt-12 px-2 w-full pb-8">
+          <table className="w-full border-collapse border-[2px] border-black text-center text-sm table-fixed" style={{ border: '2px solid black' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#808080' }}>
+                <th colSpan={3} className="py-1 border-b-[2px] border-black" style={{ borderBottom: '2px solid black' }}>
+                  <span className="text-white uppercase font-bold tracking-widest text-[12px]">VISAS</span>
+                </th>
+              </tr>
+              <tr className="bg-white text-black border-b-[2px] border-black" style={{ borderBottom: '2px solid black' }}>
+                <th className="py-2 border-r-[2px] border-black w-1/3 text-[11px] font-bold" style={{ borderRight: '2px solid black' }}>Chef de Section « Clientèle »</th>
+                <th className="py-2 border-r-[2px] border-black w-1/3 text-[11px] font-bold" style={{ borderRight: '2px solid black' }}>Juriste</th>
+                <th className="py-2 w-1/3 text-[11px] font-bold">Chef d'Agence Commerciale</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="h-32 border-r-[2px] border-black" style={{ borderRight: '2px solid black' }}></td>
+                <td className="h-32 border-r-[2px] border-black" style={{ borderRight: '2px solid black' }}></td>
+                <td className="h-32"></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

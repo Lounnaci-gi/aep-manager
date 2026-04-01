@@ -47,20 +47,29 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
   const [printingQuoteEstablishment, setPrintingQuoteEstablishment] = useState<WorkRequest | null>(null);
 
 
+  const normalizedRequests = useMemo(() => {
+    return requests.map(req => ({
+      ...req,
+      assignedValidations: req.assignedValidations && req.assignedValidations.length > 0 
+        ? req.assignedValidations 
+        : [ValidationType.AGENCY, ValidationType.CUSTOMER_SERVICE, ValidationType.LAWYER]
+    }));
+  }, [requests]);
+
   // Compter les demandes en attente de validation pour chaque rôle
-  const pendingAgencyValidation = requests.filter(req => 
+  const pendingAgencyValidation = normalizedRequests.filter(req => 
     req.assignedValidations?.includes(ValidationType.AGENCY) &&
     !req.validations?.find(v => v.type === ValidationType.AGENCY && v.status === 'validated') &&
     currentUser?.role === UserRole.CHEF_AGENCE
   ).length;
 
-  const pendingCustomerServiceValidation = requests.filter(req => 
+  const pendingCustomerServiceValidation = normalizedRequests.filter(req => 
     req.assignedValidations?.includes(ValidationType.CUSTOMER_SERVICE) &&
     !req.validations?.find(v => v.type === ValidationType.CUSTOMER_SERVICE && v.status === 'validated') &&
     currentUser?.role === UserRole.AGENT
   ).length;
 
-  const pendingLawyerValidation = requests.filter(req => 
+  const pendingLawyerValidation = normalizedRequests.filter(req => 
     req.assignedValidations?.includes(ValidationType.LAWYER) &&
     !req.validations?.find(v => v.type === ValidationType.LAWYER && v.status === 'validated') &&
     currentUser?.role === UserRole.JURISTE
@@ -69,19 +78,18 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
   // Filtrer les demandes selon le filtre de validation
   const getFilteredRequests = () => {
     if (validationFilter === 'pending') {
-      return requests.filter(req => 
+      return normalizedRequests.filter(req => 
         req.assignedValidations && 
         req.assignedValidations.length > 0 &&
         !req.validations?.every(v => v.status === 'validated')
       );
     }
     if (validationFilter === 'validated') {
-      return requests.filter(req => 
-        (req.serviceType === "Branchement d'eau potable" || req.assignedValidations?.length > 0) && 
-        (req.status === RequestStatus.VALIDATED || req.status === RequestStatus.QUOTED)
+      return normalizedRequests.filter(req => 
+        req.status === RequestStatus.VALIDATED || req.status === RequestStatus.QUOTED
       );
     }
-    return requests;
+    return normalizedRequests;
   };
 
   const getStatusBadge = (status: RequestStatus) => {

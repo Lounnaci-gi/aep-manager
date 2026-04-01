@@ -36,9 +36,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, setView, 
 
   const navItems: NavItem[] = [
     { id: 'dashboard', label: 'Dashboard', show: true },  // Modifié pour permettre l'accès à tous les utilisateurs
-    { id: 'requests', label: 'Demandes', show: true, badge: (user?.role === UserRole.ADMIN || user?.role === UserRole.CHEF_CENTRE || user?.role === UserRole.TECHICO_COMMERCIAL) ? (quotesBadgeCount > 0 ? quotesBadgeCount : undefined) : (requestsBadgeCount > 0 ? requestsBadgeCount : (validationsBadgeCount > 0 ? validationsBadgeCount : undefined)), subItems: [
-      { id: 'new-request', label: '+ Saisir Demande' }
-    ]},
+    { id: 'requests', label: 'Demandes', show: true, badge: (user?.role === UserRole.ADMIN || user?.role === UserRole.CHEF_CENTRE || user?.role === UserRole.TECHICO_COMMERCIAL) ? (quotesBadgeCount > 0 ? quotesBadgeCount : undefined) : (requestsBadgeCount > 0 ? requestsBadgeCount : (validationsBadgeCount > 0 ? validationsBadgeCount : undefined)) },
     { id: 'list', label: 'Chantiers', show: true },
     { id: 'articles', label: 'Articles', show: (user?.role === UserRole.TECHICO_COMMERCIAL || user?.role === UserRole.CHEF_CENTRE || isAdmin) },
     { id: 'clients', label: 'Clients', show: true },
@@ -89,27 +87,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, setView, 
                               <button
                                 key={sub.id}
                                 onClick={() => { 
-                                  // Vérifier si c'est le sous-élément "Saisir Demande"
-                                  if (sub.id === 'new-request') {
-                                    // Vérifier les permissions
-                                    const hasAnyPermission = workTypes.some(wt => {
-                                      if (!wt.allowedRoles || wt.allowedRoles.length === 0) return false;
-                                      return wt.allowedRoles.includes(user.role);
-                                    });
-                                    
-                                    if (!hasAnyPermission) {
-                                      Swal.fire({
-                                        title: 'Accès Refusé',
-                                        text: 'Vous n\'êtes pas autorisé à créer des demandes. Contactez votre administrateur pour plus d\'informations.',
-                                        icon: 'error',
-                                        confirmButtonColor: '#dc2626',
-                                        confirmButtonText: 'Compris'
-                                      });
-                                      return;
-                                    }
-                                  }
-                                  
-                                  setView(sub.id === 'new-request' ? 'request-form' : sub.id); 
+                                  setView(sub.id); 
                                   setOpenDropdown(null); 
                                 }}
                                 className={`w-full text-right px-4 py-2 text-[11px] sm:text-[12px] font-black uppercase tracking-widest hover:bg-blue-50 transition-colors ${currentView === sub.id ? 'text-blue-600 bg-blue-50' : 'text-gray-600'}`}
@@ -131,6 +109,29 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, setView, 
               </div>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-3 md:space-x-6">
+              <button 
+                onClick={() => {
+                  const hasAnyPermission = workTypes.some(wt => {
+                    if (!wt.allowedRoles || wt.allowedRoles.length === 0) return false;
+                    return wt.allowedRoles.includes(user.role);
+                  });
+                  if (!hasAnyPermission) {
+                    Swal.fire({
+                      title: 'Accès Refusé',
+                      text: 'Vous n\'êtes pas autorisé à créer des demandes. Contactez votre administrateur pour plus d\'informations.',
+                      icon: 'error',
+                      confirmButtonColor: '#dc2626',
+                      confirmButtonText: 'Compris'
+                    });
+                    return;
+                  }
+                  setView('request-form');
+                }}
+                className="flex items-center justify-center h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all hover:scale-105"
+                title="Saisir Demande"
+              >
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
+              </button>
               <div className="relative">
                 <button 
                   onMouseEnter={() => setUserDropdownOpen(true)}
