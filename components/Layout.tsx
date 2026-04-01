@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
+import Swal from 'sweetalert2';
 import { DbService } from '../services/dbService';
-import { User, UserRole } from '../types';
+import { User, UserRole, WorkType } from '../types';
 
 interface NavItem {
   id: string;
@@ -21,9 +22,10 @@ interface LayoutProps {
   requestsBadgeCount?: number;
   validationsBadgeCount?: number;
   quotesBadgeCount?: number;
+  workTypes: WorkType[];
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, currentView, setView, user, onLogout, onEditProfile, requestsBadgeCount = 0, validationsBadgeCount = 0, quotesBadgeCount = 0 }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, currentView, setView, user, onLogout, onEditProfile, requestsBadgeCount = 0, validationsBadgeCount = 0, quotesBadgeCount = 0, workTypes = [] }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
@@ -34,7 +36,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, setView, 
 
   const navItems: NavItem[] = [
     { id: 'dashboard', label: 'Dashboard', show: true },  // Modifié pour permettre l'accès à tous les utilisateurs
-    { id: 'requests', label: 'Demandes', show: true, badge: (user?.role === UserRole.ADMIN || user?.role === UserRole.CHEF_CENTRE || user?.role === UserRole.TECHICO_COMMERCIAL) ? (quotesBadgeCount > 0 ? quotesBadgeCount : undefined) : (requestsBadgeCount > 0 ? requestsBadgeCount : (validationsBadgeCount > 0 ? validationsBadgeCount : undefined)) },
+    { id: 'requests', label: 'Demandes', show: true, badge: (user?.role === UserRole.ADMIN || user?.role === UserRole.CHEF_CENTRE || user?.role === UserRole.TECHICO_COMMERCIAL) ? (quotesBadgeCount > 0 ? quotesBadgeCount : undefined) : (requestsBadgeCount > 0 ? requestsBadgeCount : (validationsBadgeCount > 0 ? validationsBadgeCount : undefined)), subItems: [
+      { id: 'new-request', label: '+ Saisir Demande' }
+    ]},
     { id: 'list', label: 'Chantiers', show: true },
     { id: 'articles', label: 'Articles', show: (user?.role === UserRole.TECHICO_COMMERCIAL || user?.role === UserRole.CHEF_CENTRE || isAdmin) },
     { id: 'clients', label: 'Clients', show: true },
@@ -64,6 +68,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, setView, 
                 <img src="/ade.png" alt="ADE Logo" className="h-8 sm:h-10 md:h-12 w-auto object-contain mr-2 md:mr-3 drop-shadow-sm" />
                 <div><span className="text-base sm:text-lg md:text-xl font-black text-gray-900 tracking-tighter block leading-none uppercase">ADE MANAGER</span><div className="hidden xs:flex items-center mt-0.5 md:mt-1"><span className="flex h-1.5 w-1.5 rounded-full bg-blue-500 mr-1 animate-pulse"></span><span className="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest">{dbInfo.dbName}</span></div></div>
               </div>
+              
               {/* Menu Desktop */}
               <div className="hidden md:-my-px md:ml-10 md:flex md:space-x-8">
                 {navItems.filter(item => item.show).map((item) => (
@@ -83,7 +88,30 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, setView, 
                             {item.subItems.map(sub => (
                               <button
                                 key={sub.id}
-                                onClick={() => { setView(sub.id); setOpenDropdown(null); }}
+                                onClick={() => { 
+                                  // Vérifier si c'est le sous-élément "Saisir Demande"
+                                  if (sub.id === 'new-request') {
+                                    // Vérifier les permissions
+                                    const hasAnyPermission = workTypes.some(wt => {
+                                      if (!wt.allowedRoles || wt.allowedRoles.length === 0) return false;
+                                      return wt.allowedRoles.includes(user.role);
+                                    });
+                                    
+                                    if (!hasAnyPermission) {
+                                      Swal.fire({
+                                        title: 'Accès Refusé',
+                                        text: 'Vous n\'êtes pas autorisé à créer des demandes. Contactez votre administrateur pour plus d\'informations.',
+                                        icon: 'error',
+                                        confirmButtonColor: '#dc2626',
+                                        confirmButtonText: 'Compris'
+                                      });
+                                      return;
+                                    }
+                                  }
+                                  
+                                  setView(sub.id === 'new-request' ? 'request-form' : sub.id); 
+                                  setOpenDropdown(null); 
+                                }}
                                 className={`w-full text-right px-4 py-2 text-[11px] sm:text-[12px] font-black uppercase tracking-widest hover:bg-blue-50 transition-colors ${currentView === sub.id ? 'text-blue-600 bg-blue-50' : 'text-gray-600'}`}
                               >
                                 {sub.label}
@@ -103,7 +131,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, setView, 
               </div>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-3 md:space-x-6">
-              <button onClick={() => setView('request-form')} className="inline-flex items-center px-2 sm:px-3 md:px-6 py-1.5 sm:py-2 md:py-2.5 border border-transparent text-[11px] sm:text-[12px] md:text-[13px] font-black rounded-lg md:rounded-xl shadow-lg shadow-blue-600/20 text-white bg-blue-600 hover:bg-blue-700 transition-all uppercase tracking-widest"><span className="hidden xs:inline">Saisir Demande</span><span className="xs:hidden">+</span></button>
               <div className="relative">
                 <button 
                   onMouseEnter={() => setUserDropdownOpen(true)}

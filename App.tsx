@@ -647,6 +647,7 @@ const App: React.FC = () => {
       requestsBadgeCount={newRequestsCount}
       validationsBadgeCount={pendingValidationsCount}
       quotesBadgeCount={readyForQuoteCount > 0 ? readyForQuoteCount : quoteEstablishmentCount > 0 ? quoteEstablishmentCount : 0}
+      workTypes={workTypes}
     >
       <main className="max-w-[94%] mx-auto py-6 sm:px-6 lg:px-8">
         {view === 'dashboard' && <Dashboard quotes={quotes} requests={requests} workTypes={workTypes} />}
