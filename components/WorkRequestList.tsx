@@ -1,9 +1,10 @@
 
 import React, { useState, useMemo } from 'react';
 import Swal from 'sweetalert2';
-import { WorkRequest, RequestStatus, CommercialAgency, Centre, BranchementType, UserRole, User, ValidationType, ValidationRecord } from '../types';
+import { WorkRequest, RequestStatus, CommercialAgency, Centre, BranchementType, UserRole, User, ValidationType, ValidationRecord, WorkType } from '../types';
 import { WorkRequestPrint } from './WorkRequestPrint';
 import { BranchementPrint } from './BranchementPrint';
+import { QuoteEstablishmentRequestPrint } from './QuoteEstablishmentRequestPrint';
 
 
 interface WorkRequestListProps {
@@ -11,6 +12,7 @@ interface WorkRequestListProps {
   agencies: CommercialAgency[];
   centres: Centre[];
   users: User[];
+  workTypes: WorkType[];
   onDelete: (id: string) => void;
   onEdit: (request: WorkRequest) => void;
   onCreateQuote: (request: WorkRequest) => void;
@@ -26,6 +28,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
   agencies,
   centres,
   users,
+  workTypes,
   onDelete, 
   onEdit, 
   onCreateQuote, 
@@ -41,6 +44,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
   const [validationFilter, setValidationFilter] = useState<'all' | 'pending' | 'validated'>('all');
   const [printingRequest, setPrintingRequest] = useState<WorkRequest | null>(null);
   const [printingBranchement, setPrintingBranchement] = useState<WorkRequest | null>(null);
+  const [printingQuoteEstablishment, setPrintingQuoteEstablishment] = useState<WorkRequest | null>(null);
 
 
   // Compter les demandes en attente de validation pour chaque rôle
@@ -752,22 +756,64 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                         </button>
                       )}
 
-                      {/* Bouton Imprimer - Réservé aux utilisateurs autorisés à créer des demandes */}
-                      {(currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.CHEF_CENTRE || currentUser?.role === UserRole.TECHICO_COMMERCIAL) && (
-                        <button 
-                          onClick={() => {
-                            if (req.serviceType.toLowerCase().includes('branchement')) {
-                              setPrintingBranchement(req);
-                            } else {
-                              setPrintingRequest(req);
-                            }
-                          }} 
-                          className="text-gray-400 hover:text-blue-600 transition-colors p-1.5 hover:bg-blue-50 rounded-lg"
-                          title="Imprimer la demande"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v12a2 2 0 002 2h10z" /></svg>
-                        </button>
-                      )}
+                      {/* Bouton Imprimer - Réservé aux utilisateurs autorisés à créer des demandes pour ce type de travaux */}
+                      {(() => {
+                        // Vérifier si l'utilisateur actuel est autorisé pour ce type de travail spécifique
+                        const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
+                        const isAllowedForWorkType = workType?.allowedRoles && workType.allowedRoles.length > 0 
+                          ? workType.allowedRoles.includes(currentUser?.role)
+                          : false;
+                        
+                        return isAllowedForWorkType ? (
+                          <button 
+                            onClick={() => {
+                              if (req.serviceType.toLowerCase().includes('branchement')) {
+                                setPrintingBranchement(req);
+                              } else {
+                                setPrintingRequest(req);
+                              }
+                            }} 
+                            className="text-gray-400 hover:text-blue-600 transition-colors p-1.5 hover:bg-blue-50 rounded-lg"
+                            title="Imprimer la demande"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v12a2 2 0 002 2h10z" /></svg>
+                          </button>
+                        ) : null;
+                      })()}
+
+                      {/* Bouton Demande d'Établissement de Devis - Uniquement si toutes les validations sont complètes ET utilisateur autorisé pour ce type */}
+                      {(() => {
+                        // Vérifier si l'utilisateur actuel est autorisé pour ce type de travail spécifique
+                        const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
+                        const isAllowedForWorkType = workType?.allowedRoles && workType.allowedRoles.length > 0 
+                          ? workType.allowedRoles.includes(currentUser?.role)
+                          : false;
+                        
+                        return req.status === RequestStatus.VALIDATED && isAllowedForWorkType ? (
+                          <button 
+                            onClick={() => {
+                              Swal.fire({
+                                title: 'Générer la Demande d\'Établissement de Devis',
+                                text: `Cette action va générer un document officiel demandant l'établissement d'un devis quantitatif et estimatif pour la demande ${req.id}.`,
+                                icon: 'info',
+                                showCancelButton: true,
+                                confirmButtonColor: '#059669',
+                                cancelButtonColor: '#6b7280',
+                                confirmButtonText: '✅ Générer le document',
+                                cancelButtonText: 'Annuler'
+                              }).then((result) => {
+                                if (result.isConfirmed) {
+                                  setPrintingQuoteEstablishment(req);
+                                }
+                              });
+                            }} 
+                            className="text-emerald-600 hover:text-emerald-700 transition-colors p-1.5 hover:bg-emerald-50 rounded-lg border-2 border-emerald-200 shadow-sm"
+                            title="Générer la demande d'établissement de devis quantitatif et estimatif"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                          </button>
+                        ) : null;
+                      })()}
                     </div>
                   </td>
                 </tr>
@@ -808,6 +854,15 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
           agency={agencies.find(a => a.id === printingBranchement.agencyId)}
           centre={centres.find(c => c.id === (agencies.find(a => a.id === printingBranchement.agencyId)?.centreId || printingBranchement.centreId))}
           onClose={() => setPrintingBranchement(null)}
+        />
+      )}
+
+      {printingQuoteEstablishment && (
+        <QuoteEstablishmentRequestPrint 
+          request={printingQuoteEstablishment}
+          agency={agencies.find(a => a.id === printingQuoteEstablishment.agencyId)}
+          centre={centres.find(c => c.id === (agencies.find(a => a.id === printingQuoteEstablishment.agencyId)?.centreId || printingQuoteEstablishment.centreId))}
+          onClose={() => setPrintingQuoteEstablishment(null)}
         />
       )}
     </div>

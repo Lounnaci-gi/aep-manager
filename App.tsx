@@ -175,9 +175,42 @@ const App: React.FC = () => {
     }).length;
   };
 
+  // Calcul des demandes avec établissement de devis généré (notification pour ADMIN, CHEF_CENTRE, TECHICO_COMMERCIAL)
+  const getQuoteEstablishmentCount = () => {
+    if (!currentUser) return 0;
+    
+    // Seuls ces rôles voient la notification
+    const canCreateQuotes = currentUser.role === UserRole.ADMIN || 
+                           currentUser.role === UserRole.CHEF_CENTRE || 
+                           currentUser.role === UserRole.TECHICO_COMMERCIAL;
+    
+    if (!canCreateQuotes) return 0;
+    
+    // Compter les demandes VALIDATED qui ont besoin d'un devis
+    return requests.filter(req => {
+      // Doit être au statut VALIDATED (demande d'établissement générée)
+      if (req.status !== RequestStatus.VALIDATED) return false;
+      
+      // Vérifier qu'il n'y a pas encore de devis créé
+      const hasQuote = quotes.some(q => q.requestId === req.id);
+      if (hasQuote) return false;
+      
+      // Vérifier que toutes les validations sont complètes
+      if (req.assignedValidations && req.assignedValidations.length > 0) {
+        const allValidated = req.assignedValidations.every(type => 
+          req.validations?.find(v => v.type === type && v.status === 'validated')
+        );
+        return allValidated;
+      }
+      
+      return true;
+    }).length;
+  };
+
   const pendingValidationsCount = getPendingValidationsCount();
   const newRequestsCount = requests.filter(r => r.status === RequestStatus.RECEIVED).length;
   const readyForQuoteCount = getReadyForQuoteCount();
+  const quoteEstablishmentCount = getQuoteEstablishmentCount();
 
   const handleSaveCentre = async (centre: Centre) => {
     try {
@@ -613,7 +646,7 @@ const App: React.FC = () => {
       onEditProfile={() => { setEditingUser(currentUser || undefined); setView('user-form'); }}
       requestsBadgeCount={newRequestsCount}
       validationsBadgeCount={pendingValidationsCount}
-      quotesBadgeCount={readyForQuoteCount}
+      quotesBadgeCount={readyForQuoteCount > 0 ? readyForQuoteCount : quoteEstablishmentCount > 0 ? quoteEstablishmentCount : 0}
     >
       <main className="max-w-[94%] mx-auto py-6 sm:px-6 lg:px-8">
         {view === 'dashboard' && <Dashboard quotes={quotes} requests={requests} workTypes={workTypes} />}
@@ -642,6 +675,7 @@ const App: React.FC = () => {
             agencies={agencies}
             centres={centres}
             users={users}
+            workTypes={workTypes}
             onDelete={handleDeleteRequest} 
             onEdit={(r) => { setEditingRequest(r); setView('request-form'); }}
             onCreateQuote={handleCreateQuoteFromRequest}
