@@ -199,9 +199,14 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
     const filteredValidations = updatedValidations.filter(v => v.type !== validationType);
     filteredValidations.push(newValidation);
 
-    const allValidated = filteredValidations.every(v => v.status === 'validated');
+    // Vérifier si TOUTES les validations assignées ont été effectuées et validées
+    const allValidated = !req.assignedValidations || req.assignedValidations.length === 0 || 
+                         req.assignedValidations.every(type => 
+                           filteredValidations.find(v => v.type === type && v.status === 'validated')
+                         );
+                         
     const hasRejection = filteredValidations.some(v => v.status === 'rejected');
-    const newStatus = allValidated ? RequestStatus.VALIDATED : (hasRejection ? RequestStatus.REJECTED : req.status);
+    const newStatus = allValidated ? RequestStatus.VALIDATED : (hasRejection ? RequestStatus.REJECTED : RequestStatus.UNDER_STUDY);
 
     const updatedRequest = {
       ...req,
@@ -744,17 +749,10 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                         </select>
                       )}
                       
-                      {currentUser?.role === UserRole.AGENT && req.serviceType.toLowerCase().includes("branchement") && (
-                        <button 
-                          onClick={() => handleDeleteClick(req)} 
-                          className="text-gray-200 hover:text-rose-600 transition-colors p-1.5 hover:bg-rose-50 rounded-lg"
-                          title="Supprimer la demande"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                        </button>
-                      )}
-                      
-                      {req.serviceType.toLowerCase().includes("branchement") === false && (
+                      {/* Suppression autorisée pour AGENT, CHEF_AGENCE et CHEF_CENTRE */}
+                      {currentUser && (currentUser.role === UserRole.AGENT || 
+                        currentUser.role === UserRole.CHEF_AGENCE || 
+                        currentUser.role === UserRole.CHEF_CENTRE) && (
                         <button 
                           onClick={() => handleDeleteClick(req)} 
                           className="text-gray-200 hover:text-rose-600 transition-colors p-1.5 hover:bg-rose-50 rounded-lg"
