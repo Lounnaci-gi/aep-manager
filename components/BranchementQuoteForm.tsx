@@ -563,7 +563,12 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
               </button>
               <button
                 type="submit"
-                className="w-full bg-emerald-600 text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200"
+                disabled={items.length === 0 || total === 0 || !items.some(it => it.description && it.unitPrice > 0)}
+                className={`w-full py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg active:scale-95 ${
+                  (items.length === 0 || total === 0 || !items.some(it => it.description && it.unitPrice > 0))
+                    ? 'bg-gray-400 cursor-not-allowed opacity-60'
+                    : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-200'
+                }`}
               >
                 Enregistrer le Devis
               </button>
@@ -605,11 +610,13 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
             padding: 15mm !important;
             margin: 0 !important;
             box-shadow: none !important;
-            border: none !important;
+            border: 1.2mm solid black !important; /* Added border */
+            border-radius: 10mm !important; /* Subtle circular rounding on document corners */
             position: absolute;
             left: 0;
             top: 0;
             visibility: visible !important;
+            overflow: hidden; /* Ensure content follows rounding */
           }
         }
       `}</style>
@@ -633,7 +640,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
           </div>
         </div>
 
-        <div className="bg-gray-200 border border-gray-400 p-2 mb-6">
+        <div className="bg-gray-100 border border-gray-400 p-2 mb-6" style={{ borderRadius: '8px' }}>
           <div className="flex justify-between font-bold text-[11px] mb-1">
             <span>Zone d'Alger</span>
             <span>Unité de {activeCentre?.name || 'Médéa'}</span>
@@ -657,7 +664,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
             </div>
           </div>
 
-          <div className="w-[80mm] border border-gray-400 p-4 min-h-[40mm] rounded-[30px]">
+          <div className="w-[80mm] border border-gray-400 p-4 min-h-[40mm] bg-white shadow-sm" style={{ borderRadius: '8px' }}>
             <div className="font-bold text-[11px] mb-2 uppercase">DOIT A {request.businessName || (`${request.civility} ${request.clientName}`)}</div>
             <div className="text-[11px] leading-relaxed uppercase">
               ADRESSE : {request.installationAddress}<br />
@@ -671,51 +678,54 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
           <span className="font-bold text-[11px] border-b border-black inline-block pb-0.5 uppercase">Objet: {request.serviceType}</span>
         </div>
 
-        <table className="w-full border-collapse border border-gray-400 mb-0 font-sans text-[11px]">
-          <thead>
-            <tr className="bg-gray-100 font-bold">
-              <th className="border border-gray-400 p-1.5 text-left">Désignation des travaux</th>
-              <th className="border border-gray-400 p-1.5 text-center w-16">Unité</th>
-              <th className="border border-gray-400 p-1.5 text-center w-16">Qtité</th>
-              <th className="border border-gray-400 p-1.5 text-right w-24">P.U</th>
-              <th className="border border-gray-400 p-1.5 text-right w-24">Montant</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item, i) => (
-              <tr key={i}>
-                <td className="border border-gray-400 px-2 py-1">{item.description}</td>
-                <td className="border border-gray-400 px-2 py-1 text-center">U</td>
-                <td className="border border-gray-400 px-2 py-1 text-center">{item.quantity}</td>
-                <td className="border border-gray-400 px-2 py-1 text-right">{item.unitPrice.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
-                <td className="border border-gray-400 px-2 py-1 text-right">{(item.quantity * item.unitPrice).toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
+        {/* Table Wrap for Border Radius */}
+        <div className="mb-0 overflow-hidden border border-gray-400" style={{ borderRadius: '8px' }}>
+          <table className="w-full border-collapse font-sans text-[11px]">
+            <thead>
+              <tr className="bg-gray-100 font-bold">
+                <th className="border-b border-r border-gray-400 p-1.5 text-left">Désignation des travaux</th>
+                <th className="border-b border-r border-gray-400 p-1.5 text-center w-16">Unité</th>
+                <th className="border-b border-r border-gray-400 p-1.5 text-center w-16">Qtité</th>
+                <th className="border-b border-r border-gray-400 p-1.5 text-right w-24">P.U</th>
+                <th className="border-b border-gray-400 p-1.5 text-right w-24">Montant</th>
               </tr>
-            ))}
-            <tr>
-              <td rowSpan={3} className="border border-gray-400 p-1.5 text-left align-top leading-tight space-y-0.5">
-                <p>Compte CCP N°: {activeCentre?.comptePostale || '007 99 999 0007742 862 16'}</p>
-                <p>Compte BADR N°: {activeCentre?.bankAccount || '003 00 853 30000426300 75'}</p>
-                <p>mode de paiement : versement bancaire</p>
-              </td>
-              <td colSpan={2} className="border border-gray-400 font-bold p-1 align-middle text-left">THT</td>
-              <td colSpan={2} className="border border-gray-400 p-1 text-right align-middle">
-                {subtotal.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
-              </td>
-            </tr>
-            <tr>
-              <td colSpan={2} className="border border-gray-400 font-bold p-1 align-middle text-left">TVA 19%</td>
-              <td colSpan={2} className="border border-gray-400 p-1 text-right align-middle">
-                {tax.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
-              </td>
-            </tr>
-            <tr>
-              <td colSpan={2} className="border border-gray-400 font-black p-1 align-middle text-left">TTC</td>
-              <td colSpan={2} className="border border-gray-400 font-black p-1 text-right align-middle bg-gray-50 uppercase">
-                {total.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {items.map((item, i) => (
+                <tr key={i}>
+                  <td className="border-b border-r border-gray-400 px-2 py-1">{item.description}</td>
+                  <td className="border-b border-r border-gray-400 px-2 py-1 text-center">U</td>
+                  <td className="border-b border-r border-gray-400 px-2 py-1 text-center">{item.quantity}</td>
+                  <td className="border-b border-r border-gray-400 px-2 py-1 text-right">{item.unitPrice.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
+                  <td className="border-b border-gray-400 px-2 py-1 text-right">{(item.quantity * item.unitPrice).toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
+                </tr>
+              ))}
+              <tr>
+                <td rowSpan={3} className="border-r border-gray-400 p-1.5 text-left align-top leading-tight space-y-0.5">
+                  <p>Compte CCP N°: {activeCentre?.comptePostale || '007 99 999 0007742 862 16'}</p>
+                  <p>Compte BADR N°: {activeCentre?.bankAccount || '003 00 853 30000426300 75'}</p>
+                  <p>mode de paiement : versement bancaire</p>
+                </td>
+                <td colSpan={2} className="border-b border-r border-gray-400 font-bold p-1 align-middle text-left">THT</td>
+                <td colSpan={2} className="border-b border-gray-400 p-1 text-right align-middle">
+                  {subtotal.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
+                </td>
+              </tr>
+              <tr>
+                <td colSpan={2} className="border-b border-r border-gray-400 font-bold p-1 align-middle text-left">TVA 19%</td>
+                <td colSpan={2} className="border-b border-gray-400 p-1 text-right align-middle">
+                  {tax.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
+                </td>
+              </tr>
+              <tr>
+                <td colSpan={2} className="border-r border-gray-400 font-black p-1 align-middle text-left">TTC</td>
+                <td colSpan={2} className="font-black p-1 text-right align-middle bg-gray-50 uppercase">
+                  {total.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <div className="mt-6 text-[11px] space-y-2">
           <p className="font-bold">La Somme De Ce Présent Devis Est Arrêtée À :</p>
@@ -734,7 +744,19 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
         <div className="flex justify-end gap-3">
           <button type="button" onClick={() => setActiveTab('form')} className="px-6 py-2.5 text-xs font-bold text-slate-600 bg-white border border-slate-300 rounded-xl hover:bg-slate-100">Retour à l'édition</button>
           <button type="button" onClick={() => window.print()} className="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-md">Imprimer</button>
-          <button type="button" onClick={(e) => { setActiveTab('form'); handleSubmit(e as any); }} className="px-6 py-2.5 text-xs font-bold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition-all shadow-md active:scale-95">Valider & Archiver</button>
+          <button 
+            type="button" 
+            onClick={(e) => { setActiveTab('form'); handleSubmit(e as any); }} 
+            disabled={items.length === 0 || total === 0 || !items.some(it => it.description && it.unitPrice > 0)}
+            className={`px-6 py-2.5 text-xs font-bold text-white rounded-xl transition-all shadow-md active:scale-95 ${
+              (items.length === 0 || total === 0 || !items.some(it => it.description && it.unitPrice > 0))
+                ? 'bg-gray-400 cursor-not-allowed opacity-60 shadow-none'
+                : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'
+            }`}
+            title={total === 0 ? "Le devis doit contenir au moins un article avec un montant pour être validé" : ""}
+          >
+            Valider & Archiver
+          </button>
         </div>
       </div>
     </div>

@@ -465,7 +465,15 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
           </div>
           
           <div className="pt-6">
-            <button type="submit" className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-200 active:scale-[0.98]">
+            <button 
+              type="submit" 
+              disabled={items.length === 0 || total === 0}
+              className={`w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-xl active:scale-[0.98] ${
+                items.length === 0 || total === 0 
+                  ? 'bg-gray-400 cursor-not-allowed opacity-60' 
+                  : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-200'
+              }`}
+            >
               Enregistrer le Devis
             </button>
           </div>
@@ -501,11 +509,13 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
             margin: 0 !important;
             background: white !important;
             box-shadow: none !important;
-            border: none !important;
+            border: 1.2mm solid black !important; /* Added border */
+            border-radius: 10mm !important; /* Subtle circular rounding on document corners */
             position: absolute;
             left: 0;
             top: 0;
             visibility: visible !important;
+            overflow: hidden; /* Ensure content follows rounding */
           }
           /* Ensure backgrounds are printed */
           .bg-gray-100 { background-color: #f3f4f6 !important; }
@@ -536,7 +546,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
         </div>
 
         {/* Header Bar */}
-        <div className="bg-gray-100 border border-gray-400 p-2 mb-8">
+        <div className="bg-gray-100 border border-gray-400 p-2 mb-6" style={{ borderRadius: '8px' }}>
           <div className="flex justify-between font-bold text-[11px] mb-1">
             <span>Zone d'Alger</span>
             <span>Unité de {activeCentre?.name || 'Médéa'}</span>
@@ -563,7 +573,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
             </div>
           </div>
 
-          <div className="w-full max-w-[85mm] ml-auto border border-gray-400 p-5 min-h-[45mm] rounded-[2.5rem] shadow-sm bg-white">
+          <div className="w-full max-w-[85mm] ml-auto border border-gray-400 p-5 min-h-[45mm] shadow-sm bg-white" style={{ borderRadius: '8px' }}>
             <div className="font-bold text-[12px] mb-3 uppercase border-b border-gray-100 pb-1">DOIT A :</div>
             <div className="text-[11px] font-black mb-1 uppercase leading-snug">
               {isLegal ? formData.businessName : `${formData.civility} ${formData.clientName}`}
@@ -583,53 +593,55 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
         </div>
 
         {/* Table */}
-        <table className="w-full border-collapse border border-gray-400 mb-6 font-sans text-[11px]">
-          <thead>
-            <tr className="bg-gray-100 font-bold uppercase text-[10px]">
-              <th className="border border-gray-400 p-2 text-left">Désignation des travaux</th>
-              <th className="border border-gray-400 p-2 text-center w-16">Unité</th>
-              <th className="border border-gray-400 p-2 text-center w-16">Qtité</th>
-              <th className="border border-gray-400 p-2 text-right w-24">P.U (HT)</th>
-              <th className="border border-gray-400 p-2 text-right w-28">Montant HT</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item, i) => (
-              <tr key={i} className="hover:bg-gray-50/50">
-                <td className="border border-gray-400 px-2 py-1.5 font-medium">{item.description}</td>
-                <td className="border border-gray-400 px-2 py-1.5 text-center">U</td>
-                <td className="border border-gray-400 px-2 py-1.5 text-center font-bold">{item.quantity}</td>
-                <td className="border border-gray-400 px-2 py-1.5 text-right whitespace-nowrap">{item.unitPrice.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
-                <td className="border border-gray-400 px-2 py-1.5 text-right font-bold whitespace-nowrap">{item.total.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
+        {/* Table Wrap for Border Radius */}
+        <div className="mb-6 overflow-hidden border border-gray-400" style={{ borderRadius: '8px' }}>
+          <table className="w-full border-collapse font-sans text-[11px]">
+            <thead>
+              <tr className="bg-gray-100 font-bold uppercase text-[10px]">
+                <th className="border-b border-r border-gray-400 p-2 text-left">Désignation des travaux</th>
+                <th className="border-b border-r border-gray-400 p-2 text-center w-16">Unité</th>
+                <th className="border-b border-r border-gray-400 p-2 text-center w-16">Qtité</th>
+                <th className="border-b border-r border-gray-400 p-2 text-right w-24">P.U (HT)</th>
+                <th className="border-b border-gray-400 p-2 text-right w-28">Montant HT</th>
               </tr>
-            ))}
-            {/* Empty rows to fill space if needed can be added here or just let it flow */}
-            <tr>
-              <td rowSpan={3} className="border border-gray-400 p-2 text-left align-top leading-relaxed text-[9px] bg-gray-50/30">
-                <div className="font-bold mb-1 uppercase text-gray-500">Coordonnées de paiement :</div>
-                <p>Compte CCP N°: <span className="font-bold">{activeCentre?.comptePostale || '007 99 999 0007742 862 16'}</span></p>
-                <p>Compte BADR N°: <span className="font-bold">{activeCentre?.bankAccount || '003 00 853 30000426300 75'}</span></p>
-                <p className="mt-1 italic">Mode de paiement : versement ou virement bancaire</p>
-              </td>
-              <td colSpan={2} className="border border-gray-400 font-bold p-2 text-left uppercase text-gray-600">Total HT</td>
-              <td colSpan={2} className="border border-gray-400 p-2 text-right font-black text-[12px]">
-                {subtotal.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
-              </td>
-            </tr>
-            <tr>
-              <td colSpan={2} className="border border-gray-400 font-bold p-2 text-left uppercase text-gray-600">TVA (19%)</td>
-              <td colSpan={2} className="border border-gray-400 p-2 text-right font-bold">
-                {tax.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
-              </td>
-            </tr>
-            <tr className="bg-gray-900 text-white border-black">
-              <td colSpan={2} className="border border-black font-black p-2 text-left uppercase text-[12px]">NET A PAYER (TTC)</td>
-              <td colSpan={2} className="border border-black p-2 text-right font-black text-[15px] tracking-tight">
-                {total.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })} DA
-              </td>
-            </tr>
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {items.map((item, i) => (
+                <tr key={i} className="hover:bg-gray-50/50">
+                  <td className="border-b border-r border-gray-400 px-2 py-1.5 font-medium">{item.description}</td>
+                  <td className="border-b border-r border-gray-400 px-2 py-1.5 text-center">U</td>
+                  <td className="border-b border-r border-gray-400 px-2 py-1.5 text-center font-bold">{item.quantity}</td>
+                  <td className="border-b border-r border-gray-400 px-2 py-1.5 text-right whitespace-nowrap">{item.unitPrice.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
+                  <td className="border-b border-gray-400 px-2 py-1.5 text-right font-bold whitespace-nowrap">{item.total.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
+                </tr>
+              ))}
+              <tr>
+                <td rowSpan={3} className="border-r border-gray-400 p-2 text-left align-top leading-relaxed text-[9px] bg-gray-50/30">
+                  <div className="font-bold mb-1 uppercase text-gray-500">Coordonnées de paiement :</div>
+                  <p>Compte CCP N°: <span className="font-bold">{activeCentre?.comptePostale || '007 99 999 0007742 862 16'}</span></p>
+                  <p>Compte BADR N°: <span className="font-bold">{activeCentre?.bankAccount || '003 00 853 30000426300 75'}</span></p>
+                  <p className="mt-1 italic">Mode de paiement : versement ou virement bancaire</p>
+                </td>
+                <td colSpan={2} className="border-b border-r border-gray-400 font-bold p-2 text-left uppercase text-gray-600">Total HT</td>
+                <td colSpan={2} className="border-b border-gray-400 p-2 text-right font-black text-[12px]">
+                  {subtotal.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
+                </td>
+              </tr>
+              <tr>
+                <td colSpan={2} className="border-b border-r border-gray-400 font-bold p-2 text-left uppercase text-gray-600">TVA (19%)</td>
+                <td colSpan={2} className="border-b border-gray-400 p-2 text-right font-bold">
+                  {tax.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
+                </td>
+              </tr>
+              <tr className="bg-gray-900 text-white">
+                <td colSpan={2} className="font-black p-2 text-left uppercase text-[12px] border-r border-gray-400">NET A PAYER (TTC)</td>
+                <td colSpan={2} className="p-2 text-right font-black text-[15px] tracking-tight">
+                  {total.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })} DA
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         {/* Total in Letters */}
         <div className="mt-8 text-[11px] space-y-3">
@@ -667,7 +679,19 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
             Imprimer le Devis
           </button>
-          <button type="button" onClick={(e) => { setActiveTab('form'); handleSubmit(e as any); }} className="px-8 py-3 text-[10px] font-black uppercase tracking-widest text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 active:scale-95">Valider & Archiver</button>
+          <button 
+            type="button" 
+            onClick={(e) => { setActiveTab('form'); handleSubmit(e as any); }} 
+            disabled={items.length === 0 || total === 0}
+            className={`px-8 py-3 text-[10px] font-black uppercase tracking-widest text-white rounded-xl transition-all shadow-lg active:scale-95 ${
+              (items.length === 0 || total === 0) 
+                ? 'bg-gray-400 cursor-not-allowed opacity-60 shadow-none' 
+                : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'
+            }`}
+            title={items.length === 0 || total === 0 ? "Le devis doit contenir au moins un article avec un montant pour être validé" : ""}
+          >
+            Valider & Archiver
+          </button>
         </div>
       </div>
     </div>

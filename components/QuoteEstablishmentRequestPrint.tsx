@@ -54,7 +54,17 @@ export const QuoteEstablishmentRequestPrint: React.FC<QuoteEstablishmentRequestP
               body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background-color: white !important; }
               body * { visibility: hidden; }
               #quote-print-container, #quote-print-container * { visibility: visible; }
-              #quote-print-container { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
+              #quote-print-container { 
+                position: absolute; 
+                left: 0; 
+                top: 0; 
+                width: 100%; 
+                margin: 0; 
+                padding: 10mm !important;
+                border: 1.2mm solid black !important;
+                border-radius: 10mm !important;
+                overflow: hidden;
+              }
             }
           `}
         </style>
@@ -80,7 +90,7 @@ export const QuoteEstablishmentRequestPrint: React.FC<QuoteEstablishmentRequestP
         </div>
 
         {/* Ref Box Style (Simplified for Request) */}
-        <div className="bg-gray-100 border border-gray-400 p-2 mb-6">
+        <div className="bg-gray-100 border border-gray-400 p-2 mb-6" style={{ borderRadius: '8px' }}>
           <div className="flex justify-between font-bold text-[11px]">
             <span>Zone d'Alger</span>
             <span>Unité de {centre?.name || 'Médéa'}</span>
