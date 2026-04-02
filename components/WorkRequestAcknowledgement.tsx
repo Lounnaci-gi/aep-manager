@@ -90,13 +90,30 @@ export const WorkRequestAcknowledgement: React.FC<WorkRequestAcknowledgementProp
         {/* The Actual Receipt Box - 110mm x 90mm */}
         <div className="w-[110mm] h-[90mm] bg-white border border-dashed border-gray-400 p-4 relative overflow-hidden shadow-2xl print:shadow-none mb-10">
           
+          {/* Republic Text */}
+          <div className="text-center font-bold text-[7px] mb-1">
+            الجمهورية الجزائرية الديمقراطية الشعبية
+          </div>
+
           {/* Header Section */}
-          <div className="flex justify-between items-start mb-3">
-            <img src="/ade.png" alt="ADE Logo" className="h-10 w-auto object-contain" />
-            <div className="text-right space-y-0.5">
-              <h1 className="text-[10px] font-bold uppercase leading-tight border-b border-black inline-block">ALGERIENNE DES EAUX</h1>
-              <p className="text-[8px] font-medium leading-none">Zone d'Alger</p>
-              <p className="text-[8px] font-bold leading-none">Unité de {centre?.name || 'Médéa'}</p>
+          <div className="flex justify-between items-center mb-3">
+            <div className="text-[7px] font-bold text-left leading-tight w-1/3">
+              Ministère des ressources en eau<br />
+              E.P ALGERIENNE DES EAUX
+            </div>
+            <div className="flex flex-col items-center w-1/3">
+              <img src="/ade.png" alt="ADE Logo" className="h-8 w-auto object-contain" />
+            </div>
+            <div className="text-[7px] font-bold text-right leading-tight w-1/3" dir="rtl">
+              وزارة المــــوارد المائيــــــة<br />
+              الجزائريــــــة للميــــــــــاه
+            </div>
+          </div>
+
+          {/* Ref Box Style (Very Compact for Receipt) */}
+          <div className="bg-gray-100 border border-gray-400 p-1 mb-2 text-center">
+            <div className="font-bold text-[8px]">
+              Zone d'Alger - Unité de {centre?.name || 'Médéa'}
             </div>
           </div>
 

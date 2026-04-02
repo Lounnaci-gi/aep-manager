@@ -108,19 +108,31 @@ export const BranchementPrint: React.FC<BranchementPrintProps> = ({ request, age
       {/* Document Content */}
       <div className="branchement-print-doc max-w-[210mm] mx-auto p-6 md:p-8 bg-white print:p-0 print:m-0" style={{ fontSize: '10pt' }}>
         
-        {/* === HEADER === */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2px' }}>
-          <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
-            <div style={{ fontSize: '10pt', fontWeight: 'bold' }}>|ALGERIENNE DES EAUX</div>
-            <div style={{ fontSize: '9pt', fontWeight: 'bold', paddingLeft: '8px' }}>Zone d'Alger</div>
-            <div style={{ fontSize: '9pt', fontWeight: 'bold', paddingLeft: '8px' }}>Unité de {centre?.name || 'Médéa'}</div>
+        {/* Republic Text */}
+        <div style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '11pt', marginBottom: '8px' }}>
+          الجمهورية الجزائرية الديمقراطية الشعبية
+        </div>
+
+        {/* === HEADER (3 colonnes) === */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <div style={{ textAlign: 'left', lineHeight: 1.2, width: '33%' }}>
+            <div style={{ fontSize: '9pt', fontWeight: 'bold' }}>Ministère des ressources en eau</div>
+            <div style={{ fontSize: '9pt', fontWeight: 'bold' }}>E.P ALGERIENNE DES EAUX</div>
           </div>
-          <div style={{ textAlign: 'center' }}>
-            <img src="/ade.png" alt="ADE Logo" style={{ height: '110px', margin: '0 auto' }} />
+          <div style={{ textAlign: 'center', width: '33%' }}>
+            <img src="/ade.png" alt="ADE Logo" style={{ height: '70px', margin: '0 auto' }} />
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '10pt', fontWeight: 'bold' }}>Agence de {agency?.name || '........................'}</div>
+          <div style={{ textAlign: 'right', width: '33%', fontSize: '9pt', fontWeight: 'bold' }} dir="rtl">
+            وزارة المــــوارد المائيــــــة<br />
+            الجزائريــــــة للميــــــــــاه
           </div>
+        </div>
+
+        {/* New Zone/Unit Header Bar */}
+        <div style={{ backgroundColor: '#f3f4f6', border: '1px solid #9ca3af', padding: '6px 10px', marginBottom: '15px', display: 'flex', justifyContent: 'space-between', fontSize: '10pt', fontWeight: 'bold' }}>
+          <span>Zone d'Alger</span>
+          <span>Unité de {centre?.name || 'Médéa'}</span>
+          <span style={{ textTransform: 'uppercase' }}>Agence : {agency?.name || '........................'}</span>
         </div>
 
         {/* === TITLE === */}

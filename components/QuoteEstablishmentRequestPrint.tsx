@@ -59,18 +59,32 @@ export const QuoteEstablishmentRequestPrint: React.FC<QuoteEstablishmentRequestP
           `}
         </style>
 
+        {/* Republic Text */}
+        <div className="text-center font-bold text-[14px] mb-4">
+          الجمهورية الجزائرية الديمقراطية الشعبية
+        </div>
+
         {/* En-tête (3 colonnes) */}
-        <div className="flex justify-between items-start mb-6 text-[13px] leading-tight text-black">
-          <div className="text-center w-1/3">
-            <div>ALGERIENNE DES EAUX</div>
-            <div>Zone d'Alger</div>
-            <div>Unité de {centre?.name || 'Médéa'}</div>
+        <div className="flex justify-between items-center mb-6 text-black">
+          <div className="text-[10px] font-bold text-left leading-tight w-1/3">
+            Ministère des ressources en eau<br />
+            E.P ALGERIENNE DES EAUX
           </div>
-          <div className="flex justify-center w-1/3">
-            <img src="/ade.png" alt="ADE Logo" className="h-20 w-auto object-contain" />
+          <div className="flex flex-col items-center w-1/3">
+            <img src="/ade.png" alt="ADE" className="h-16 w-auto object-contain mb-1" />
           </div>
-          <div className="text-right w-1/3 pt-2">
-            <span>Agence de : </span><span className="font-bold uppercase text-[14px]">{agency?.name || '........................'}</span>
+          <div className="text-[10px] font-bold text-right leading-tight w-1/3" dir="rtl">
+            وزارة المــــوارد المائيــــــة<br />
+            الجزائريــــــة للميــــــــــاه
+          </div>
+        </div>
+
+        {/* Ref Box Style (Simplified for Request) */}
+        <div className="bg-gray-100 border border-gray-400 p-2 mb-6">
+          <div className="flex justify-between font-bold text-[11px]">
+            <span>Zone d'Alger</span>
+            <span>Unité de {centre?.name || 'Médéa'}</span>
+            <span className="uppercase">Agence : {agency?.name || '........................'}</span>
           </div>
         </div>
 

@@ -608,104 +608,132 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
     </div>
 
     <div className={activeTab === 'preview' ? 'block animate-in fade-in duration-500' : 'hidden'}>
-      <div className="bg-white w-full max-w-4xl mx-auto rounded-[2.5rem] shadow-2xl overflow-hidden mb-8 border border-slate-100">
-        <div className="p-12 md:p-16 space-y-12 bg-white text-left">
-            <div className="flex flex-col md:flex-row justify-between items-start border-b-2 border-slate-800 pb-8 gap-6">
-              <div className="flex items-center gap-4">
-                <img src="/ade.png" alt="ADE Logo" className="h-16 md:h-20 w-auto object-contain" />
-                <div>
-                  <div className="text-3xl font-black text-emerald-600 tracking-tighter mb-2 uppercase">ADE MANAGER - BRANCHEMENT</div>
-                  <div className="text-[10px] font-bold text-slate-500 uppercase space-y-1">
-                    <p>{activeCentre?.name}</p>
-                    <p>{activeAgency?.name}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="text-right">
-                <h1 className="text-5xl font-black text-slate-800 uppercase tracking-tighter mb-2">DEVIS</h1>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Demande n° {request.id}</p>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Émis le : {new Date().toLocaleDateString('fr-DZ')}</p>
-              </div>
+      <div className="bg-white w-full max-w-[210mm] mx-auto shadow-2xl mb-8 border border-gray-300 print:shadow-none print:border-none p-[10mm] text-slate-900" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
+        <div className="text-center font-bold text-[11px] mb-2 uppercase">
+          الجمهورية الجزائرية الديمقراطية الشعبية
+        </div>
+
+        <div className="flex flex-col items-center mb-6">
+          <img src="/ade.png" alt="ADE" className="h-[84px] w-auto object-contain mb-2" />
+          <div className="w-full flex justify-between items-center text-[11px]">
+            <div className="font-bold text-left leading-tight w-1/3">
+              Ministère des ressources en eau<br />
+              E.P ALGERIENNE DES EAUX
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              <div className="space-y-6">
-                <div>
-                  <h4 className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2">IDENTITÉ ABONNÉ</h4>
-                  <p className="text-lg font-black text-slate-800 uppercase mb-1">{formData.clientName}</p>
-                  <p className="text-xs text-slate-500 font-bold uppercase pt-1">Qualité: {formData.type}</p>
-                  <p className="text-xs text-slate-500 font-bold uppercase pt-1">{formData.address}</p>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <div>
-                  <h4 className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-2">SITE TECHNIQUE</h4>
-                  <p className="text-xs font-bold text-slate-800 uppercase">LIEU : {formData.installationAddress}</p>
-                  <p className="text-xs font-bold text-slate-800 uppercase">COMMUNE : {formData.installationCommune}</p>
-                  <div className="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-100 flex justify-between gap-2">
-                    <p className="text-[10px] font-black text-amber-800 uppercase">Type: {formData.branchementType}</p>
-                    <p className="text-[10px] font-black text-amber-800 uppercase">Ø {formData.diameter}</p>
-                  </div>
-                </div>
-              </div>
+            <div className="w-1/3"></div>
+            <div className="font-bold text-right leading-tight w-1/3" dir="rtl">
+              وزارة المــــوارد المائيــــــة<br />
+              الجزائريــــــة للميــــــــــاه
             </div>
+          </div>
+        </div>
 
-            <div className="border border-slate-200 rounded-xl overflow-hidden">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                    <th className="py-3 px-4 text-left">Désignation</th>
-                    <th className="py-3 px-4 text-center w-20">Qté</th>
-                    <th className="py-3 px-4 text-right w-24">P.U HT</th>
-                    <th className="py-3 px-4 text-right w-32">Total HT</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {items.map((item, i) => (
-                    <tr key={i} className="bg-white">
-                      <td className="py-3 px-4 text-sm font-semibold text-slate-700">
-                        {item.description}
-                        {item.priceTypeIndicator && <span className="ml-2 px-1 text-[8px] border text-slate-400 border-slate-200 rounded">{item.priceTypeIndicator}</span>}
-                      </td>
-                      <td className="py-3 px-4 text-sm text-center font-bold text-slate-700">{item.quantity}</td>
-                      <td className="py-3 px-4 text-sm text-right text-slate-600">{item.unitPrice.toFixed(2)}</td>
-                      <td className="py-3 px-4 text-sm font-bold text-slate-800 text-right">{(item.quantity * item.unitPrice).toFixed(2)} DA</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <div className="bg-gray-200 border border-gray-400 p-2 mb-6">
+          <div className="flex justify-between font-bold text-[11px] mb-1">
+            <span>Zone d'Alger</span>
+            <span>Unité de {activeCentre?.name || 'Médéa'}</span>
+          </div>
+          <div className="text-[11px] text-center leading-relaxed font-medium">
+            Siège social : {activeCentre?.address || 'Quartier KOTTITANE - BP136 - 26000 MEDEA'} . Tél {activeCentre?.phone || '025 74 13 35'} Fax {activeCentre?.fax || '025 74 13 43'}<br />
+            R.C: {activeCentre?.prefix || '01B0017164'} &nbsp;&nbsp;&nbsp; I.F: 000116189029833 &nbsp;&nbsp;&nbsp; A.I: 26010890207
+          </div>
+        </div>
+
+        <div className="flex justify-between mb-8">
+          <div className="w-1/2 space-y-4">
+            <div>
+              <span className="font-bold text-[11px] border-b border-black inline-block pb-0.5">Centre de {activeCentre?.name || 'Berrouaghia'}</span>
             </div>
-
-            <div className="flex flex-col md:flex-row justify-between items-end gap-6">
-              <div className="flex-1 bg-slate-50 p-5 rounded-2xl border border-slate-100">
-                <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">DOMICILIATION BANCAIRE</h4>
-                <p className="text-[10px] font-bold text-slate-800 uppercase mb-1">{activeCentre?.bankName || 'AEP MANAGER BANK'}</p>
-                <p className="text-sm font-mono font-bold text-slate-600 break-all">{activeCentre?.bankAccount || '002 0000000000000'}</p>
+            <div>
+              <h1 className="font-black text-[11px] border-b border-black inline-block pb-0.5">DEVIS QUANTITATIF ET ESTIMATIF</h1>
+              <div className="text-[11px] font-bold mt-1">
+                N°: {request.id} / {new Date().getFullYear()} du: {new Date().toLocaleDateString('fr-DZ')}
               </div>
-              <div className="w-full md:w-80 bg-slate-900 p-6 rounded-3xl text-white shadow-xl">
-                <div className="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-widest mb-2"><span>Sous-Total HT</span><span>{formatCurrency(subtotal)}</span></div>
-                <div className="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-widest mb-4"><span>TVA ({taxRate}%)</span><span>{formatCurrency(tax)}</span></div>
-                <div className="pt-4 border-t border-slate-700">
-                  <span className="block text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1">NET À PAYER TTC</span>
-                  <span className="block text-2xl font-black text-white">{formatCurrency(total)}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-8 border-t border-slate-200 pt-6 text-center">
-              <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest leading-relaxed">
-                {numberToFrenchLetters(total)}
-              </p>
             </div>
           </div>
 
-          <div className="px-8 py-5 bg-slate-50 border-t border-slate-200 flex justify-end gap-3 rounded-b-[2.5rem]">
-            <button type="button" onClick={() => setActiveTab('form')} className="px-6 py-2.5 text-xs font-bold text-slate-600 bg-white border border-slate-300 rounded-xl hover:bg-slate-100">Retour à l'édition</button>
-            <button type="button" onClick={(e) => { setActiveTab('form'); handleSubmit(e as any); }} className="px-6 py-2.5 text-xs font-bold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition-all shadow-md active:scale-95">Valider & Archiver</button>
+          <div className="w-[80mm] border border-gray-400 p-4 min-h-[40mm] rounded-[30px]">
+            <div className="font-bold text-[11px] mb-2 uppercase">DOIT A {request.businessName || (`${request.civility} ${request.clientName}`)}</div>
+            <div className="text-[11px] leading-relaxed uppercase">
+              ADRESSE : {request.installationAddress}<br />
+              {request.installationCommune}<br />
+              {request.clientPhone && `Tel : ${request.clientPhone}`}
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <span className="font-bold text-[11px] border-b border-black inline-block pb-0.5 uppercase">Objet: {request.serviceType}</span>
+        </div>
+
+        <table className="w-full border-collapse border border-gray-400 mb-0 font-sans text-[11px]">
+          <thead>
+            <tr className="bg-gray-100 font-bold">
+              <th className="border border-gray-400 p-1.5 text-left">Désignation des travaux</th>
+              <th className="border border-gray-400 p-1.5 text-center w-16">Unité</th>
+              <th className="border border-gray-400 p-1.5 text-center w-16">Qtité</th>
+              <th className="border border-gray-400 p-1.5 text-right w-24">P.U</th>
+              <th className="border border-gray-400 p-1.5 text-right w-24">Montant</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item, i) => (
+              <tr key={i}>
+                <td className="border border-gray-400 px-2 py-1">{item.description}</td>
+                <td className="border border-gray-400 px-2 py-1 text-center">U</td>
+                <td className="border border-gray-400 px-2 py-1 text-center">{item.quantity}</td>
+                <td className="border border-gray-400 px-2 py-1 text-right">{item.unitPrice.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
+                <td className="border border-gray-400 px-2 py-1 text-right">{(item.quantity * item.unitPrice).toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
+              </tr>
+            ))}
+            <tr>
+              <td rowSpan={3} className="border border-gray-400 p-1.5 text-left align-top leading-tight space-y-0.5">
+                <p>Compte CCP N°: {activeCentre?.comptePostale || '007 99 999 0007742 862 16'}</p>
+                <p>Compte BADR N°: {activeCentre?.bankAccount || '003 00 853 30000426300 75'}</p>
+                <p>mode de paiement : versement bancaire</p>
+              </td>
+              <td colSpan={2} className="border border-gray-400 font-bold p-1 align-middle text-left">THT</td>
+              <td colSpan={2} className="border border-gray-400 p-1 text-right align-middle">
+                {subtotal.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
+              </td>
+            </tr>
+            <tr>
+              <td colSpan={2} className="border border-gray-400 font-bold p-1 align-middle text-left">TVA 19%</td>
+              <td colSpan={2} className="border border-gray-400 p-1 text-right align-middle">
+                {tax.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
+              </td>
+            </tr>
+            <tr>
+              <td colSpan={2} className="border border-gray-400 font-black p-1 align-middle text-left">TTC</td>
+              <td colSpan={2} className="border border-gray-400 font-black p-1 text-right align-middle bg-gray-50 uppercase">
+                {total.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div className="mt-6 text-[11px] space-y-2">
+          <p className="font-bold">La Somme De Ce Présent Devis Est Arrêtée À :</p>
+          <p className="font-black tracking-tight capitalize">{numberToFrenchLetters(total).toLowerCase()} Dinars.</p>
+          <p className="italic">Nb: ce devis est valable pour une durée de 01 mois</p>
+        </div>
+
+        <div className="mt-10 flex justify-end">
+          <div className="text-center">
+            <p className="font-bold text-[11px] border-b border-black inline-block pb-0.5 pointer-events-none">LE CHEF D'AGENCE COMMERCIALE</p>
           </div>
         </div>
       </div>
+
+      <div className="px-8 py-5 flex justify-end gap-3 print:hidden">
+        <button type="button" onClick={() => setActiveTab('form')} className="px-6 py-2.5 text-xs font-bold text-slate-600 bg-white border border-slate-300 rounded-xl hover:bg-slate-100">Retour à l'édition</button>
+        <button type="button" onClick={async (e) => { 
+          // Imprimer
+          window.print();
+        }} className="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-md">Imprimer</button>
+        <button type="button" onClick={(e) => { setActiveTab('form'); handleSubmit(e as any); }} className="px-6 py-2.5 text-xs font-bold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition-all shadow-md active:scale-95">Valider & Archiver</button>
+      </div>
+    </div>
     </div>
   );
 };

@@ -499,110 +499,133 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
       </form>
       </div>
 
-      <div className={activeTab === 'preview' ? 'block animate-in fade-in duration-500' : 'hidden'}>
-        <div className="bg-white w-full max-w-4xl mx-auto rounded-[3rem] shadow-2xl overflow-hidden mb-8 border border-gray-100">
-            <div className="p-16 space-y-12 bg-white">
-              <div className="flex justify-between items-start border-b-2 border-gray-900 pb-8">
-                <div className="flex items-center gap-4">
-                  <img src="/ade.png" alt="ADE Logo" className="h-16 md:h-20 w-auto object-contain" />
-                  <div>
-                    <div className="text-3xl font-black text-blue-600 tracking-tighter mb-2 uppercase">ADE MANAGER</div>
-                    <div className="text-[10px] font-black text-gray-400 uppercase space-y-1">
-                      <p>{activeCentre?.name}</p>
-                      <p>{activeAgency?.name}</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <h1 className="text-6xl font-black text-gray-900 uppercase tracking-tighter mb-2">DEVIS</h1>
-                  <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Émis le : {new Date().toLocaleDateString('fr-DZ')}</p>
-                </div>
-              </div>
+    <div className={activeTab === 'preview' ? 'block animate-in fade-in duration-500' : 'hidden'}>
+      <div className="bg-white w-full max-w-[210mm] mx-auto shadow-2xl mb-8 border border-gray-300 print:shadow-none print:border-none p-[10mm] text-slate-900" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
+        <div className="text-center font-bold text-[11px] mb-2 uppercase">
+          الجمهورية الجزائرية الديمقراطية الشعبية
+        </div>
 
-              <div className="grid grid-cols-2 gap-16">
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2">IDENTITÉ ABONNÉ</h4>
-                    {isLegal && <p className="text-xl font-black text-gray-900 uppercase mb-1">{formData.businessName}</p>}
-                    <p className={`${isLegal ? 'text-xs text-gray-500 font-bold' : 'text-xl font-black text-gray-900 uppercase'}`}>{formData.civility} {formData.clientName}</p>
-                    <p className="text-xs text-gray-500 font-bold mt-1 uppercase">{formData.address}, {formData.commune}</p>
-                    
-                    {!isLegal && (
-                      <div className="mt-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Pièce d'Identité : {formData.idDocumentType}</p>
-                        <p className="text-[10px] font-black text-gray-800">N° {formData.idDocumentNumber}</p>
-                        <p className="text-[9px] font-bold text-gray-500 mt-1">Délivrée le {formData.idDocumentIssueDate} par {formData.idDocumentIssuer}</p>
-                      </div>
-                    )}
-
-                    <div className="inline-block px-3 py-1 mt-4 bg-emerald-100 text-emerald-700 text-[9px] font-black rounded-full uppercase tracking-widest">QUALITÉ : {formData.type}</div>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-2">SITE DES TRAVAUX</h4>
-                    <p className="text-xs font-black text-gray-900 uppercase">LIEU : {formData.installationAddress}</p>
-                    <p className="text-xs font-black text-gray-900 uppercase">COMMUNE : {formData.installationCommune}</p>
-                    <div className="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-100">
-                      <p className="text-[10px] font-black text-amber-800 uppercase leading-tight">{formData.serviceType}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <table className="w-full border-collapse">
-                <thead><tr className="border-b-2 border-gray-900 text-[10px] font-black text-gray-900 uppercase tracking-widest"><th className="py-4 text-left">Désignation</th><th className="py-4 px-4 text-center w-20">Qté</th><th className="py-4 text-right">P.U HT</th><th className="py-4 text-right">Total HT</th></tr></thead>
-                <tbody className="divide-y divide-gray-100">
-                  {items.map((item, i) => (
-                    <tr key={i}>
-                      <td className="py-4 text-sm font-bold uppercase text-gray-800">{item.description}</td>
-                      <td className="py-4 px-4 text-sm text-center font-bold">{item.quantity}</td>
-                      <td className="py-4 text-sm text-right">{item.unitPrice.toFixed(2)}</td>
-                      <td className="py-4 text-sm font-black text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <span>{item.total.toFixed(2)} DA</span>
-                          {item.priceTypeIndicator && (
-                            <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-bold rounded-full">
-                              {item.priceTypeIndicator}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              <div className="flex justify-between items-end gap-12">
-                <div className="flex-1 bg-gray-50 p-6 rounded-3xl border border-gray-100">
-                  <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-4">DOMICILIATION BANCAIRE</h4>
-                  <p className="text-[10px] font-black text-gray-900 uppercase mb-2">{activeCentre?.bankName}</p>
-                  <p className="text-sm font-mono font-black text-blue-700 tracking-wider break-all">{activeCentre?.bankAccount}</p>
-                </div>
-                <div className="w-80 bg-gray-900 p-8 rounded-[2.5rem] text-white shadow-2xl space-y-4">
-                  <div className="flex justify-between text-[10px] font-black text-gray-400 uppercase"><span>TOTAL HT</span><span>{formatCurrency(subtotal)}</span></div>
-                  <div className="flex justify-between text-[10px] font-black text-gray-400 uppercase"><span>TVA (19%)</span><span>{formatCurrency(tax)}</span></div>
-                  <div className="flex flex-col gap-1 pt-6 border-t-2 border-blue-600 mt-2">
-                    <span className="font-black text-blue-400 uppercase text-[10px]">NET À PAYER TTC</span>
-                    <span className="font-black text-4xl text-white tracking-tighter">{formatCurrency(total)}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-8 border-t border-gray-100 pt-6 text-center">
-                <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-relaxed">
-                  {numberToFrenchLetters(total)}
-                </p>
-              </div>
+        <div className="flex flex-col items-center mb-6">
+          <img src="/ade.png" alt="ADE" className="h-[84px] w-auto object-contain mb-2" />
+          <div className="w-full flex justify-between items-center text-[11px]">
+            <div className="font-bold text-left leading-tight w-1/3">
+              Ministère des ressources en eau<br />
+              E.P ALGERIENNE DES EAUX
             </div>
-
-            <div className="px-10 py-8 bg-gray-50 border-t border-gray-100 flex justify-end gap-4 rounded-b-[3rem]">
-              <button type="button" onClick={() => setActiveTab('form')} className="px-6 py-3 text-[11px] font-black text-gray-600 bg-white border border-gray-300 rounded-xl hover:bg-gray-100 uppercase tracking-widest">Retour à l'édition</button>
-              <button type="button" onClick={(e) => { setActiveTab('form'); handleSubmit(e as any); }} className="px-10 py-3 text-[11px] font-black text-white bg-blue-600 rounded-xl uppercase tracking-widest shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95">Valider & Archiver</button>
+            <div className="w-1/3"></div>
+            <div className="font-bold text-right leading-tight w-1/3" dir="rtl">
+              وزارة المــــوارد المائيــــــة<br />
+              الجزائريــــــة للميــــــــــاه
             </div>
           </div>
         </div>
+
+        <div className="bg-gray-200 border border-gray-400 p-2 mb-6">
+          <div className="flex justify-between font-bold text-[11px] mb-1">
+            <span>Zone d'Alger</span>
+            <span>Unité de {activeCentre?.name || 'Médéa'}</span>
+          </div>
+          <div className="text-[11px] text-center leading-relaxed font-medium">
+            Siège social : {activeCentre?.address || 'Quartier KOTTITANE - BP136 - 26000 MEDEA'} . Tél {activeCentre?.phone || '025 74 13 35'} Fax {activeCentre?.fax || '025 74 13 43'}<br />
+            R.C: {activeCentre?.prefix || '01B0017164'} &nbsp;&nbsp;&nbsp; I.F: 000116189029833 &nbsp;&nbsp;&nbsp; A.I: 26010890207
+          </div>
+        </div>
+
+        <div className="flex justify-between mb-8">
+          <div className="w-1/2 space-y-4">
+            <div>
+              <span className="font-bold text-[11px] border-b border-black inline-block pb-0.5">Centre de {activeCentre?.name || 'Berrouaghia'}</span>
+            </div>
+            <div>
+              <h1 className="font-black text-[11px] border-b border-black inline-block pb-0.5">DEVIS QUANTITATIF ET ESTIMATIF</h1>
+              <div className="text-[11px] font-bold mt-1">
+                N°: {initialData?.id || `AEP-${Date.now().toString().slice(-6)}`} / {new Date().getFullYear()} du: {new Date().toLocaleDateString('fr-DZ')}
+              </div>
+            </div>
+          </div>
+
+          <div className="w-[80mm] border border-gray-400 p-4 min-h-[40mm] rounded-[30px]">
+            <div className="font-bold text-[11px] mb-2 uppercase">DOIT A {isLegal ? formData.businessName : `${formData.civility} ${formData.clientName}`}</div>
+            <div className="text-[11px] leading-relaxed uppercase">
+              ADRESSE : {formData.installationAddress}<br />
+              {formData.installationCommune}<br />
+              {formData.clientPhone && `Tel : ${formData.clientPhone}`}
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <span className="font-bold text-[11px] border-b border-black inline-block pb-0.5 uppercase">Objet: {formData.serviceType}</span>
+        </div>
+
+        <table className="w-full border-collapse border border-gray-400 mb-2 font-sans text-[11px]">
+          <thead>
+            <tr className="bg-gray-100 font-bold">
+              <th className="border border-gray-400 p-1.5 text-left">Désignation des travaux</th>
+              <th className="border border-gray-400 p-1.5 text-center w-16">Unité</th>
+              <th className="border border-gray-400 p-1.5 text-center w-16">Qtité</th>
+              <th className="border border-gray-400 p-1.5 text-right w-24">P.U</th>
+              <th className="border border-gray-400 p-1.5 text-right w-24">Montant</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item, i) => (
+              <tr key={i}>
+                <td className="border border-gray-400 px-2 py-1">{item.description}</td>
+                <td className="border border-gray-400 px-2 py-1 text-center">U</td>
+                <td className="border border-gray-400 px-2 py-1 text-center">{item.quantity}</td>
+                <td className="border border-gray-400 px-2 py-1 text-right">{item.unitPrice.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
+                <td className="border border-gray-400 px-2 py-1 text-right">{item.total.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
+              </tr>
+            ))}
+            <tr>
+              <td rowSpan={3} className="border border-gray-400 p-1.5 text-left align-top leading-tight space-y-0.5">
+                <p>Compte CCP N°: {activeCentre?.comptePostale || '007 99 999 0007742 862 16'}</p>
+                <p>Compte BADR N°: {activeCentre?.bankAccount || '003 00 853 30000426300 75'}</p>
+                <p>mode de paiement : versement bancaire</p>
+              </td>
+              <td colSpan={2} className="border border-gray-400 font-bold p-1 align-middle text-left">THT</td>
+              <td colSpan={2} className="border border-gray-400 p-1 text-right align-middle">
+                {subtotal.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
+              </td>
+            </tr>
+            <tr>
+              <td colSpan={2} className="border border-gray-400 font-bold p-1 align-middle text-left">TVA 19%</td>
+              <td colSpan={2} className="border border-gray-400 p-1 text-right align-middle">
+                {tax.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
+              </td>
+            </tr>
+            <tr>
+              <td colSpan={2} className="border border-gray-400 font-black p-1 align-middle text-left">TTC</td>
+              <td colSpan={2} className="border border-gray-400 font-black p-1 text-right align-middle bg-gray-50 uppercase">
+                {total.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div className="mt-6 text-[11px] space-y-2">
+          <p className="font-bold">La Somme De Ce Présent Devis Est Arrêtée À :</p>
+          <p className="font-black tracking-tight capitalize">{numberToFrenchLetters(total).toLowerCase()} Dinars.</p>
+          <p className="italic">Nb: ce devis est valable pour une durée de 01 mois</p>
+        </div>
+
+        <div className="mt-10 flex justify-end">
+          <div className="text-center">
+            <p className="font-bold text-[11px] border-b border-black inline-block pb-0.5 pointer-events-none">LE CHEF D'AGENCE COMMERCIALE</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-8 py-5 flex justify-end gap-3 print:hidden">
+        <button type="button" onClick={() => setActiveTab('form')} className="px-6 py-2.5 text-xs font-bold text-slate-600 bg-white border border-slate-300 rounded-xl hover:bg-slate-100">Retour à l'édition</button>
+        <button type="button" onClick={async (e) => { 
+          // Imprimer
+          window.print();
+        }} className="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-md">Imprimer</button>
+        <button type="button" onClick={(e) => { setActiveTab('form'); handleSubmit(e as any); }} className="px-6 py-2.5 text-xs font-bold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition-all shadow-md active:scale-95">Valider & Archiver</button>
+      </div>
+    </div>
       </div>
   );
 };
