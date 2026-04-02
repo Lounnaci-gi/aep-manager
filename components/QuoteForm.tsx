@@ -310,33 +310,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
   const isEditMode = !!initialData;
 
   return (
-    <div className="max-w-5xl mx-auto mb-10 w-full">
-      <div className="flex justify-center mb-8">
-        <div className="bg-slate-100/80 p-1.5 rounded-2xl flex items-center gap-1 shadow-inner border border-slate-200/50">
-          <button
-            type="button"
-            onClick={() => setActiveTab('form')}
-            className={`px-6 py-2.5 rounded-xl text-sm font-black tracking-widest uppercase transition-all ${
-              activeTab === 'form' 
-                ? 'bg-white text-blue-600 shadow-sm border border-slate-200/50' 
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            Édition du Devis
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('preview')}
-            className={`px-6 py-2.5 rounded-xl text-sm font-black tracking-widest uppercase transition-all ${
-              activeTab === 'preview' 
-                ? 'bg-white text-emerald-600 shadow-sm border border-slate-200/50' 
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            Aperçu PDF
-          </button>
-        </div>
-      </div>
+    <div className="max-w-5xl mx-auto mb-10 w-full animate-in fade-in duration-500">
 
       <div className={activeTab === 'form' ? 'block' : 'hidden'}>
       <form onSubmit={handleSubmit} className="space-y-8 bg-white p-8 rounded-[2.5rem] shadow-2xl border border-gray-100 max-w-4xl mx-auto animate-in fade-in duration-300">
@@ -347,7 +321,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
             </h2>
             <p className="text-sm text-gray-500 font-medium">Capture juridique et financière.</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 print-hidden">
             <button type="button" onClick={onCancel} className="px-5 py-2.5 text-[10px] font-black text-gray-500 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 uppercase tracking-widest">Annuler</button>
             <button type="button" onClick={() => setActiveTab('preview')} className="px-5 py-2.5 text-[10px] font-black text-blue-700 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100 uppercase tracking-widest">Aperçu PDF</button>
             <button type="submit" className="px-6 py-2.5 text-[10px] font-black text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 shadow-xl uppercase tracking-widest">Valider</button>
@@ -500,132 +474,202 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
       </div>
 
     <div className={activeTab === 'preview' ? 'block animate-in fade-in duration-500' : 'hidden'}>
-      <div className="bg-white w-full max-w-[210mm] mx-auto shadow-2xl mb-8 border border-gray-300 print:shadow-none print:border-none p-[10mm] text-slate-900" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
-        <div className="text-center font-bold text-[11px] mb-2 uppercase">
+      <style>{`
+        @media print {
+          @page {
+            size: A4 portrait;
+            margin: 0 !important; /* Force removal of browser headers/footers */
+          }
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+            /* Force background graphics automatically */
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+          }
+          /* Isolation: Hide all non-print elements */
+          .print-hidden, nav, footer, .sidebar, .no-print {
+            display: none !important;
+          }
+          /* Document container: Full page simulation with internal margins */
+          .quote-print-doc {
+            width: 210mm !important;
+            min-height: 297mm !important;
+            padding: 15mm !important; /* Managed internally to look like standard margins */
+            margin: 0 !important;
+            background: white !important;
+            box-shadow: none !important;
+            border: none !important;
+            position: absolute;
+            left: 0;
+            top: 0;
+            visibility: visible !important;
+          }
+          /* Ensure backgrounds are printed */
+          .bg-gray-100 { background-color: #f3f4f6 !important; }
+          .bg-gray-900 { background-color: #111827 !important; }
+          .text-white { color: white !important; }
+        }
+      `}</style>
+
+      <div className="quote-print-doc bg-white w-full max-w-[210mm] mx-auto p-[15mm] text-slate-900" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
+        {/* Republic Text */}
+        <div className="text-center font-bold text-[13px] mb-2 uppercase">
           الجمهورية الجزائرية الديمقراطية الشعبية
         </div>
 
-        <div className="flex flex-col items-center mb-6">
-          <img src="/ade.png" alt="ADE" className="h-[84px] w-auto object-contain mb-2" />
-          <div className="w-full flex justify-between items-center text-[11px]">
-            <div className="font-bold text-left leading-tight w-1/3">
-              Ministère des ressources en eau<br />
-              E.P ALGERIENNE DES EAUX
-            </div>
-            <div className="w-1/3"></div>
-            <div className="font-bold text-right leading-tight w-1/3" dir="rtl">
-              وزارة المــــوارد المائيــــــة<br />
-              الجزائريــــــة للميــــــــــاه
-            </div>
+        {/* === HEADER (3 colonnes) === */}
+        <div className="flex justify-between items-center mb-6">
+          <div className="text-[10px] font-bold text-left leading-tight w-1/3">
+            Ministère des ressources en eau<br />
+            E.P ALGERIENNE DES EAUX
+          </div>
+          <div className="flex flex-col items-center w-1/3">
+            <img src="/ade.png" alt="ADE" className="h-16 w-auto object-contain mb-1" />
+          </div>
+          <div className="text-[10px] font-bold text-right leading-tight w-1/3" dir="rtl">
+            وزارة المــــوارد المائيــــــة<br />
+            الجزائريــــــة للميــــــــــاه
           </div>
         </div>
 
-        <div className="bg-gray-200 border border-gray-400 p-2 mb-6">
+        {/* Header Bar */}
+        <div className="bg-gray-100 border border-gray-400 p-2 mb-8">
           <div className="flex justify-between font-bold text-[11px] mb-1">
             <span>Zone d'Alger</span>
             <span>Unité de {activeCentre?.name || 'Médéa'}</span>
           </div>
-          <div className="text-[11px] text-center leading-relaxed font-medium">
+          <div className="text-[10px] text-center leading-relaxed font-medium">
             Siège social : {activeCentre?.address || 'Quartier KOTTITANE - BP136 - 26000 MEDEA'} . Tél {activeCentre?.phone || '025 74 13 35'} Fax {activeCentre?.fax || '025 74 13 43'}<br />
             R.C: {activeCentre?.prefix || '01B0017164'} &nbsp;&nbsp;&nbsp; I.F: 000116189029833 &nbsp;&nbsp;&nbsp; A.I: 26010890207
           </div>
         </div>
 
-        <div className="flex justify-between mb-8">
-          <div className="w-1/2 space-y-4">
+        {/* Title & Ref Section - Using grid to prevent overlaps */}
+        <div className="grid grid-cols-2 gap-6 mb-8 items-start">
+          <div className="space-y-6">
             <div>
               <span className="font-bold text-[11px] border-b border-black inline-block pb-0.5">Centre de {activeCentre?.name || 'Berrouaghia'}</span>
             </div>
             <div>
-              <h1 className="font-black text-[11px] border-b border-black inline-block pb-0.5">DEVIS QUANTITATIF ET ESTIMATIF</h1>
-              <div className="text-[11px] font-bold mt-1">
+              <h1 className="font-black text-[13px] border-b-[8px] border-black inline-block pb-1 uppercase tracking-tight leading-tight">
+                DEVIS QUANTITATIF<br />ET ESTIMATIF
+              </h1>
+              <div className="text-[11px] font-bold mt-3">
                 N°: {initialData?.id || `AEP-${Date.now().toString().slice(-6)}`} / {new Date().getFullYear()} du: {new Date().toLocaleDateString('fr-DZ')}
               </div>
             </div>
           </div>
 
-          <div className="w-[80mm] border border-gray-400 p-4 min-h-[40mm] rounded-[30px]">
-            <div className="font-bold text-[11px] mb-2 uppercase">DOIT A {isLegal ? formData.businessName : `${formData.civility} ${formData.clientName}`}</div>
-            <div className="text-[11px] leading-relaxed uppercase">
+          <div className="w-full max-w-[85mm] ml-auto border border-gray-400 p-5 min-h-[45mm] rounded-[2.5rem] shadow-sm bg-white">
+            <div className="font-bold text-[12px] mb-3 uppercase border-b border-gray-100 pb-1">DOIT A :</div>
+            <div className="text-[11px] font-black mb-1 uppercase leading-snug">
+              {isLegal ? formData.businessName : `${formData.civility} ${formData.clientName}`}
+            </div>
+            <div className="text-[11px] leading-relaxed uppercase text-gray-700">
               ADRESSE : {formData.installationAddress}<br />
               {formData.installationCommune}<br />
-              {formData.clientPhone && `Tel : ${formData.clientPhone}`}
+              {formData.clientPhone && <span className="font-bold mt-2 inline-block">Tel : {formData.clientPhone}</span>}
             </div>
           </div>
         </div>
 
-        <div className="mb-4">
-          <span className="font-bold text-[11px] border-b border-black inline-block pb-0.5 uppercase">Objet: {formData.serviceType}</span>
+        {/* Object */}
+        <div className="mb-8 pt-4">
+          <span className="font-bold text-[11px] lowercase italic">Objet :</span>
+          <span className="font-black text-[11px] ml-2 uppercase border-b border-black pb-0.5 leading-relaxed">{formData.serviceType}</span>
         </div>
 
-        <table className="w-full border-collapse border border-gray-400 mb-2 font-sans text-[11px]">
+        {/* Table */}
+        <table className="w-full border-collapse border border-gray-400 mb-6 font-sans text-[11px]">
           <thead>
-            <tr className="bg-gray-100 font-bold">
-              <th className="border border-gray-400 p-1.5 text-left">Désignation des travaux</th>
-              <th className="border border-gray-400 p-1.5 text-center w-16">Unité</th>
-              <th className="border border-gray-400 p-1.5 text-center w-16">Qtité</th>
-              <th className="border border-gray-400 p-1.5 text-right w-24">P.U</th>
-              <th className="border border-gray-400 p-1.5 text-right w-24">Montant</th>
+            <tr className="bg-gray-100 font-bold uppercase text-[10px]">
+              <th className="border border-gray-400 p-2 text-left">Désignation des travaux</th>
+              <th className="border border-gray-400 p-2 text-center w-16">Unité</th>
+              <th className="border border-gray-400 p-2 text-center w-16">Qtité</th>
+              <th className="border border-gray-400 p-2 text-right w-24">P.U (HT)</th>
+              <th className="border border-gray-400 p-2 text-right w-28">Montant HT</th>
             </tr>
           </thead>
           <tbody>
             {items.map((item, i) => (
-              <tr key={i}>
-                <td className="border border-gray-400 px-2 py-1">{item.description}</td>
-                <td className="border border-gray-400 px-2 py-1 text-center">U</td>
-                <td className="border border-gray-400 px-2 py-1 text-center">{item.quantity}</td>
-                <td className="border border-gray-400 px-2 py-1 text-right">{item.unitPrice.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
-                <td className="border border-gray-400 px-2 py-1 text-right">{item.total.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
+              <tr key={i} className="hover:bg-gray-50/50">
+                <td className="border border-gray-400 px-2 py-1.5 font-medium">{item.description}</td>
+                <td className="border border-gray-400 px-2 py-1.5 text-center">U</td>
+                <td className="border border-gray-400 px-2 py-1.5 text-center font-bold">{item.quantity}</td>
+                <td className="border border-gray-400 px-2 py-1.5 text-right whitespace-nowrap">{item.unitPrice.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
+                <td className="border border-gray-400 px-2 py-1.5 text-right font-bold whitespace-nowrap">{item.total.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
               </tr>
             ))}
+            {/* Empty rows to fill space if needed can be added here or just let it flow */}
             <tr>
-              <td rowSpan={3} className="border border-gray-400 p-1.5 text-left align-top leading-tight space-y-0.5">
-                <p>Compte CCP N°: {activeCentre?.comptePostale || '007 99 999 0007742 862 16'}</p>
-                <p>Compte BADR N°: {activeCentre?.bankAccount || '003 00 853 30000426300 75'}</p>
-                <p>mode de paiement : versement bancaire</p>
+              <td rowSpan={3} className="border border-gray-400 p-2 text-left align-top leading-relaxed text-[9px] bg-gray-50/30">
+                <div className="font-bold mb-1 uppercase text-gray-500">Coordonnées de paiement :</div>
+                <p>Compte CCP N°: <span className="font-bold">{activeCentre?.comptePostale || '007 99 999 0007742 862 16'}</span></p>
+                <p>Compte BADR N°: <span className="font-bold">{activeCentre?.bankAccount || '003 00 853 30000426300 75'}</span></p>
+                <p className="mt-1 italic">Mode de paiement : versement ou virement bancaire</p>
               </td>
-              <td colSpan={2} className="border border-gray-400 font-bold p-1 align-middle text-left">THT</td>
-              <td colSpan={2} className="border border-gray-400 p-1 text-right align-middle">
+              <td colSpan={2} className="border border-gray-400 font-bold p-2 text-left uppercase text-gray-600">Total HT</td>
+              <td colSpan={2} className="border border-gray-400 p-2 text-right font-black text-[12px]">
                 {subtotal.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
               </td>
             </tr>
             <tr>
-              <td colSpan={2} className="border border-gray-400 font-bold p-1 align-middle text-left">TVA 19%</td>
-              <td colSpan={2} className="border border-gray-400 p-1 text-right align-middle">
+              <td colSpan={2} className="border border-gray-400 font-bold p-2 text-left uppercase text-gray-600">TVA (19%)</td>
+              <td colSpan={2} className="border border-gray-400 p-2 text-right font-bold">
                 {tax.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
               </td>
             </tr>
-            <tr>
-              <td colSpan={2} className="border border-gray-400 font-black p-1 align-middle text-left">TTC</td>
-              <td colSpan={2} className="border border-gray-400 font-black p-1 text-right align-middle bg-gray-50 uppercase">
-                {total.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
+            <tr className="bg-gray-900 text-white border-black">
+              <td colSpan={2} className="border border-black font-black p-2 text-left uppercase text-[12px]">NET A PAYER (TTC)</td>
+              <td colSpan={2} className="border border-black p-2 text-right font-black text-[15px] tracking-tight">
+                {total.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })} DA
               </td>
             </tr>
           </tbody>
         </table>
 
-        <div className="mt-6 text-[11px] space-y-2">
-          <p className="font-bold">La Somme De Ce Présent Devis Est Arrêtée À :</p>
-          <p className="font-black tracking-tight capitalize">{numberToFrenchLetters(total).toLowerCase()} Dinars.</p>
-          <p className="italic">Nb: ce devis est valable pour une durée de 01 mois</p>
+        {/* Total in Letters */}
+        <div className="mt-8 text-[11px] space-y-3">
+          <p className="font-bold underline uppercase">La Somme De Ce Présent Devis Est Arrêtée À :</p>
+          <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
+            <p className="font-black text-[11px] tracking-tight capitalize leading-relaxed">
+              {numberToFrenchLetters(total).toLowerCase()} Dinars Algériens.
+            </p>
+          </div>
+          <p className="italic text-[9px] text-gray-500">Nb: ce devis est valable pour une durée de 01 mois à compter de sa date d'établissement.</p>
         </div>
 
-        <div className="mt-10 flex justify-end">
-          <div className="text-center">
-            <p className="font-bold text-[11px] border-b border-black inline-block pb-0.5 pointer-events-none">LE CHEF D'AGENCE COMMERCIALE</p>
+        {/* Signatures */}
+        <div className="mt-12 flex justify-end">
+          <div className="text-center w-64">
+            <p className="font-black text-[11px] border-b-2 border-black inline-block pb-1 uppercase tracking-widest mb-16">
+              LE CHEF D'AGENCE COMMERCIALE
+            </p>
+            <div className="text-[9px] text-gray-400 italic">(Nom, Signature et Cachet)</div>
           </div>
         </div>
-      </div>
 
-      <div className="px-8 py-5 flex justify-end gap-3 print:hidden">
-        <button type="button" onClick={() => setActiveTab('form')} className="px-6 py-2.5 text-xs font-bold text-slate-600 bg-white border border-slate-300 rounded-xl hover:bg-slate-100">Retour à l'édition</button>
-        <button type="button" onClick={async (e) => { 
-          // Imprimer
-          window.print();
-        }} className="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-md">Imprimer</button>
-        <button type="button" onClick={(e) => { setActiveTab('form'); handleSubmit(e as any); }} className="px-6 py-2.5 text-xs font-bold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition-all shadow-md active:scale-95">Valider & Archiver</button>
+        {/* Final footer watermark for screen only */}
+        <div className="mt-auto pt-10 text-[8px] text-gray-300 italic flex justify-between print:hidden">
+          <span>Généré par ADE-MANAGER — Document Officiel</span>
+          <span>Date système : {new Date().toLocaleString()}</span>
+        </div>
       </div>
     </div>
+
+      <div className="px-8 py-6 mb-10 max-w-4xl mx-auto print:hidden">
+        <div className="flex justify-end gap-4">
+          <button type="button" onClick={() => setActiveTab('form')} className="px-8 py-3 text-[10px] font-black uppercase tracking-widest text-slate-500 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all">Retour à l'édition</button>
+          <button type="button" onClick={() => window.print()} className="px-8 py-3 text-[10px] font-black uppercase tracking-widest text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center gap-2">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+            Imprimer le Devis
+          </button>
+          <button type="button" onClick={(e) => { setActiveTab('form'); handleSubmit(e as any); }} className="px-8 py-3 text-[10px] font-black uppercase tracking-widest text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 active:scale-95">Valider & Archiver</button>
+        </div>
       </div>
+    </div>
   );
 };

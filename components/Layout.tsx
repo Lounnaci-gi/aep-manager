@@ -286,7 +286,7 @@ export const Layout: React.FC<LayoutProps> = ({
           borderBottom: `1px solid ${scrolled ? '#d1d5db' : GRAY_BORDER}`,
           boxShadow:    scrolled ? '0 2px 16px -4px rgba(11,30,66,0.09)' : 'none',
           transition:   'box-shadow 0.3s, border-color 0.3s',
-        }}>
+        }} className="print:hidden">
           <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', height: '64px', gap: '0' }}>
 
@@ -637,7 +637,7 @@ export const Layout: React.FC<LayoutProps> = ({
           color:         '#9ca3af',
           letterSpacing: '0.07em',
           textTransform: 'uppercase',
-        }}>
+        }} className="print:hidden">
           ADE Manager v3.0 — Algérie Des Eaux
         </footer>
       </div>

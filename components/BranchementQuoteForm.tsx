@@ -322,32 +322,6 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
 
   return (
     <div className="max-w-full mx-auto mb-10 w-full animate-in fade-in duration-300">
-      <div className="flex justify-center mb-8">
-        <div className="bg-slate-100/80 p-1.5 rounded-2xl flex items-center gap-1 shadow-inner border border-slate-200/50">
-          <button
-            type="button"
-            onClick={() => setActiveTab('form')}
-            className={`px-6 py-2.5 rounded-xl text-sm font-black tracking-widest uppercase transition-all ${
-              activeTab === 'form' 
-                ? 'bg-white text-blue-600 shadow-sm border border-slate-200/50' 
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            Édition du Devis
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('preview')}
-            className={`px-6 py-2.5 rounded-xl text-sm font-black tracking-widest uppercase transition-all ${
-              activeTab === 'preview' 
-                ? 'bg-white text-emerald-600 shadow-sm border border-slate-200/50' 
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            Aperçu PDF
-          </button>
-        </div>
-      </div>
 
       <div className={activeTab === 'form' ? 'block' : 'hidden'}>
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 max-w-full mx-auto">
@@ -608,7 +582,38 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
     </div>
 
     <div className={activeTab === 'preview' ? 'block animate-in fade-in duration-500' : 'hidden'}>
-      <div className="bg-white w-full max-w-[210mm] mx-auto shadow-2xl mb-8 border border-gray-300 print:shadow-none print:border-none p-[10mm] text-slate-900" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
+      <style>{`
+        @media print {
+          @page {
+            size: A4 portrait;
+            margin: 0 !important;
+          }
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+          }
+          .print-hidden, nav, footer, .sidebar, .no-print {
+            display: none !important;
+          }
+          .quote-print-doc {
+            width: 210mm !important;
+            min-height: 297mm !important;
+            padding: 15mm !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            border: none !important;
+            position: absolute;
+            left: 0;
+            top: 0;
+            visibility: visible !important;
+          }
+        }
+      `}</style>
+      <div className="quote-print-doc bg-white w-full max-w-[210mm] mx-auto p-[15mm] text-slate-900" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
         <div className="text-center font-bold text-[11px] mb-2 uppercase">
           الجمهورية الجزائرية الديمقراطية الشعبية
         </div>
@@ -725,13 +730,12 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
         </div>
       </div>
 
-      <div className="px-8 py-5 flex justify-end gap-3 print:hidden">
-        <button type="button" onClick={() => setActiveTab('form')} className="px-6 py-2.5 text-xs font-bold text-slate-600 bg-white border border-slate-300 rounded-xl hover:bg-slate-100">Retour à l'édition</button>
-        <button type="button" onClick={async (e) => { 
-          // Imprimer
-          window.print();
-        }} className="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-md">Imprimer</button>
-        <button type="button" onClick={(e) => { setActiveTab('form'); handleSubmit(e as any); }} className="px-6 py-2.5 text-xs font-bold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition-all shadow-md active:scale-95">Valider & Archiver</button>
+      <div className="px-8 py-6 max-w-full mx-auto print:hidden">
+        <div className="flex justify-end gap-3">
+          <button type="button" onClick={() => setActiveTab('form')} className="px-6 py-2.5 text-xs font-bold text-slate-600 bg-white border border-slate-300 rounded-xl hover:bg-slate-100">Retour à l'édition</button>
+          <button type="button" onClick={() => window.print()} className="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-md">Imprimer</button>
+          <button type="button" onClick={(e) => { setActiveTab('form'); handleSubmit(e as any); }} className="px-6 py-2.5 text-xs font-bold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition-all shadow-md active:scale-95">Valider & Archiver</button>
+        </div>
       </div>
     </div>
     </div>
