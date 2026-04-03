@@ -408,17 +408,23 @@ export const StructureManager: React.FC<StructureManagerProps> = ({
               </div>
             </div>
 
-            {/* Informations Bancaires */}
+            {/* Informations Bancaires & Postales */}
             <div className="bg-blue-50/50 p-8 rounded-[2rem] border border-blue-50 space-y-6">
-              <h4 className="text-[11px] font-black text-blue-400 uppercase tracking-widest text-center border-b border-blue-100 pb-4 mb-4">Informations Bancaires</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <h4 className="text-[11px] font-black text-blue-400 uppercase tracking-widest text-center border-b border-blue-100 pb-4 mb-4">Informations Bancaires & Postales</h4>
+              <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
                 <div className="space-y-2">
                   <label className="block text-[10px] font-black text-blue-500/60 uppercase tracking-widest ml-1">Banque *</label>
                   <input required placeholder="Banque" className="w-full p-4 border border-blue-100 rounded-2xl font-bold text-sm bg-white focus:ring-4 focus:ring-blue-100" value={centreFormData.bankName} onChange={e => setCentreFormData({...centreFormData, bankName: e.target.value})} />
                 </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="block text-[10px] font-black text-blue-500/60 uppercase tracking-widest ml-1">N° Compte Bancaire *</label>
                   <input required placeholder="RIB Bancaire" className="w-full p-4 border border-blue-100 rounded-2xl font-mono text-sm bg-white focus:ring-4 focus:ring-blue-100" value={centreFormData.bankAccount} onChange={e => setCentreFormData({...centreFormData, bankAccount: e.target.value})} />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-black text-blue-500/60 uppercase tracking-widest ml-1">N° Compte Postale -CCP *</label>
+                  <input required placeholder="Numéro CCP" maxLength={12} className="w-full p-4 border border-blue-100 rounded-2xl font-mono text-sm bg-white focus:ring-4 focus:ring-blue-100" value={centreFormData.comptePostale} onChange={e => setCentreFormData({...centreFormData, comptePostale: e.target.value.replace(/\D/g, '')})} />
                 </div>
               </div>
             </div>

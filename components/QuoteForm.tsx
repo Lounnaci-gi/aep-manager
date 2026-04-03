@@ -573,15 +573,13 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
             </div>
           </div>
 
-          <div className="w-full max-w-[85mm] ml-auto border border-gray-400 p-5 min-h-[45mm] shadow-sm bg-white" style={{ borderRadius: '8px' }}>
-            <div className="font-bold text-[12px] mb-3 uppercase border-b border-gray-100 pb-1">DOIT A :</div>
-            <div className="text-[11px] font-black mb-1 uppercase leading-snug">
-              {isLegal ? formData.businessName : `${formData.civility} ${formData.clientName}`}
-            </div>
-            <div className="text-[11px] leading-relaxed uppercase text-gray-700">
-              ADRESSE : {formData.installationAddress}<br />
-              {formData.installationCommune}<br />
-              {formData.clientPhone && <span className="font-bold mt-2 inline-block">Tel : {formData.clientPhone}</span>}
+          <div className="w-fit min-w-[85mm] max-w-full ml-auto border border-gray-400 p-4 min-h-[45mm] shadow-sm bg-white" style={{ borderRadius: '8px' }}>
+            <div className="text-[11px] leading-relaxed text-gray-900">
+              <div className="mb-3"><span className="font-bold uppercase pr-2">Doit A :</span> <span className="font-black uppercase">{isLegal ? formData.businessName : `${formData.civility || ''} ${formData.clientName}`.trim()}</span></div>
+              <div className="mb-1.5"><span className="font-bold pr-2">Adresse :</span> <span className="uppercase">{formData.installationAddress ? formData.installationAddress : '...........................................'}</span></div>
+              <div className="mb-1.5"><span className="font-bold pr-2">Commune :</span> <span className="uppercase">{formData.installationCommune ? formData.installationCommune : '...................................'}</span></div>
+              <div className="mb-1.5"><span className="font-bold pr-2">Tél :</span> <span className="uppercase">{formData.clientPhone ? formData.clientPhone : '...........................................'}</span></div>
+              <div className="mb-1.5"><span className="font-bold pr-2">Fax :</span> <span className="uppercase">.........................................</span></div>
             </div>
           </div>
         </div>
@@ -645,7 +643,6 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
 
         {/* Total in Letters */}
         <div className="mt-8 text-[11px] space-y-3">
-          <p className="font-bold underline uppercase">La Somme De Ce Présent Devis Est Arrêtée À :</p>
           <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
             <p className="font-black text-[11px] tracking-tight capitalize leading-relaxed">
               {numberToFrenchLetters(total).toLowerCase()} Dinars Algériens.

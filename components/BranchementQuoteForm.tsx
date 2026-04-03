@@ -664,12 +664,13 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
             </div>
           </div>
 
-          <div className="w-[80mm] border border-gray-400 p-4 min-h-[40mm] bg-white shadow-sm" style={{ borderRadius: '8px' }}>
-            <div className="font-bold text-[11px] mb-2 uppercase">DOIT A {request.businessName || (`${request.civility} ${request.clientName}`)}</div>
-            <div className="text-[11px] leading-relaxed uppercase">
-              ADRESSE : {request.installationAddress}<br />
-              {request.installationCommune}<br />
-              {request.clientPhone && `Tel : ${request.clientPhone}`}
+          <div className="w-fit min-w-[85mm] max-w-full border border-gray-400 p-4 min-h-[40mm] bg-white shadow-sm" style={{ borderRadius: '8px' }}>
+            <div className="text-[11px] leading-relaxed text-gray-900">
+              <div className="mb-3"><span className="font-bold uppercase pr-2">Doit A :</span> <span className="font-black uppercase">{request.businessName || (`${request.civility || ''} ${request.clientName}`).trim()}</span></div>
+              <div className="mb-1.5"><span className="font-bold pr-2">Adresse :</span> <span className="uppercase">{request.installationAddress ? request.installationAddress : '...........................................'}</span></div>
+              <div className="mb-1.5"><span className="font-bold pr-2">Commune :</span> <span className="uppercase">{request.installationCommune ? request.installationCommune : '...................................'}</span></div>
+              <div className="mb-1.5"><span className="font-bold pr-2">Tél :</span> <span className="uppercase">{request.clientPhone ? request.clientPhone : '...........................................'}</span></div>
+              <div className="mb-1.5"><span className="font-bold pr-2">Fax :</span> <span className="uppercase">.........................................</span></div>
             </div>
           </div>
         </div>
@@ -728,7 +729,6 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
         </div>
 
         <div className="mt-6 text-[11px] space-y-2">
-          <p className="font-bold">La Somme De Ce Présent Devis Est Arrêtée À :</p>
           <p className="font-black tracking-tight capitalize">{numberToFrenchLetters(total).toLowerCase()} Dinars.</p>
           <p className="italic">Nb: ce devis est valable pour une durée de 01 mois</p>
         </div>
