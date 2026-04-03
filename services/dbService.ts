@@ -110,7 +110,8 @@ export const DbService = {
   },
   
   async deleteUser(id: string): Promise<void> {
-    await fetch(`${API_URL}/${COLLECTIONS.USERS}/${id}`, { method: 'DELETE' });
+    const encodedId = encodeURIComponent(id);
+    await fetch(`${API_URL}/${COLLECTIONS.USERS}/${encodedId}`, { method: 'DELETE' });
   },
   
   // Authentifie un utilisateur avec gestion des tentatives échouées
@@ -151,7 +152,8 @@ export const DbService = {
   },
 
   async deleteUnit(id: string): Promise<void> {
-    await fetch(`${API_URL}/${COLLECTIONS.UNITS}/${id}`, { method: 'DELETE' });
+    const encodedId = encodeURIComponent(id);
+    await fetch(`${API_URL}/${COLLECTIONS.UNITS}/${encodedId}`, { method: 'DELETE' });
   },
 
   async getCentres(): Promise<Centre[]> { 
@@ -163,7 +165,8 @@ export const DbService = {
   },
   
   async deleteCentre(id: string): Promise<void> {
-    await fetch(`${API_URL}/${COLLECTIONS.CENTRES}/${id}`, { method: 'DELETE' });
+    const encodedId = encodeURIComponent(id);
+    await fetch(`${API_URL}/${COLLECTIONS.CENTRES}/${encodedId}`, { method: 'DELETE' });
   },
 
   async getAgencies(): Promise<CommercialAgency[]> {
@@ -175,7 +178,8 @@ export const DbService = {
   },
   
   async deleteAgency(id: string): Promise<void> {
-    await fetch(`${API_URL}/${COLLECTIONS.AGENCIES}/${id}`, { method: 'DELETE' });
+    const encodedId = encodeURIComponent(id);
+    await fetch(`${API_URL}/${COLLECTIONS.AGENCIES}/${encodedId}`, { method: 'DELETE' });
   },
 
   async getClients(): Promise<Client[]> {
@@ -187,7 +191,8 @@ export const DbService = {
   },
   
   async deleteClient(id: string): Promise<void> {
-    await fetch(`${API_URL}/${COLLECTIONS.CLIENTS}/${id}`, { method: 'DELETE' });
+    const encodedId = encodeURIComponent(id);
+    await fetch(`${API_URL}/${COLLECTIONS.CLIENTS}/${encodedId}`, { method: 'DELETE' });
   },
 
   async getRequests(): Promise<WorkRequest[]> {
@@ -223,7 +228,8 @@ export const DbService = {
   
   async deleteQuote(id: string): Promise<void> {
     try {
-      const response = await fetch(`${API_URL}/${COLLECTIONS.QUOTES}/${id}`, { method: 'DELETE' });
+      const encodedId = encodeURIComponent(id);
+      const response = await fetch(`${API_URL}/${COLLECTIONS.QUOTES}/${encodedId}`, { method: 'DELETE' });
       if (!response.ok) {
         throw new Error(`Failed to delete quote: ${response.statusText}`);
       }
@@ -262,7 +268,8 @@ export const DbService = {
   },
   
   async deleteWorkType(id: string): Promise<void> {
-    await fetch(`${API_URL}/${COLLECTIONS.WORK_TYPES}/${id}`, { method: 'DELETE' });
+    const encodedId = encodeURIComponent(id);
+    await fetch(`${API_URL}/${COLLECTIONS.WORK_TYPES}/${encodedId}`, { method: 'DELETE' });
   },
 
   async getStats() {
@@ -377,7 +384,8 @@ export const DbService = {
   },
   
   async deleteArticle(id: string): Promise<void> {
-    await fetch(`${API_URL}/${COLLECTIONS.ARTICLES}/${id}`, { method: 'DELETE' });
+    const encodedId = encodeURIComponent(id);
+    await fetch(`${API_URL}/${COLLECTIONS.ARTICLES}/${encodedId}`, { method: 'DELETE' });
   },
 
   // Extrait la matière d'un article à partir de son nom ou description (analyse sémantique)

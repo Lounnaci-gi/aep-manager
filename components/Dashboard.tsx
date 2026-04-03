@@ -112,7 +112,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ quotes, requests, workType
             </div>
           </div>
           <div className="h-64 sm:h-72 w-full">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <PieChart>
                 <Pie data={dataStatus} cx="50%" cy="50%" innerRadius={50} sm:innerRadius={60} outerRadius={80} sm:outerRadius={100} paddingAngle={5} dataKey="value">
                   {dataStatus.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
@@ -131,7 +131,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ quotes, requests, workType
           </div>
           <div className="h-64 sm:h-72 w-full">
             {dataRevenueByType.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <BarChart data={dataRevenueByType}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: '900', fill: '#9CA3AF' }} />
