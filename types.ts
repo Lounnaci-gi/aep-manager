@@ -59,8 +59,28 @@ export enum BranchementType {
   AUTRE = 'Autres (à préciser)'
 }
 
+export interface Unit {
+  id: string;
+  name: string;
+  address: string;
+  commune: string;
+  phone: string;
+  secondaryPhone?: string;
+  fax?: string;
+  email?: string;
+  nif: string;
+  nis: string;
+  rc: string;
+  ai: string;
+  bankName: string;
+  bankAccount: string;
+  comptePostale: string;
+  createdAt: string;
+}
+
 export interface Centre {
   id: string;
+  unitId: string;
   name: string;
   prefix: string;
   address: string;

@@ -109,7 +109,7 @@ export const Layout: React.FC<LayoutProps> = ({
     { id: 'clients',   label: 'Clients',                                  show: true,               icon: <Icon name="clients"   /> },
     {
       id: 'structure', label: 'Structure', show: isAdmin, icon: <Icon name="structure" />,
-      subItems: [{ id: 'structure', label: 'Centres' }, { id: 'agencies', label: 'Agences Commerciales' }]
+      subItems: [{ id: 'structure', label: 'Unités & Centres' }, { id: 'agencies', label: 'Agences Commerciales' }]
     },
     { id: 'users',    label: 'Utilisateurs', show: isAdmin, icon: <Icon name="users"    /> },
     { id: 'settings', label: 'Paramètres',   show: isAdmin, icon: <Icon name="settings" /> },

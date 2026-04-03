@@ -1,5 +1,5 @@
 
-import { Quote, QuoteStatus, Client, WorkType, User, UserRole, WorkRequest, RequestStatus, Centre, CommercialAgency, Article, ArticlePrice } from '../types';
+import { Quote, QuoteStatus, Client, WorkType, User, UserRole, WorkRequest, RequestStatus, Unit, Centre, CommercialAgency, Article, ArticlePrice } from '../types';
 import { hashPasswordWithSalt, verifyPassword } from './passwordUtils';
 
 // ⚠️ IMPORTANT: URL dynamique pour supporter à la fois localhost et l'accès réseau
@@ -29,6 +29,7 @@ const DB_CONFIG = {
 
 export const COLLECTIONS = {
   USERS: 'users',
+  UNITS: 'units',
   CENTRES: 'centres',
   AGENCIES: 'agencies',
   CLIENTS: 'clients',
@@ -139,6 +140,18 @@ export const DbService = {
       // Message d'erreur plus informatif pour l'utilisateur
       return { error: 'Impossible de se connecter au serveur. Vérifiez que le backend est en cours d\'exécution.' };
     }
+  },
+
+  async getUnits(): Promise<Unit[]> {
+    return await apiRequest<Unit[]>('GET', COLLECTIONS.UNITS);
+  },
+
+  async saveUnit(unit: Unit): Promise<void> {
+    await apiRequest('POST', COLLECTIONS.UNITS, unit);
+  },
+
+  async deleteUnit(id: string): Promise<void> {
+    await fetch(`${API_URL}/${COLLECTIONS.UNITS}/${id}`, { method: 'DELETE' });
   },
 
   async getCentres(): Promise<Centre[]> { 

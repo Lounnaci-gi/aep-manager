@@ -20,7 +20,7 @@ import { UserList } from './components/UserList';
 import { UserForm } from './components/UserForm';
 
 import { DbService } from './services/dbService';
-import { Quote, QuoteStatus, WorkType, Client, User, UserRole, WorkRequest, RequestStatus, Centre, CommercialAgency } from './types';
+import { Quote, QuoteStatus, WorkType, Client, User, UserRole, WorkRequest, RequestStatus, Unit, Centre, CommercialAgency } from './types';
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
@@ -44,6 +44,7 @@ const App: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [centres, setCentres] = useState<Centre[]>([]);
   const [agencies, setAgencies] = useState<CommercialAgency[]>([]);
+  const [units, setUnits] = useState<Unit[]>([]);
 
   useEffect(() => {
     if (currentUser) {
@@ -57,14 +58,15 @@ const App: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [q, r, c, w, u, ctr, agc] = await Promise.all([
+      const [q, r, c, w, u, ctr, agc, unitsData] = await Promise.all([
         DbService.getQuotes(),
         DbService.getRequests(),
         DbService.getClients(),
         DbService.getWorkTypes(),
         DbService.getUsers(),
         DbService.getCentres(),
-        DbService.getAgencies()
+        DbService.getAgencies(),
+        DbService.getUnits()
       ]);
       
       setQuotes(q);
@@ -74,6 +76,7 @@ const App: React.FC = () => {
       setUsers(u);
       setCentres(ctr);
       setAgencies(agc);
+      setUnits(unitsData as Unit[]);
     } catch (error) {
       console.error("Erreur de chargement:", error);
       // Afficher une notification utilisateur en cas d'erreur
@@ -211,6 +214,31 @@ const App: React.FC = () => {
   const newRequestsCount = requests.filter(r => r.status === RequestStatus.RECEIVED).length;
   const readyForQuoteCount = getReadyForQuoteCount();
   const quoteEstablishmentCount = getQuoteEstablishmentCount();
+
+  const handleSaveUnit = async (unit: Unit) => {
+    try {
+      await DbService.saveUnit(unit);
+      await loadData();
+      Swal.fire({ title: 'Unité Enregistrée', icon: 'success', timer: 1500, showConfirmButton: false });
+    } catch (error) {
+      console.error('Erreur lors de l\'enregistrement de l\'unité:', error);
+      Swal.fire({ title: 'Erreur', text: 'Impossible d\'enregistrer l\'unité.', icon: 'error' });
+    }
+  };
+
+  const handleDeleteUnit = async (id: string) => {
+    const result = await Swal.fire({ title: 'Supprimer cette unité ?', text: 'Tous les centres rattachés seront orphelins.', icon: 'warning', showCancelButton: true });
+    if (result.isConfirmed) {
+      try {
+        await DbService.deleteUnit(id);
+        await loadData();
+        Swal.fire('Supprimée !', '', 'success');
+      } catch (error) {
+        console.error('Erreur lors de la suppression de l\'unité:', error);
+        Swal.fire({ title: 'Erreur', text: 'Impossible de supprimer l\'unité.', icon: 'error' });
+      }
+    }
+  };
 
   const handleSaveCentre = async (centre: Centre) => {
     try {
@@ -654,8 +682,11 @@ const App: React.FC = () => {
 
         {view === 'structure' && (
           <StructureManager 
+            units={units}
             centres={centres}
             agencies={agencies}
+            onSaveUnit={handleSaveUnit}
+            onDeleteUnit={handleDeleteUnit}
             onSaveCentre={handleSaveCentre}
             onDeleteCentre={handleDeleteCentre}
             onSaveAgency={handleSaveAgency}

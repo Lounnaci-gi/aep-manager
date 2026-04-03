@@ -68,6 +68,7 @@ function hashPassword(password, salt) {
 // Collections MongoDB utilisées par l'application
 const COLLECTIONS = [
   'users',
+  'units',
   'centres',
   'agencies',
   'clients',
