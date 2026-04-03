@@ -283,7 +283,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
     if (!result.isConfirmed) return;
 
     const quote: Quote = {
-      id: `DEV-${Date.now().toString().slice(-6)}`,
+      id: generateTempQuoteId(),
       requestId: request.id,
       clientId: formData.clientId,
       clientName: formData.clientName,
@@ -319,9 +319,24 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-DZ', { style: 'currency', currency: 'DZD' }).format(amount);
   };
+  
   const activeCentre = centres.find(c => c.id === formData.centreId) || centres[0];
   const activeAgency = agencies.find(a => a.id === formData.agencyId) || agencies[0];
   const activeUnit = (activeCentre ? units.find(u => u.id === activeCentre.unitId) : null) || units[0];
+  
+  // Fonction pour générer un ID temporaire pour les devis
+  const generateTempQuoteId = () => {
+    const currentYear = new Date().getFullYear();
+    
+    // Utiliser le préfixe du centre
+    let prefix = 'DV'; // Préfixe par défaut pour Devis
+    if (activeCentre && activeCentre.prefix) {
+      prefix = activeCentre.prefix;
+    }
+    
+    // ID spécial pour indiquer au backend de générer le vrai numéro incrémental
+    return `TEMP-QUOTE-${Date.now()}-${prefix}-${currentYear}`;
+  };
 
   return (
     <div className="max-w-full mx-auto mb-10 w-full animate-in fade-in duration-300">

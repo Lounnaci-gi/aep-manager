@@ -290,7 +290,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
     if (!result.isConfirmed) return;
 
     const quoteData: Quote = {
-      id: initialData?.id || `AEP-${Date.now().toString().slice(-6)}`,
+      id: initialData?.id || generateTempQuoteId(),
       ...formData,
       items,
       subtotal,
@@ -313,6 +313,20 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
       unit: unit || units[0] 
     };
   })();
+
+  // Fonction pour générer un ID temporaire pour les devis
+  const generateTempQuoteId = () => {
+    const currentYear = new Date().getFullYear();
+    
+    // Utiliser le préfixe du centre de l'agence sélectionnée
+    let prefix = 'DV'; // Préfixe par défaut pour Devis
+    if (activeCentre && activeCentre.prefix) {
+      prefix = activeCentre.prefix;
+    }
+    
+    // ID spécial pour indiquer au backend de générer le vrai numéro incrémental
+    return `TEMP-QUOTE-${Date.now()}-${prefix}-${currentYear}`;
+  };
 
   const isEditMode = !!initialData;
 

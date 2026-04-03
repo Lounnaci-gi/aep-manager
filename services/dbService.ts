@@ -222,8 +222,9 @@ export const DbService = {
     return await apiRequest<Quote[]>('GET', COLLECTIONS.QUOTES);
   },
   
-  async saveQuote(quote: Quote): Promise<void> { 
-    await apiRequest('POST', COLLECTIONS.QUOTES, quote); 
+  async saveQuote(quote: Quote): Promise<Quote> { 
+    const response = await apiRequest<{ success: boolean; id: string }>('POST', COLLECTIONS.QUOTES, quote);
+    return { ...quote, id: response.id || quote.id };
   },
   
   async deleteQuote(id: string): Promise<void> {

@@ -287,6 +287,43 @@ COLLECTIONS.forEach(colName => {
         }
       }
       
+      // Logique spéciale pour la génération d'ID incrémental pour les devis
+      if (colName === 'quotes' && doc.id.startsWith('TEMP-QUOTE-')) {
+        console.log('🔧 Détection ID temporaire devis:', doc.id);
+        // Extraire les infos du format TEMP-QUOTE-timestamp-prefix-year
+        const parts = doc.id.split('-');
+        console.log('   Parties:', parts);
+        if (parts.length >= 5) {
+          const prefix = parts[3];
+          const year = parts[4];
+          console.log('   Préfixe:', prefix, 'Année:', year);
+          
+          // Trouver le dernier numéro de devis utilisé pour ce centre et cette année
+          const regex = new RegExp(`^\\d{4}/${prefix}/${year}$`);
+          console.log('   Regex:', regex);
+          const latestQuotes = await db.collection('quotes')
+            .find({ id: regex })
+            .sort({ id: -1 })
+            .limit(1)
+            .toArray();
+          
+          let maxNum = 0;
+          if (latestQuotes.length > 0) {
+            const idParts = latestQuotes[0].id.split('/');
+            maxNum = parseInt(idParts[0]) || 0;
+            console.log('   Dernier devis trouvé:', latestQuotes[0].id, 'Numéro:', maxNum);
+          } else {
+            console.log('   Aucun devis existant pour ce préfixe/année');
+          }
+          
+          // Générer le nouvel ID incrémental pour le devis
+          const nextNum = maxNum + 1;
+          const newId = `${nextNum.toString().padStart(4, '0')}/${prefix}/${year}`;
+          console.log('   Nouvel ID généré:', newId);
+          doc = { ...doc, id: newId };
+        }
+      }
+      
       // ⚠️ SÉCURITÉ: Vérification spécifique pour les utilisateurs
       // Empêcher la création de multiples administrateurs
       if (colName === 'users') {
