@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
-import { Quote, QuoteItem, WorkRequest, Client, CommercialAgency, Centre, UserRole, QuoteStatus, Article } from '../types';
+import { Quote, QuoteItem, WorkRequest, Client, CommercialAgency, Centre, UserRole, QuoteStatus, Article, Unit } from '../types';
 import { numberToFrenchLetters } from '../utils/numberToLetters';
 import { ArticleService } from '../services/articleService';
 
@@ -9,6 +9,7 @@ interface BranchementQuoteFormProps {
   clients: Client[];
   agencies: CommercialAgency[];
   centres: Centre[];
+  units: Unit[];
   currentUser: { role: UserRole; agencyId?: string };
   onSave: (quote: Quote) => void;
   onCancel: () => void;
@@ -19,6 +20,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
   clients,
   agencies,
   centres,
+  units,
   currentUser,
   onSave,
   onCancel
@@ -317,8 +319,9 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-DZ', { style: 'currency', currency: 'DZD' }).format(amount);
   };
-  const activeCentre = centres.find(c => c.id === formData.centreId);
-  const activeAgency = agencies.find(a => a.id === formData.agencyId);
+  const activeCentre = centres.find(c => c.id === formData.centreId) || centres[0];
+  const activeAgency = agencies.find(a => a.id === formData.agencyId) || agencies[0];
+  const activeUnit = (activeCentre ? units.find(u => u.id === activeCentre.unitId) : null) || units[0];
 
   return (
     <div className="max-w-full mx-auto mb-10 w-full animate-in fade-in duration-300">
@@ -643,18 +646,18 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
         <div className="bg-gray-100 border border-gray-400 p-2 mb-6" style={{ borderRadius: '8px' }}>
           <div className="flex justify-between font-bold text-[11px] mb-1">
             <span>Zone d'Alger</span>
-            <span>Unité de {activeCentre?.name || 'Médéa'}</span>
+            <span>Unité de {activeUnit?.name || '................'}</span>
           </div>
           <div className="text-[11px] text-center leading-relaxed font-medium">
-            Siège social : {activeCentre?.address || 'Quartier KOTTITANE - BP136 - 26000 MEDEA'} . Tél {activeCentre?.phone || '025 74 13 35'} Fax {activeCentre?.fax || '025 74 13 43'}<br />
-            R.C: {activeCentre?.prefix || '01B0017164'} &nbsp;&nbsp;&nbsp; I.F: 000116189029833 &nbsp;&nbsp;&nbsp; A.I: 26010890207
+            Siège social : {activeUnit?.address || activeCentre?.address || '...........................'} . Tél: {activeUnit?.phone || activeCentre?.phone || '.............'} Fax: {activeUnit?.fax || activeCentre?.fax || '.............'}<br />
+            R.C: {activeUnit?.rc || '................'} &nbsp;&nbsp;&nbsp; I.F (NIF): {activeUnit?.nif || '................'} &nbsp;&nbsp;&nbsp; A.I: {activeUnit?.ai || '................'}
           </div>
         </div>
 
         <div className="flex justify-between mb-8">
-          <div className="w-1/2 space-y-4">
+          <div className="space-y-6">
             <div>
-              <span className="font-bold text-[11px] border-b border-black inline-block pb-0.5">Centre de {activeCentre?.name || 'Berrouaghia'}</span>
+              <span className="font-bold text-[11px] border-b border-black inline-block pb-0.5">Centre de {activeCentre?.name}</span>
             </div>
             <div>
               <h1 className="font-black text-[11px] border-b border-black inline-block pb-0.5">DEVIS QUANTITATIF ET ESTIMATIF</h1>
@@ -703,8 +706,8 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
               ))}
               <tr>
                 <td rowSpan={3} className="border-r border-gray-400 p-1.5 text-left align-top leading-tight space-y-0.5">
-                  <p>Compte CCP N°: {activeCentre?.comptePostale || '007 99 999 0007742 862 16'}</p>
-                  <p>Compte BADR N°: {activeCentre?.bankAccount || '003 00 853 30000426300 75'}</p>
+                  <p>Compte CCP N°: <span className="font-bold">{activeCentre?.comptePostale || activeUnit?.comptePostale || '...........................'}</span></p>
+                  <p>Compte <span className="font-bold">{activeCentre?.bankName || activeUnit?.bankName || '..........'}</span> N°: <span className="font-bold">{activeCentre?.bankAccount || activeUnit?.bankAccount || '...........................'}</span></p>
                   <p>mode de paiement : versement bancaire</p>
                 </td>
                 <td colSpan={2} className="border-b border-r border-gray-400 font-bold p-1 align-middle text-left">THT</td>

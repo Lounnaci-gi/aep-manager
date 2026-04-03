@@ -756,6 +756,7 @@ const App: React.FC = () => {
             clients={clients} 
             agencies={agencies}
             centres={centres}
+            units={units}
             currentUser={currentUser}
             onSave={handleSaveQuote}
             onCancel={() => { setView('requests'); setQuoteRequest(undefined); }} 
@@ -774,6 +775,7 @@ const App: React.FC = () => {
             workTypes={workTypes} 
             agencies={agencies}
             centres={centres}
+            units={units}
             initialData={editingQuote}
             currentUserAgencyId={currentUser.agencyId}
             onSave={handleSaveQuote}
