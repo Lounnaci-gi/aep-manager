@@ -631,7 +631,14 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                   
                   return (
                     <tr key={i} className="hover:bg-gray-50/50">
-                      <td className="border-b border-r border-gray-400 px-2 py-1.5 font-medium">{item.description}</td>
+                      <td className="border-b border-r border-gray-400 px-2 py-1.5 font-medium">
+                        {item.priceTypeIndicator && (
+                          <span className="inline-block mr-1.5 px-1.5 py-0.5 bg-blue-100 text-blue-800 text-[9px] font-bold rounded">
+                            {item.priceTypeIndicator}
+                          </span>
+                        )}
+                        {item.description}
+                      </td>
                       <td className="border-b border-r border-gray-400 px-2 py-1.5 text-center">{unit}</td>
                       <td className="border-b border-r border-gray-400 px-2 py-1.5 text-center font-bold">{item.quantity}</td>
                       <td className="border-b border-r border-gray-400 px-2 py-1.5 text-right whitespace-nowrap">{item.unitPrice.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>

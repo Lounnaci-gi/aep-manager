@@ -853,7 +853,14 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
                       
                       return (
                         <tr key={`${family}-${i}`}>
-                          <td className="border-b border-r border-gray-400 px-2 py-1 pl-4">{item.description}</td>
+                          <td className="border-b border-r border-gray-400 px-2 py-1 pl-4">
+                            {item.priceTypeIndicator && (
+                              <span className="inline-block mr-1.5 px-1.5 py-0.5 bg-blue-100 text-blue-800 text-[9px] font-bold rounded">
+                                {item.priceTypeIndicator}
+                              </span>
+                            )}
+                            {item.description}
+                          </td>
                           <td className="border-b border-r border-gray-400 px-2 py-1 text-center">{unit}</td>
                           <td className="border-b border-r border-gray-400 px-2 py-1 text-center">{item.quantity}</td>
                           <td className="border-b border-r border-gray-400 px-2 py-1 text-right">{item.unitPrice.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
@@ -884,7 +891,14 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
                       
                       return (
                         <tr key={`autres-${i}`}>
-                          <td className="border-b border-r border-gray-400 px-2 py-1 pl-4">{item.description}</td>
+                          <td className="border-b border-r border-gray-400 px-2 py-1 pl-4">
+                            {item.priceTypeIndicator && (
+                              <span className="inline-block mr-1.5 px-1.5 py-0.5 bg-blue-100 text-blue-800 text-[9px] font-bold rounded">
+                                {item.priceTypeIndicator}
+                              </span>
+                            )}
+                            {item.description}
+                          </td>
                           <td className="border-b border-r border-gray-400 px-2 py-1 text-center">{unit}</td>
                           <td className="border-b border-r border-gray-400 px-2 py-1 text-center">{item.quantity}</td>
                           <td className="border-b border-r border-gray-400 px-2 py-1 text-right">{item.unitPrice.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
