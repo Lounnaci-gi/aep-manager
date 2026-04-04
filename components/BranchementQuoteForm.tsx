@@ -786,7 +786,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
             <span>Unité de {activeUnit?.name || '................'}</span>
           </div>
           <div className="text-[11px] text-center leading-relaxed font-medium">
-            Siège social : {activeUnit?.address || activeCentre?.address || '...........................'} . Tél: {activeUnit?.phone || activeCentre?.phone || '.............'} Fax: {activeUnit?.fax || activeCentre?.fax || '.............'}<br />
+            Siège social : {activeUnit?.address || activeCentre?.address || '...........................'} - {activeUnit?.commune || activeCentre?.commune || '...........................'} . Tél: {activeUnit?.phone || activeCentre?.phone || '.............'} Fax: {activeUnit?.fax || activeCentre?.fax || '.............'}<br />
             R.C: {activeUnit?.rc || '................'} &nbsp;&nbsp;&nbsp; I.F (NIF): {activeUnit?.nif || '................'} &nbsp;&nbsp;&nbsp; A.I: {activeUnit?.ai || '................'}
           </div>
         </div>
@@ -912,7 +912,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
         </div>
 
         <div className="mt-6 text-[11px] space-y-2">
-          <p className="font-black tracking-tight capitalize">{numberToFrenchLetters(total).toLowerCase()} Dinars.</p>
+          <p className="font-black tracking-tight capitalize">{numberToFrenchLetters(total).toLowerCase()}</p>
           <p className="italic">Nb: ce devis est valable pour une durée de 01 mois</p>
         </div>
 
