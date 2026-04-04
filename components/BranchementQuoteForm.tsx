@@ -292,6 +292,73 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
   const tax = subtotal * (taxRate / 100);
   const total = subtotal + tax;
 
+  // Fonction pour obtenir la catégorie d'un article à partir de son nom
+  const getItemCategory = (itemName: string): string => {
+    const article = allArticles.find(a => a.name === itemName);
+    return article?.category || 'Autres';
+  };
+
+  // Définir l'ordre des familles
+  const familyOrder = [
+    'TRAVAUX DE TERRASSEMENT & VOIRIE',
+    'CANALISATIONS (TUBES PEHD)',
+    'PIÈCES SPÉCIALES',
+    'DIVERS & PRESTATIONS',
+    'Comptage',
+    'Cautionnement pour Branchement'
+  ];
+
+  // Fonction pour convertir un nombre en chiffres romains
+  const toRoman = (num: number): string => {
+    const romanNumerals: {[key: number]: string} = {
+      1000: 'M', 900: 'CM', 500: 'D', 400: 'CD',
+      100: 'C', 90: 'XC', 50: 'L', 40: 'XL',
+      10: 'X', 9: 'IX', 5: 'V', 4: 'IV', 1: 'I'
+    };
+    
+    let result = '';
+    for (const [value, numeral] of Object.entries(romanNumerals).reverse()) {
+      while (num >= Number(value)) {
+        result += numeral;
+        num -= Number(value);
+      }
+    }
+    return result;
+  };
+
+  // Regrouper les items par famille
+  const groupedItems = React.useMemo(() => {
+    const groups: { [key: string]: typeof items } = {};
+    
+    // Initialiser les groupes dans l'ordre défini
+    familyOrder.forEach(family => {
+      groups[family] = [];
+    });
+    groups['Autres'] = [];
+    
+    // Répartir les items dans les groupes
+    items.forEach(item => {
+      const category = getItemCategory(item.description);
+      
+      // Trouver la famille correspondante
+      let matchedFamily = 'Autres';
+      for (const family of familyOrder) {
+        if (category.toUpperCase().includes(family.split(' ')[0].toUpperCase()) || 
+            category.includes(family)) {
+          matchedFamily = family;
+          break;
+        }
+      }
+      
+      if (!groups[matchedFamily]) {
+        groups[matchedFamily] = [];
+      }
+      groups[matchedFamily].push(item);
+    });
+    
+    return groups;
+  }, [items, allArticles]);
+
   const handleAddItem = () => {
     setItems([...items, { description: '', quantity: 1, unitPrice: 0 }]);
   };
@@ -766,15 +833,57 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
               </tr>
             </thead>
             <tbody>
-              {items.map((item, i) => (
-                <tr key={i}>
-                  <td className="border-b border-r border-gray-400 px-2 py-1">{item.description}</td>
-                  <td className="border-b border-r border-gray-400 px-2 py-1 text-center">U</td>
-                  <td className="border-b border-r border-gray-400 px-2 py-1 text-center">{item.quantity}</td>
-                  <td className="border-b border-r border-gray-400 px-2 py-1 text-right">{item.unitPrice.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
-                  <td className="border-b border-gray-400 px-2 py-1 text-right">{(item.quantity * item.unitPrice).toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
-                </tr>
-              ))}
+              {familyOrder.map((family, familyIndex) => {
+                const familyItems = groupedItems[family] || [];
+                if (familyItems.length === 0) return null;
+                
+                return (
+                  <React.Fragment key={family}>
+                    {/* En-tête de famille */}
+                    <tr className="bg-gray-200">
+                      <td colSpan={5} className="border-b border-r border-gray-400 px-2 py-1 font-black text-[10px] uppercase">
+                        {toRoman(familyIndex + 1)}. {family}
+                      </td>
+                    </tr>
+                    {/* Items de cette famille */}
+                    {familyItems.map((item, i) => (
+                      <tr key={`${family}-${i}`}>
+                        <td className="border-b border-r border-gray-400 px-2 py-1 pl-4">{item.description}</td>
+                        <td className="border-b border-r border-gray-400 px-2 py-1 text-center">U</td>
+                        <td className="border-b border-r border-gray-400 px-2 py-1 text-center">{item.quantity}</td>
+                        <td className="border-b border-r border-gray-400 px-2 py-1 text-right">{item.unitPrice.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
+                        <td className="border-b border-gray-400 px-2 py-1 text-right">{(item.quantity * item.unitPrice).toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    ))}
+                  </React.Fragment>
+                );
+              })}
+              
+              {/* Afficher les items "Autres" s'il y en a */}
+              {(() => {
+                const autresItems = groupedItems['Autres'] || [];
+                if (autresItems.length === 0) return null;
+                
+                return (
+                  <React.Fragment>
+                    <tr className="bg-gray-200">
+                      <td colSpan={5} className="border-b border-r border-gray-400 px-2 py-1 font-black text-[10px] uppercase">
+                        {toRoman(familyOrder.length + 1)}. AUTRES
+                      </td>
+                    </tr>
+                    {autresItems.map((item, i) => (
+                      <tr key={`autres-${i}`}>
+                        <td className="border-b border-r border-gray-400 px-2 py-1 pl-4">{item.description}</td>
+                        <td className="border-b border-r border-gray-400 px-2 py-1 text-center">U</td>
+                        <td className="border-b border-r border-gray-400 px-2 py-1 text-center">{item.quantity}</td>
+                        <td className="border-b border-r border-gray-400 px-2 py-1 text-right">{item.unitPrice.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
+                        <td className="border-b border-gray-400 px-2 py-1 text-right">{(item.quantity * item.unitPrice).toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    ))}
+                  </React.Fragment>
+                );
+              })()}
+              
               <tr>
                 <td rowSpan={3} className="border-r border-gray-400 p-1.5 text-left align-top leading-tight space-y-0.5">
                   <p>Compte CCP N°: <span className="font-bold">{activeCentre?.comptePostale || activeUnit?.comptePostale || '...........................'}</span></p>
