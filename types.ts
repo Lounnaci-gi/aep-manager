@@ -133,6 +133,10 @@ export interface QuoteItem {
   description: string;
   quantity: number;
   unitPrice: number;
+  unit?: string;
+  margin?: number;
+  tva?: number;
+  totalHT?: number;
   priceTypeIndicator?: string;
 }
 
@@ -246,6 +250,15 @@ export interface Quote {
   clientEmail?: string;
   clientPhone?: string;
   createdAt: string;
+  // Nouveaux champs pour le style devis BTP
+  projectTitle?: string;
+  validUntil?: string;
+  workStartDate?: string;
+  estimatedDuration?: string;
+  paymentConditions?: string;
+  iban?: string;
+  bic?: string;
+  wasteManagement?: string;
 }
 
 export interface WorkType {

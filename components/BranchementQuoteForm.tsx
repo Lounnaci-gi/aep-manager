@@ -62,9 +62,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
     installationEmail: request.installationEmail || '',
   });
 
-  const [items, setItems] = useState<QuoteItem[]>([
-    { description: '', quantity: 1, unitPrice: 0 }
-  ]);
+  const [items, setItems] = useState<QuoteItem[]>([]);
 
   const [allArticles, setAllArticles] = useState<Article[]>([]);
   const [filteredArticles, setFilteredArticles] = useState<Article[]>([]);
@@ -364,9 +362,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
   };
 
   const handleRemoveItem = (index: number) => {
-    if (items.length > 1) {
-      setItems(items.filter((_, i) => i !== index));
-    }
+    setItems(items.filter((_, i) => i !== index));
   };
 
   const handleItemChange = (index: number, field: keyof QuoteItem, value: string | number) => {
@@ -544,98 +540,112 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
           Détails du Devis
         </h3>
         
-        <div className="space-y-2">
-          {items.map((item, index) => (
-            <div key={index} className="grid grid-cols-12 gap-2 items-end bg-gray-50 p-2 rounded-lg relative">
-              <div className="col-span-4 relative">
-                <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1">
-                  Description
-                </label>
-                <input
-                  type="text"
-                  value={searchTerms[index] || item.description}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setSearchTerms(prev => ({ ...prev, [index]: value }));
-                    handleItemChange(index, 'description', value);
-                    filterArticles(value, index);
-                  }}
-                  onFocus={() => {
-                    if (searchTerms[index] && searchTerms[index].length > 0) {
-                      filterArticles(searchTerms[index], index);
-                    }
-                  }}
-                  onBlur={() => setTimeout(() => {
-                    setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
-                  }, 200)}
-                  className="w-full rounded-md border-gray-200 p-1.5 text-sm font-bold border bg-white relative z-20 shadow-sm"
-                  placeholder="Description de l'article"
-                  required
-                />
-                {showArticleDropdown[index] && filteredArticles.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                    {filteredArticles.map((article, idx) => (
-                      <div 
-                        key={idx}
-                        className="px-3 py-1.5 hover:bg-gray-50 cursor-pointer flex justify-between items-center"
-                        onMouseDown={() => handleArticleSelect(article, index)}
-                      >
-                        <span className="text-sm font-bold">{article.name}</span>
-                        <span className="text-[10px] text-gray-500">{article.prices[0]?.price || 0} DA</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+        <div className="space-y-4">
+          {items.length === 0 ? (
+            <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl p-8 text-center">
+              <div className="flex flex-col items-center gap-3">
+                <svg className="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <p className="text-gray-400 font-bold uppercase tracking-widest text-[11px]">
+                  Aucun article sélectionné
+                </p>
+                <p className="text-gray-400 text-xs font-medium">
+                  Utilisez le bouton ci-dessous pour ajouter des éléments à votre devis.
+                </p>
               </div>
-              
-              <div className="col-span-2">
-                <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1">
-                  Qté
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={item.quantity}
-                  onChange={(e) => handleItemChange(index, 'quantity', parseInt(e.target.value) || 1)}
-                  className="w-full rounded-md border-gray-200 p-1.5 text-sm font-bold border bg-white shadow-sm"
-                  required
-                />
-              </div>
-              
-              <div className="col-span-2">
-                <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1">
-                  Prix Unitaire (DZD)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={item.unitPrice.toFixed(2)}
-                  onChange={(e) => handleItemChange(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                  className="w-full rounded-md border-gray-200 p-1.5 text-sm font-bold border bg-white shadow-sm"
-                  placeholder="0.00"
-                  required
-                />
-              </div>
-              
-              <div className="col-span-2">
-                <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1">
-                  Total
-                </label>
-                <div className="flex items-center gap-2 h-7 mt-0.5">
-                  <p className="font-black text-emerald-600 flex-1 truncate text-xs">
-                    {(item.quantity * item.unitPrice).toFixed(2)} DZD
-                  </p>
-                  {item.priceTypeIndicator && (
-                    <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 text-[8px] font-bold rounded-full">
-                      {item.priceTypeIndicator}
-                    </span>
+            </div>
+          ) : (
+            items.map((item, index) => (
+              <div key={index} className="grid grid-cols-12 gap-2 items-end bg-gray-50 p-2 rounded-lg relative">
+                <div className="col-span-4 relative">
+                  <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1">
+                    Description
+                  </label>
+                  <input
+                    type="text"
+                    value={searchTerms[index] || item.description}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setSearchTerms(prev => ({ ...prev, [index]: value }));
+                      handleItemChange(index, 'description', value);
+                      filterArticles(value, index);
+                    }}
+                    onFocus={() => {
+                      if (searchTerms[index] && searchTerms[index].length > 0) {
+                        filterArticles(searchTerms[index], index);
+                      }
+                    }}
+                    onBlur={() => setTimeout(() => {
+                      setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
+                    }, 200)}
+                    className="w-full rounded-md border-gray-200 p-1.5 text-sm font-bold border bg-white relative z-20 shadow-sm"
+                    placeholder="Description de l'article"
+                    required
+                  />
+                  {showArticleDropdown[index] && filteredArticles.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                      {filteredArticles.map((article, idx) => (
+                        <div 
+                          key={idx}
+                          className="px-3 py-1.5 hover:bg-gray-50 cursor-pointer flex justify-between items-center"
+                          onMouseDown={() => handleArticleSelect(article, index)}
+                        >
+                          <span className="text-sm font-bold">{article.name}</span>
+                          <span className="text-[10px] text-gray-500">{article.prices[0]?.price || 0} DA</span>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
-              </div>
-              
-              <div className="col-span-2 flex items-center justify-end gap-1 h-7 mt-0.5">
-                {items.length > 1 && (
+                
+                <div className="col-span-2">
+                  <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1">
+                    Qté
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={item.quantity}
+                    onChange={(e) => handleItemChange(index, 'quantity', parseInt(e.target.value) || 1)}
+                    className="w-full rounded-md border-gray-200 p-1.5 text-sm font-bold border bg-white shadow-sm"
+                    required
+                  />
+                </div>
+                
+                <div className="col-span-2">
+                  <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1">
+                    Prix Unitaire (DZD)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={item.unitPrice.toFixed(2)}
+                    onChange={(e) => handleItemChange(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                    className="w-full rounded-md border-gray-200 p-1.5 text-sm font-bold border bg-white shadow-sm"
+                    placeholder="0.00"
+                    required
+                  />
+                </div>
+                
+                <div className="col-span-2">
+                  <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1">
+                    Total
+                  </label>
+                  <div className="flex items-center gap-2 h-7 mt-0.5">
+                    <p className="font-black text-emerald-600 flex-1 truncate text-xs">
+                      {(item.quantity * item.unitPrice).toFixed(2)} DZD
+                    </p>
+                    {item.priceTypeIndicator && (
+                      <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 text-[8px] font-bold rounded-full">
+                        {item.priceTypeIndicator}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="col-span-2 flex items-center justify-end gap-1 h-7 mt-0.5">
                   <button
                     type="button"
                     onClick={() => handleRemoveItem(index)}
@@ -646,24 +656,20 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                   </button>
-                )}
-                {index === items.length - 1 && (
-                  <button
-                    type="button"
-                    onClick={handleAddItem}
-                    className="text-blue-500 hover:text-blue-700 p-1.5 rounded-md hover:bg-blue-50 transition-colors"
-                    title="Ajouter un article"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                  </button>
-                )}
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
           
-          {/* Add item button is now inline with rows */}
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={handleAddItem}
+              className="bg-transparent border-[1.5px] border-dashed border-[#1e90ff] text-[#1e90ff] rounded-[4px] px-[18px] py-[6px] text-[13px] font-semibold cursor-pointer tracking-wider hover:bg-blue-50 transition-colors flex items-center gap-2"
+            >
+              <span className="text-base font-medium">+</span> Ajouter une ligne
+            </button>
+          </div>
         </div>
       </div>
 
@@ -674,17 +680,24 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
             <h4 className="font-black text-gray-900 uppercase tracking-widest text-sm mb-4">
               Récapitulatif
             </h4>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Sous-total:</span>
-                <span className="font-bold">{subtotal.toFixed(2)} DZD</span>
+            <div className="space-y-3 py-3 bg-white rounded-xl border border-gray-100 shadow-sm font-medium">
+              <div className="px-4 space-y-2">
+                <div className="flex justify-between text-gray-500 text-xs">
+                  <span>Sous-total:</span>
+                  <span className="text-gray-700 font-bold">{subtotal.toFixed(2)} DZD</span>
+                </div>
+                <div className="flex justify-between text-gray-500 text-xs">
+                  <span>TVA ({taxRate}%):</span>
+                  <span className="text-gray-700 font-bold">{tax.toFixed(2)} DZD</span>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">TVA ({taxRate}%):</span>
-                <span className="font-bold">{tax.toFixed(2)} DZD</span>
-              </div>
-              <div className="flex justify-between border-t border-gray-200 pt-2 mt-2">
-                <span className="font-black text-emerald-600 text-xl">{total.toFixed(2)} DZD</span>
+              
+              <div className="flex justify-between items-center bg-[#1e90ff] text-white p-4 rounded-xl shadow-lg shadow-blue-100 mx-2">
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-black uppercase tracking-widest opacity-80">Total Global</span>
+                  <span className="font-black text-[10px] uppercase leading-none">Net à Payer</span>
+                </div>
+                <span className="font-black text-xl tracking-tighter">{total.toFixed(2)} DZD</span>
               </div>
             </div>
           </div>

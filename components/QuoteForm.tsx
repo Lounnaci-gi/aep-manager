@@ -50,12 +50,21 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
     description: initialData?.description || '',
     type: initialData?.type || 'Propriétaire',
     agencyId: initialData?.agencyId || currentUserAgencyId || (agencies.length > 0 ? agencies[0].id : ''),
+    // Nouveaux champs
+    projectTitle: initialData?.projectTitle || '',
+    validUntil: initialData?.validUntil || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    workStartDate: initialData?.workStartDate || '',
+    estimatedDuration: initialData?.estimatedDuration || '',
+    paymentConditions: initialData?.paymentConditions || 'Chèque, Espèces, Virement bancaire',
+    iban: initialData?.iban || 'FR76 1478 9563 1254 4789 4598',
+    bic: initialData?.bic || 'MCPRIFRPP',
+    wasteManagement: initialData?.wasteManagement || 'À définir',
   });
 
   const [items, setItems] = useState<QuoteItem[]>(
     initialData?.items && initialData.items.length > 0
       ? initialData.items
-      : [{ description: '', quantity: 1, unitPrice: 0, total: 0 }]
+      : []
   );
 
   const [loadingAI, setLoadingAI] = useState(false);
@@ -246,15 +255,22 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
     const newItems = [...items];
     const item = newItems[index];
     (item as any)[field] = value;
-    if (field === 'quantity' || field === 'unitPrice') {
-      item.total = (item.quantity || 0) * (item.unitPrice || 0);
+    if (field === 'quantity' || field === 'unitPrice' || field === 'margin') {
+      item.totalHT = (item.quantity || 0) * (item.unitPrice || 0);
     }
     setItems(newItems);
   };
 
-  const subtotal = items.reduce((acc, item) => acc + item.total, 0);
-  const tax = subtotal * 0.19;
+  const subtotal = items.reduce((acc, item) => acc + (item.totalHT || 0), 0);
+  const tax = items.reduce((acc, item) => acc + ((item.totalHT || 0) * (item.tva || 19) / 100), 0);
   const total = subtotal + tax;
+
+  const grossMargin = items.reduce((acc, item) => {
+    const cost = (item.unitPrice || 0) / (1 + (item.margin || 0) / 100);
+    return acc + (item.quantity * ((item.unitPrice || 0) - cost));
+  }, 0);
+
+  const marginRate = subtotal > 0 ? (grossMargin / subtotal) * 100 : 0;
 
   const handleConsultAI = async () => {
     setLoadingAI(true);
@@ -334,168 +350,277 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
     <div className="max-w-5xl mx-auto mb-10 w-full animate-in fade-in duration-500">
 
       <div className={activeTab === 'form' ? 'block' : 'hidden'}>
-        <form onSubmit={handleSubmit} className="space-y-8 bg-white p-8 rounded-[2.5rem] shadow-2xl border border-gray-100 max-w-4xl mx-auto animate-in fade-in duration-300">
-          <div className="flex justify-between items-center border-b border-gray-100 pb-6">
-            <div>
-              <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">
-                {isEditMode ? `Modifier Dossier ${initialData.id}` : 'Nouveau Dossier AEP'}
-              </h2>
-              <p className="text-sm text-gray-500 font-medium">Capture juridique et financière.</p>
-            </div>
-            <div className="flex gap-2 print-hidden">
-              <button type="button" onClick={onCancel} className="px-5 py-2.5 text-[10px] font-black text-gray-500 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 uppercase tracking-widest">Annuler</button>
-              <button type="button" onClick={() => setActiveTab('preview')} className="px-5 py-2.5 text-[10px] font-black text-blue-700 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100 uppercase tracking-widest">Aperçu PDF</button>
-              <button type="submit" className="px-6 py-2.5 text-[10px] font-black text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 shadow-xl uppercase tracking-widest">Valider</button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-5">
-              <h3 className="text-[10px] font-black text-blue-600 border-l-4 border-blue-600 pl-3 uppercase tracking-widest">Abonné & Identification</h3>
-
-              {!isEditMode && (
-                <select className="w-full rounded-xl border-gray-200 bg-gray-50/50 p-3 text-sm font-bold border" onChange={handleSelectClient}>
-                  <option value="">-- Saisie Manuelle --</option>
-                  {clients.map(c => <option key={c.id} value={c.id}>{c.category === ClientCategory.LEGAL ? `[E] ${c.businessName}` : `[I] ${c.name}`}</option>)}
-                </select>
-              )}
-
-              <div className="bg-gray-50/30 p-4 rounded-2xl border border-gray-100 space-y-4">
-                {isLegal && (
-                  <input required type="text" placeholder="Raison Sociale" className="w-full rounded-xl border-gray-200 p-3 text-sm font-black border bg-white" value={formData.businessName} onChange={e => setFormData({ ...formData, businessName: e.target.value })} />
-                )}
-                <div className="grid grid-cols-4 gap-2">
-                  {!isLegal && (
-                    <select className="col-span-1 rounded-xl border-gray-200 p-2.5 text-xs font-black border bg-white" value={formData.civility} onChange={e => setFormData({ ...formData, civility: e.target.value })}>
-                      <option value="M.">M.</option>
-                      <option value="Mme">Mme</option>
-                    </select>
-                  )}
-                  <input required type="text" placeholder="Nom Complet" className={`${isLegal ? 'col-span-4' : 'col-span-3'} rounded-xl border-gray-200 p-2.5 text-sm font-black border bg-white`} value={formData.clientName} onChange={e => setFormData({ ...formData, clientName: e.target.value })} />
+        <form onSubmit={handleSubmit} className="bg-white p-10 rounded-[1.5rem] shadow-xl border border-gray-100 max-w-6xl mx-auto space-y-8">
+          
+          {/* Header Section: Devis Info + Client Box */}
+          <div className="flex flex-col md:flex-row justify-between items-start gap-10 border-b border-gray-50 pb-10">
+            <div className="space-y-4 w-full md:w-1/2">
+              <div className="space-y-1">
+                <h2 className="text-3xl font-bold text-gray-800 tracking-tight">
+                  Devis n°{initialData?.id || 'NOUVEAU'}
+                </h2>
+                <p className="text-sm text-gray-500">En date du {new Date().toLocaleDateString('fr-FR')}</p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
+                <div className="flex flex-col">
+                  <span className="text-gray-400 text-xs">Valable jusqu'au</span>
+                  <input 
+                    type="date" 
+                    className="border-none p-0 font-medium text-gray-700 bg-transparent focus:ring-0" 
+                    value={formData.validUntil} 
+                    onChange={e => setFormData({...formData, validUntil: e.target.value})}
+                  />
                 </div>
+                <div className="flex flex-col">
+                  <span className="text-gray-400 text-xs text-blue-600">Début des travaux le <button type="button" className="text-blue-600 underline">définir</button></span>
+                  <input 
+                    type="date" 
+                    className="border-none p-0 font-medium text-gray-700 bg-transparent focus:ring-0 hidden" 
+                    value={formData.workStartDate}
+                    onChange={e => setFormData({...formData, workStartDate: e.target.value})}
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-gray-400 text-xs text-blue-600">Durée estimée à <button type="button" className="text-blue-600 underline">définir</button></span>
+                  <input 
+                    type="text" 
+                    placeholder="Ex: 15 jours"
+                    className="border-none p-0 font-medium text-gray-700 bg-transparent focus:ring-0 hidden"
+                  />
+                </div>
+              </div>
+            </div>
 
-                {!isLegal && (
-                  <div className="p-3 bg-white rounded-xl border border-blue-100 space-y-2 shadow-inner">
-                    <p className="text-[8px] font-black text-blue-500 uppercase tracking-widest leading-none">Pièce : {formData.idDocumentType}</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <input required type="text" placeholder="N° Pièce" maxLength={18} className="w-full border-none p-0 text-[10px] font-black bg-transparent" value={formData.idDocumentNumber} onChange={e => setFormData({ ...formData, idDocumentNumber: e.target.value })} />
-                      <input required type="date" className="w-full border-none p-0 text-[10px] font-black bg-transparent text-right" value={formData.idDocumentIssueDate} onChange={e => setFormData({ ...formData, idDocumentIssueDate: e.target.value })} />
-                    </div>
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-[9px] font-black text-emerald-600 uppercase mb-1 ml-1">Qualité de l'abonné</label>
-                  <select className="w-full rounded-xl border-emerald-200 p-2.5 text-xs font-black border bg-white" value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value as any })}>
-                    <option value="Propriétaire">Propriétaire</option>
-                    <option value="Locataire">Locataire</option>
-                    <option value="Mandataire">Mandataire</option>
+            <div className="w-full md:w-[350px] bg-gray-50/50 p-6 rounded-xl border border-gray-100 flex flex-col space-y-2 relative">
+              {!isEditMode && (
+                <div className="absolute -top-3 left-4">
+                  <select 
+                    className="text-[10px] bg-white border border-gray-200 rounded-md px-2 py-1 font-bold text-blue-600 shadow-sm"
+                    onChange={handleSelectClient}
+                  >
+                    <option value="">Sélectionner un client</option>
+                    {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <input required placeholder="Commune Domicile" type="text" maxLength={40} className="w-full rounded-xl border-gray-200 p-3 text-sm font-bold border" value={formData.commune} onChange={e => setFormData({ ...formData, commune: e.target.value })} />
-                <input required placeholder="Téléphone" type="tel" maxLength={10} className="w-full rounded-xl border-gray-200 p-3 text-sm font-black border" value={formData.clientPhone} onChange={e => setFormData({ ...formData, clientPhone: e.target.value })} />
-              </div>
-            </div>
-
-            <div className="space-y-5">
-              <h3 className="text-[10px] font-black text-amber-600 border-l-4 border-amber-600 pl-3 uppercase tracking-widest">Site Technique</h3>
-              <div className="bg-amber-50/50 p-5 rounded-3xl border border-amber-100 space-y-4">
-                <input required type="text" placeholder="Adresse précise du site" maxLength={120} className="w-full rounded-xl border-amber-200 p-3 text-sm font-bold bg-white shadow-sm" value={formData.installationAddress} onChange={e => setFormData({ ...formData, installationAddress: e.target.value })} />
-                <input required type="text" placeholder="Commune du site" maxLength={40} className="w-full rounded-xl border-amber-200 p-3 text-sm font-black bg-white shadow-sm" value={formData.installationCommune} onChange={e => setFormData({ ...formData, installationCommune: e.target.value })} />
-                <select className="w-full rounded-xl border-amber-200 p-3 text-xs font-black bg-white" value={formData.serviceType} onChange={e => setFormData({ ...formData, serviceType: e.target.value })}>
-                  {workTypes.map(s => <option key={s.id} value={s.label}>{s.label}</option>)}
-                </select>
-              </div>
+              )}
+              <p className="font-bold text-gray-700">{formData.civility} {formData.clientName || formData.businessName || 'Client à définir'}</p>
+              <p className="text-sm text-gray-500 whitespace-pre-wrap">{formData.address || 'Adresse...'}</p>
+              <p className="text-sm text-gray-500">{formData.commune}</p>
             </div>
           </div>
 
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-[10px] font-black text-blue-600 border-l-4 border-blue-600 pl-3 uppercase tracking-widest">Détails Financiers</h3>
-              <button type="button" onClick={() => setItems([...items, { description: '', quantity: 1, unitPrice: 0, total: 0 }])} className="text-[9px] font-black bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full uppercase border border-blue-100">+ Ligne</button>
-            </div>
-            <div className="overflow-x-auto rounded-2xl border border-gray-100">
-              <table className="min-w-full divide-y divide-gray-100">
-                <thead className="bg-gray-50 text-[9px] font-black text-gray-400 uppercase tracking-widest">
-                  <tr><th className="px-4 py-3 text-left">Désignation</th><th className="px-4 py-3 text-center w-20">Qté</th><th className="px-4 py-3 text-right w-32">P.U HT</th><th className="px-4 py-3 text-right w-32">Total</th><th className="w-10"></th></tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {items.map((item, index) => (
-                    <tr key={index}>
-                      <td className="px-2 py-2 relative">
-                        <input
-                          type="text"
-                          className="w-full border-none p-2 text-xs font-bold bg-transparent relative z-20"
-                          value={searchTerm[index] || item.description}
-                          onChange={e => {
-                            const value = e.target.value;
-                            setSearchTerm(prev => ({ ...prev, [index]: value }));
-                            updateItem(index, 'description', value);
-                            filterArticles(value, index);
-                          }}
-                          onFocus={() => {
-                            if (searchTerm[index] && searchTerm[index].length > 0) {
-                              filterArticles(searchTerm[index], index);
-                            }
-                          }}
-                          onBlur={() => setTimeout(() => {
-                            setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
-                          }, 200)}
-                        />
-                        {showArticleDropdown[index] && filteredArticles.length > 0 && (
-                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                            {filteredArticles.map((article, idx) => (
-                              <div
-                                key={idx}
-                                className="px-3 py-2 hover:bg-gray-50 cursor-pointer flex justify-between items-center"
-                                onMouseDown={() => handleArticleSelect(article, index)}
-                              >
-                                <span className="text-xs font-bold">{article.name}</span>
-                                <span className="text-[8px] text-gray-500">{article.prices[0]?.price || 0} DA</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-2 py-2 text-center"><input type="number" className="w-16 border-none text-xs font-bold text-center bg-transparent" value={item.quantity} onChange={e => updateItem(index, 'quantity', parseFloat(e.target.value) || 0)} /></td>
-                      <td className="px-2 py-2 text-right"><input type="number" className="w-28 border-none text-xs font-bold text-right bg-transparent" value={item.unitPrice.toFixed(2)} onChange={e => updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)} /></td>
-                      <td className="px-4 py-2 text-xs font-black text-right">{item.total.toLocaleString()} DA</td>
-                      <td className="px-2 py-2 text-right">{items.length > 1 && <button type="button" onClick={() => setItems(items.filter((_, i) => i !== index))} className="text-gray-300 hover:text-red-500">×</button>}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <button type="button" className="text-blue-500 text-sm font-medium flex items-center gap-1 hover:underline">
+              Ajouter une description
+            </button>
+
+            <div className="flex items-center gap-3 group relative max-w-2xl">
+              <input 
+                type="text" 
+                placeholder="Titre du projet (ex: Rénovation Appartement)"
+                className="w-full bg-gray-50 border-none rounded-lg p-3 text-lg font-medium text-gray-700 focus:ring-2 focus:ring-blue-100 transition-all"
+                value={formData.projectTitle}
+                onChange={e => setFormData({...formData, projectTitle: e.target.value})}
+              />
+              <div className="flex gap-2">
+                <button type="button" className="p-2 text-gray-300 hover:text-gray-600 transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                </button>
+                <button type="button" className="p-2 text-gray-300 hover:text-gray-600 transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+                </button>
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-gray-50">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Expertise IA</span>
-                <button type="button" onClick={handleConsultAI} disabled={loadingAI} className="text-[8px] font-black bg-blue-600 text-white px-2 py-1 rounded-full uppercase">{loadingAI ? 'Analyse...' : 'Relancer'}</button>
-              </div>
-              <div className="bg-slate-900 text-blue-100 p-4 rounded-2xl text-[10px] italic border-l-4 border-blue-500">{aiRec || "Recommandations hydrauliques SEAAL/ADE..."}</div>
-            </div>
-            <div className="bg-gray-900 text-white p-6 rounded-3xl space-y-3">
-              <div className="flex justify-between text-[10px] opacity-60 uppercase"><span>Total HT</span><span>{formatCurrency(subtotal)}</span></div>
-              <div className="flex justify-between text-[10px] opacity-60 uppercase"><span>TVA (19%)</span><span>{formatCurrency(tax)}</span></div>
-              <div className="flex justify-between text-2xl font-black border-t border-white/10 pt-4 mt-4 uppercase tracking-tighter"><span>Total TTC</span><span className="text-blue-400">{formatCurrency(total)}</span></div>
+          {/* Advanced Table Section (Quote Details) */}
+          <div className="space-y-4">
+            <h3 className="text-[#1e90ff] font-extrabold text-sm uppercase pl-2 tracking-wide">Details du Devis</h3>
+            <div className="overflow-hidden bg-white border border-gray-100 rounded-xl shadow-sm">
+              <table className="w-full text-sm border-collapse">
+                <thead className="bg-[#1e90ff] text-white">
+                  <tr>
+                    <th className="px-6 py-4 text-left font-bold text-[11px] uppercase tracking-wider">Description</th>
+                    <th className="px-4 py-4 text-center font-bold text-[11px] uppercase tracking-wider w-28">Unité</th>
+                    <th className="px-4 py-4 text-center font-bold text-[11px] uppercase tracking-wider w-28">Qté</th>
+                    <th className="px-4 py-4 text-center font-bold text-[11px] uppercase tracking-wider w-44">Prix Unitaire (DZD)</th>
+                    <th className="px-6 py-4 text-right font-bold text-[11px] uppercase tracking-wider w-56">Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {items.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-12 text-center text-gray-400 italic">
+                        <div className="flex flex-col items-center gap-2">
+                          <svg className="w-8 h-8 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                          </svg>
+                          Aucun article ajouté. Cliquez sur le bouton "Ajouter" pour commencer.
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    items.map((item, index) => (
+                      <tr key={index} className="hover:bg-blue-50/20 transition-colors">
+                        <td className="px-4 py-4">
+                          <div className="relative">
+                            <input
+                              type="text"
+                              placeholder="Description de l'article"
+                              className="w-full border border-gray-200 rounded-md p-2.5 text-[13px] bg-white text-gray-700 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition-all"
+                              value={searchTerm[index] || item.description}
+                              onChange={e => {
+                                const value = e.target.value;
+                                setSearchTerm(prev => ({ ...prev, [index]: value }));
+                                updateItem(index, 'description', value);
+                                filterArticles(value, index);
+                              }}
+                              onFocus={() => {
+                                if (searchTerm[index] && searchTerm[index].length > 0) {
+                                  filterArticles(searchTerm[index], index);
+                                }
+                              }}
+                              onBlur={() => setTimeout(() => {
+                                setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
+                              }, 200)}
+                            />
+                            {showArticleDropdown[index] && filteredArticles.length > 0 && (
+                              <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                                {filteredArticles.map((article, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="px-4 py-2 hover:bg-blue-50 cursor-pointer flex justify-between items-center transition-colors"
+                                    onMouseDown={() => handleArticleSelect(article, index)}
+                                  >
+                                    <span className="text-sm font-medium">{article.name}</span>
+                                    <span className="text-[10px] font-bold text-blue-600">{article.prices[0]?.price || 0} DA</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-2 py-4">
+                          <select 
+                            className="w-full border border-gray-200 rounded-md p-2.5 text-[13px] bg-white text-center text-gray-600 focus:border-blue-400 transition-all appearance-none"
+                            value={item.unit}
+                            onChange={e => updateItem(index, 'unit', e.target.value)}
+                          >
+                            <option value="U">U</option>
+                            <option value="M²">M²</option>
+                            <option value="ML">ML</option>
+                            <option value="M3">M3</option>
+                          </select>
+                        </td>
+                        <td className="px-2 py-4">
+                          <input 
+                            type="number" 
+                            className="w-full border border-gray-200 rounded-md p-2.5 text-[13px] bg-white text-center text-gray-700 focus:border-blue-400 transition-all font-medium" 
+                            value={item.quantity} 
+                            onChange={e => updateItem(index, 'quantity', parseFloat(e.target.value) || 0)} 
+                          />
+                        </td>
+                        <td className="px-2 py-4">
+                          <input 
+                            type="number" 
+                            className="w-full border border-gray-200 rounded-md p-2.5 text-[13px] bg-white text-center text-gray-700 focus:border-blue-400 transition-all font-semibold" 
+                            value={item.unitPrice} 
+                            onChange={e => updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)} 
+                          />
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center justify-end gap-4">
+                            <span className="text-blue-600 font-bold text-[14px] whitespace-nowrap">
+                              {(item.totalHT || 0).toFixed(2)} DZD
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <button 
+                                type="button" 
+                                className="p-2 bg-blue-50 text-blue-500 rounded hover:bg-blue-100 transition-colors shadow-sm"
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                              </button>
+                              <button 
+                                type="button" 
+                                onClick={() => setItems(items.filter((_, i) => i !== index))} 
+                                className="p-2 bg-red-50 text-red-500 rounded hover:bg-red-100 transition-colors shadow-sm"
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
 
-            <div className="pt-6">
-              <button
-                type="submit"
-                disabled={items.length === 0 || total === 0}
-                className={`w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-xl active:scale-[0.98] ${items.length === 0 || total === 0
-                    ? 'bg-gray-400 cursor-not-allowed opacity-60'
-                    : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-200'
-                  }`}
+            <div className="py-2">
+              <button 
+                type="button" 
+                onClick={() => setItems([...items, { description: '', quantity: 1, unitPrice: 0, unit: 'U', margin: 0, tva: 19, totalHT: 0 }])}
+                className="bg-transparent border-[1.5px] border-dashed border-[#1e90ff] text-[#1e90ff] rounded-[4px] px-[18px] py-[6px] text-[13px] font-semibold cursor-pointer tracking-[0.3px] hover:bg-blue-50 transition-colors flex items-center gap-2 mt-2"
               >
-                Enregistrer le Devis
+                <span>+</span> Ajouter une ligne
               </button>
+            </div>
+          </div>
+
+          {/* Footer Section: Payment & Totals */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 pt-10 border-t border-gray-50">
+            <div className="space-y-8">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-gray-700">Conditions de paiement</h3>
+                </div>
+                <p className="text-xs text-gray-500">Méthodes de paiement acceptées : {formData.paymentConditions}</p>
+                <div className="bg-white border-l-2 border-red-400 p-3 space-y-1">
+                  <p className="text-xs text-red-500 font-medium">Acompte de 30,00 % à la signature soit {(total * 0.3).toLocaleString()} DA TTC</p>
+                  <p className="text-xs text-red-500">Reste à facturer : {(total * 0.7).toLocaleString()} DA TTC</p>
+                </div>
+                <div className="border border-gray-100 p-4 rounded-lg space-y-1 text-xs">
+                  <p><span className="font-semibold text-gray-400">IBAN :</span> <span className="text-gray-600">{formData.iban}</span></p>
+                  <p><span className="font-semibold text-gray-400">BIC :</span> <span className="text-gray-600">{formData.bic}</span></p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-gray-700">Gestion des déchets</h3>
+                </div>
+                <p className="text-xs text-blue-500 underline cursor-pointer">{formData.wasteManagement}</p>
+              </div>
+            </div>
+
+            <div className="space-y-1 flex flex-col items-end">
+              <div className="w-full max-w-[400px] space-y-4">
+                <div className="space-y-1.5 border-b border-gray-50 pb-3 px-4 text-xs font-semibold">
+                  <div className="flex justify-between text-gray-500"><span>Sous-total HT</span><span className="text-gray-700">{subtotal.toLocaleString()} DA</span></div>
+                  <div className="flex justify-between text-gray-500"><span>Montant TVA (19%)</span><span className="text-gray-700">{tax.toLocaleString()} DA</span></div>
+                </div>
+
+                <div className="bg-[#1e90ff] text-white p-4 rounded-xl flex justify-between items-center shadow-lg shadow-blue-100 ring-4 ring-blue-50/10 mx-1">
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-black uppercase tracking-widest opacity-80">Total Global</span>
+                    <span className="text-base font-black mt-0.5 leading-none">Net à Payer</span>
+                  </div>
+                  <span className="text-2xl font-black tracking-tighter">{total.toLocaleString()} DA</span>
+                </div>
+                
+                <div className="space-y-1 pt-3 px-4 text-[9px] font-black uppercase tracking-widest text-blue-400/60 transition-colors">
+                  <div className="flex justify-between"><span>Marge brute HT</span><span>{grossMargin.toLocaleString()} DA</span></div>
+                  <div className="flex justify-between"><span>Taux de marge</span><span>{marginRate.toFixed(2)} %</span></div>
+                </div>
+              </div>
+
+              <div className="pt-10 flex gap-4 w-full justify-end">
+                  <button type="button" onClick={onCancel} className="px-6 py-2 text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors">Annuler</button>
+                  <button type="button" onClick={() => setActiveTab('preview')} className="px-6 py-2 text-xs font-bold text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-all">Aperçu</button>
+                  <button type="submit" className="px-8 py-3 bg-[#1e90ff] text-white text-xs font-bold rounded-lg shadow-lg shadow-blue-100 hover:bg-blue-600 transition-all">VALIDER ET ENREGISTRER</button>
+              </div>
             </div>
           </div>
         </form>
@@ -604,10 +729,18 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
             </div>
           </div>
 
-          {/* Object */}
-          <div className="mb-8 pt-4">
-            <span className="font-bold text-[11px] lowercase italic">Objet :</span>
-            <span className="font-black text-[11px] ml-2 uppercase border-b border-black pb-0.5 leading-relaxed">{formData.serviceType}</span>
+          {/* Object & Project Title */}
+          <div className="mb-6 pt-4 space-y-2">
+            <div>
+              <span className="font-bold text-[11px] lowercase italic">Objet :</span>
+              <span className="font-black text-[11px] ml-2 uppercase border-b border-black pb-0.5 leading-relaxed">{formData.serviceType}</span>
+            </div>
+            {formData.projectTitle && (
+              <div>
+                <span className="font-bold text-[11px] lowercase italic">Désignation :</span>
+                <span className="font-medium text-[11px] ml-2 uppercase leading-relaxed">{formData.projectTitle}</span>
+              </div>
+            )}
           </div>
 
           {/* Table */}
@@ -625,9 +758,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
               </thead>
               <tbody>
                 {items.map((item, i) => {
-                  // Trouver l'article correspondant pour récupérer son unité
-                  const article = articles.find(a => a.name === item.description);
-                  const unit = article?.unit || 'U';
+                  const unit = item.unit || 'U';
                   
                   return (
                     <tr key={i} className="hover:bg-gray-50/50">
@@ -642,7 +773,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                       <td className="border-b border-r border-gray-400 px-2 py-1.5 text-center">{unit}</td>
                       <td className="border-b border-r border-gray-400 px-2 py-1.5 text-center font-bold">{item.quantity}</td>
                       <td className="border-b border-r border-gray-400 px-2 py-1.5 text-right whitespace-nowrap">{item.unitPrice.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
-                      <td className="border-b border-gray-400 px-2 py-1.5 text-right font-bold whitespace-nowrap">{item.total.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
+                      <td className="border-b border-gray-400 px-2 py-1.5 text-right font-bold whitespace-nowrap">{(item.totalHT || 0).toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
                     </tr>
                   );
                 })}
