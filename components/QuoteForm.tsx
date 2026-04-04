@@ -624,15 +624,21 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {items.map((item, i) => (
-                  <tr key={i} className="hover:bg-gray-50/50">
-                    <td className="border-b border-r border-gray-400 px-2 py-1.5 font-medium">{item.description}</td>
-                    <td className="border-b border-r border-gray-400 px-2 py-1.5 text-center">U</td>
-                    <td className="border-b border-r border-gray-400 px-2 py-1.5 text-center font-bold">{item.quantity}</td>
-                    <td className="border-b border-r border-gray-400 px-2 py-1.5 text-right whitespace-nowrap">{item.unitPrice.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
-                    <td className="border-b border-gray-400 px-2 py-1.5 text-right font-bold whitespace-nowrap">{item.total.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
-                  </tr>
-                ))}
+                {items.map((item, i) => {
+                  // Trouver l'article correspondant pour récupérer son unité
+                  const article = articles.find(a => a.name === item.description);
+                  const unit = article?.unit || 'U';
+                  
+                  return (
+                    <tr key={i} className="hover:bg-gray-50/50">
+                      <td className="border-b border-r border-gray-400 px-2 py-1.5 font-medium">{item.description}</td>
+                      <td className="border-b border-r border-gray-400 px-2 py-1.5 text-center">{unit}</td>
+                      <td className="border-b border-r border-gray-400 px-2 py-1.5 text-center font-bold">{item.quantity}</td>
+                      <td className="border-b border-r border-gray-400 px-2 py-1.5 text-right whitespace-nowrap">{item.unitPrice.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
+                      <td className="border-b border-gray-400 px-2 py-1.5 text-right font-bold whitespace-nowrap">{item.total.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                  );
+                })}
                 <tr>
                   <td rowSpan={3} className="border-r border-gray-400 p-1.5 text-left align-top leading-tight space-y-0.5">
                     <p>Compte CCP N°: <span className="font-bold">{activeCentre?.comptePostale || activeUnit?.comptePostale || '...........................'}</span></p>

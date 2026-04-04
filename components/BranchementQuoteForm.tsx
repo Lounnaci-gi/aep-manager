@@ -846,15 +846,21 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
                       </td>
                     </tr>
                     {/* Items de cette famille */}
-                    {familyItems.map((item, i) => (
-                      <tr key={`${family}-${i}`}>
-                        <td className="border-b border-r border-gray-400 px-2 py-1 pl-4">{item.description}</td>
-                        <td className="border-b border-r border-gray-400 px-2 py-1 text-center">U</td>
-                        <td className="border-b border-r border-gray-400 px-2 py-1 text-center">{item.quantity}</td>
-                        <td className="border-b border-r border-gray-400 px-2 py-1 text-right">{item.unitPrice.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
-                        <td className="border-b border-gray-400 px-2 py-1 text-right">{(item.quantity * item.unitPrice).toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
-                      </tr>
-                    ))}
+                    {familyItems.map((item, i) => {
+                      // Trouver l'article correspondant pour récupérer son unité
+                      const article = allArticles.find(a => a.name === item.description);
+                      const unit = article?.unit || 'U';
+                      
+                      return (
+                        <tr key={`${family}-${i}`}>
+                          <td className="border-b border-r border-gray-400 px-2 py-1 pl-4">{item.description}</td>
+                          <td className="border-b border-r border-gray-400 px-2 py-1 text-center">{unit}</td>
+                          <td className="border-b border-r border-gray-400 px-2 py-1 text-center">{item.quantity}</td>
+                          <td className="border-b border-r border-gray-400 px-2 py-1 text-right">{item.unitPrice.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
+                          <td className="border-b border-gray-400 px-2 py-1 text-right">{(item.quantity * item.unitPrice).toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
+                        </tr>
+                      );
+                    })}
                   </React.Fragment>
                 );
               })}
@@ -871,15 +877,21 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
                         {toRoman(familyOrder.length + 1)}. AUTRES
                       </td>
                     </tr>
-                    {autresItems.map((item, i) => (
-                      <tr key={`autres-${i}`}>
-                        <td className="border-b border-r border-gray-400 px-2 py-1 pl-4">{item.description}</td>
-                        <td className="border-b border-r border-gray-400 px-2 py-1 text-center">U</td>
-                        <td className="border-b border-r border-gray-400 px-2 py-1 text-center">{item.quantity}</td>
-                        <td className="border-b border-r border-gray-400 px-2 py-1 text-right">{item.unitPrice.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
-                        <td className="border-b border-gray-400 px-2 py-1 text-right">{(item.quantity * item.unitPrice).toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
-                      </tr>
-                    ))}
+                    {autresItems.map((item, i) => {
+                      // Trouver l'article correspondant pour récupérer son unité
+                      const article = allArticles.find(a => a.name === item.description);
+                      const unit = article?.unit || 'U';
+                      
+                      return (
+                        <tr key={`autres-${i}`}>
+                          <td className="border-b border-r border-gray-400 px-2 py-1 pl-4">{item.description}</td>
+                          <td className="border-b border-r border-gray-400 px-2 py-1 text-center">{unit}</td>
+                          <td className="border-b border-r border-gray-400 px-2 py-1 text-center">{item.quantity}</td>
+                          <td className="border-b border-r border-gray-400 px-2 py-1 text-right">{item.unitPrice.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
+                          <td className="border-b border-gray-400 px-2 py-1 text-right">{(item.quantity * item.unitPrice).toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
+                        </tr>
+                      );
+                    })}
                   </React.Fragment>
                 );
               })()}
