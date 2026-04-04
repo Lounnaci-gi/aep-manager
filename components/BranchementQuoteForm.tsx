@@ -10,9 +10,11 @@ interface BranchementQuoteFormProps {
   agencies: CommercialAgency[];
   centres: Centre[];
   units: Unit[];
+  quotes: Quote[];
   currentUser: { role: UserRole; agencyId?: string };
   onSave: (quote: Quote) => void;
   onCancel: () => void;
+  existingQuote?: Quote;
 }
 
 export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({ 
@@ -21,9 +23,11 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
   agencies,
   centres,
   units,
+  quotes,
   currentUser,
   onSave,
-  onCancel
+  onCancel,
+  existingQuote
 }) => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loadingArticles, setLoadingArticles] = useState(true);
@@ -69,6 +73,39 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
   const [activeTab, setActiveTab] = useState<'form' | 'preview'>('form');
   
   const [taxRate, setTaxRate] = useState(19); // 19% TVA
+
+  // Générer ou récupérer le numéro de devis
+  const getQuoteNumber = (): string => {
+    // Si un devis existant est fourni, utiliser son ID
+    if (existingQuote && existingQuote.id) {
+      return existingQuote.id;
+    }
+    
+    // Sinon, générer un numéro au format NNNN/préfix/yyyy
+    const currentYear = new Date().getFullYear();
+    
+    // Obtenir le préfixe du centre d'appartenance de la demande
+    const centre = centres.find(c => c.id === request.centreId);
+    const prefix = centre?.prefix || 'DV'; // Utiliser le préfixe du centre ou DV par défaut
+    
+    // Compter le nombre de devis existants pour ce centre et cette année
+    const existingQuotesForCentre = quotes.filter(q => {
+      // Extraire le préfixe et l'année de l'ID du devis
+      const parts = q.id.split('/');
+      if (parts.length === 3) {
+        const quotePrefix = parts[1];
+        const quoteYear = parseInt(parts[2]);
+        return quotePrefix === prefix && quoteYear === currentYear;
+      }
+      return false;
+    });
+    
+    // Le prochain numéro est le nombre de devis + 1, formaté sur 4 chiffres
+    const nextNumber = existingQuotesForCentre.length + 1;
+    const sequenceNumber = String(nextNumber).padStart(4, '0');
+    
+    return `${sequenceNumber}/${prefix}/${currentYear}`;
+  };
 
   useEffect(() => {
     loadArticles();
@@ -422,11 +459,11 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
           Détails du Devis
         </h3>
         
-        <div className="space-y-4">
+        <div className="space-y-2">
           {items.map((item, index) => (
-            <div key={index} className="grid grid-cols-12 gap-2 items-end bg-gray-50 p-3 rounded-lg relative">
+            <div key={index} className="grid grid-cols-12 gap-2 items-end bg-gray-50 p-2 rounded-lg relative">
               <div className="col-span-4 relative">
-                <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1.5">
+                <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1">
                   Description
                 </label>
                 <input
@@ -446,7 +483,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
                   onBlur={() => setTimeout(() => {
                     setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
                   }, 200)}
-                  className="w-full rounded-md border-gray-200 p-2 text-sm font-bold border bg-white relative z-20 shadow-sm"
+                  className="w-full rounded-md border-gray-200 p-1.5 text-sm font-bold border bg-white relative z-20 shadow-sm"
                   placeholder="Description de l'article"
                   required
                 />
@@ -467,7 +504,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
               </div>
               
               <div className="col-span-2">
-                <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1.5">
+                <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1">
                   Qté
                 </label>
                 <input
@@ -475,13 +512,13 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
                   min="1"
                   value={item.quantity}
                   onChange={(e) => handleItemChange(index, 'quantity', parseInt(e.target.value) || 1)}
-                  className="w-full rounded-md border-gray-200 p-2 text-sm font-bold border bg-white shadow-sm"
+                  className="w-full rounded-md border-gray-200 p-1.5 text-sm font-bold border bg-white shadow-sm"
                   required
                 />
               </div>
               
               <div className="col-span-2">
-                <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1.5">
+                <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1">
                   Prix Unitaire (DZD)
                 </label>
                 <input
@@ -490,14 +527,14 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
                   step="0.01"
                   value={item.unitPrice.toFixed(2)}
                   onChange={(e) => handleItemChange(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                  className="w-full rounded-md border-gray-200 p-2 text-sm font-bold border bg-white shadow-sm"
+                  className="w-full rounded-md border-gray-200 p-1.5 text-sm font-bold border bg-white shadow-sm"
                   placeholder="0.00"
                   required
                 />
               </div>
               
               <div className="col-span-2">
-                <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1.5">
+                <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1">
                   Total
                 </label>
                 <div className="flex items-center gap-2 h-7 mt-0.5">
@@ -677,7 +714,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
             <div>
               <h1 className="font-black text-[11px] border-b border-black inline-block pb-0.5">DEVIS QUANTITATIF ET ESTIMATIF</h1>
               <div className="text-[11px] font-bold mt-1">
-                N°: {request.id} / {new Date().getFullYear()} du: {new Date().toLocaleDateString('fr-DZ')}
+                N°: {getQuoteNumber()} du: {new Date().toLocaleDateString('fr-DZ')}
               </div>
             </div>
           </div>

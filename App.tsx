@@ -35,6 +35,7 @@ const App: React.FC = () => {
   const [editingRequest, setEditingRequest] = useState<WorkRequest | undefined>(undefined);
   const [lastSavedRequest, setLastSavedRequest] = useState<WorkRequest | undefined>(undefined);
   const [quoteRequest, setQuoteRequest] = useState<WorkRequest | undefined>(undefined);
+  const [existingQuoteForBranchement, setExistingQuoteForBranchement] = useState<Quote | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   
   const [quotes, setQuotes] = useState<Quote[]>([]);
@@ -465,13 +466,17 @@ const App: React.FC = () => {
       showConfirmButton: false
     });
     
+    // Vérifier s'il existe déjà un devis pour cette demande
+    const existingQuote = quotes.find(q => q.requestId === request.id);
+    
     // Pour les branchements, utiliser le formulaire spécifique
     if (request.serviceType.toLowerCase().includes("branchement")) {
       setQuoteRequest(request);
+      setExistingQuoteForBranchement(existingQuote);
       setView('branchement-quote');
     } else {
       // Pour les autres types, utiliser le formulaire existant
-      const partialQuote: Partial<Quote> = {
+      const partialQuote: Partial<Quote> = existingQuote || {
         id: `AEP-${Date.now().toString().slice(-6)}`,
         requestId: request.id,
         agencyId: request.agencyId,
@@ -757,9 +762,11 @@ const App: React.FC = () => {
             agencies={agencies}
             centres={centres}
             units={units}
+            quotes={quotes}
             currentUser={currentUser}
+            existingQuote={existingQuoteForBranchement}
             onSave={handleSaveQuote}
-            onCancel={() => { setView('requests'); setQuoteRequest(undefined); }} 
+            onCancel={() => { setView('requests'); setQuoteRequest(undefined); setExistingQuoteForBranchement(undefined); }} 
           />
         )}
         
