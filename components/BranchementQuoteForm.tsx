@@ -739,11 +739,12 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
 
           <div className="w-fit min-w-[85mm] max-w-full border border-gray-400 p-4 min-h-[40mm] bg-white shadow-sm" style={{ borderRadius: '8px' }}>
             <div className="text-[11px] leading-relaxed text-gray-900">
-              <div className="mb-3"><span className="font-bold uppercase pr-2">Doit A :</span> <span className="font-black uppercase">{request.businessName || (`${request.civility || ''} ${request.clientName}`).trim()}</span></div>
-              <div className="mb-1.5"><span className="font-bold pr-2">Adresse :</span> <span className="uppercase">{request.installationAddress ? request.installationAddress : '...........................................'}</span></div>
-              <div className="mb-1.5"><span className="font-bold pr-2">Commune :</span> <span className="uppercase">{request.installationCommune ? request.installationCommune : '...................................'}</span></div>
-              <div className="mb-1.5"><span className="font-bold pr-2">Tél :</span> <span className="uppercase">{request.clientPhone ? request.clientPhone : '...........................................'}</span></div>
+              <div className="mb-3"><span className="font-bold uppercase pr-2">Doit A :</span> <span className="font-black uppercase">{formData.businessName || (`${formData.civility || ''} ${formData.clientName}`).trim()}</span></div>
+              <div className="mb-1.5"><span className="font-bold pr-2">Adresse :</span> <span className="uppercase">{formData.address || request.address || '...........................................'}</span></div>
+              <div className="mb-1.5"><span className="font-bold pr-2">Commune :</span> <span className="uppercase">{formData.commune || request.commune || '...................................'}</span></div>
+              <div className="mb-1.5"><span className="font-bold pr-2">Tél :</span> <span className="uppercase">{formData.clientPhone || formData.correspondencePhone || request.clientPhone || request.correspondencePhone || '...........................................'}</span></div>
               <div className="mb-1.5"><span className="font-bold pr-2">Fax :</span> <span className="uppercase">.........................................</span></div>
+              <div className="mb-1.5"><span className="font-bold pr-2">Email :</span> <span className="lowercase">{formData.clientEmail || formData.correspondenceEmail || request.clientEmail || request.correspondenceEmail || '.........................................'}</span></div>
             </div>
           </div>
         </div>
