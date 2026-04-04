@@ -190,6 +190,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
     
     const newItems = [...items];
     newItems[index].description = article.name;
+    newItems[index].unit = article.unit;
     
     // Filtrer les prix non nuls
     const validPrices = article.prices.filter(price => price.price > 0);
@@ -202,12 +203,14 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
     if (validPrices.length === 0) {
       // Aucun prix valide
       newItems[index].unitPrice = 0;
+      newItems[index].unit = article.unit;
       setItems(newItems);
       setSearchTerms(prev => ({ ...prev, [index]: article.name }));
       setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
     } else if (validPrices.length === 1) {
       // Un seul prix valide, l'utiliser directement
       newItems[index].unitPrice = validPrices[0].price;
+      newItems[index].unit = article.unit;
       // Ajouter l'indicateur de type de prix
       newItems[index].priceTypeIndicator = validPrices[0].type === 'fourniture' ? 'F' : 
                                           validPrices[0].type === 'pose' ? 'P' : 'PS';
@@ -358,7 +361,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
   }, [items, allArticles]);
 
   const handleAddItem = () => {
-    setItems([...items, { description: '', quantity: 1, unitPrice: 0 }]);
+    setItems([...items, { description: '', quantity: 1, unitPrice: 0, unit: 'U' }]);
   };
 
   const handleRemoveItem = (index: number) => {
@@ -540,128 +543,124 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
           Détails du Devis
         </h3>
         
-        <div className="space-y-4">
-          {items.length === 0 ? (
-            <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl p-8 text-center">
-              <div className="flex flex-col items-center gap-3">
-                <svg className="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                <p className="text-gray-400 font-bold uppercase tracking-widest text-[11px]">
-                  Aucun article sélectionné
-                </p>
-                <p className="text-gray-400 text-xs font-medium">
-                  Utilisez le bouton ci-dessous pour ajouter des éléments à votre devis.
-                </p>
-              </div>
-            </div>
-          ) : (
-            items.map((item, index) => (
-              <div key={index} className="grid grid-cols-12 gap-2 items-end bg-gray-50 p-2 rounded-lg relative">
-                <div className="col-span-4 relative">
-                  <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1">
-                    Description
-                  </label>
-                  <input
-                    type="text"
-                    value={searchTerms[index] || item.description}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setSearchTerms(prev => ({ ...prev, [index]: value }));
-                      handleItemChange(index, 'description', value);
-                      filterArticles(value, index);
-                    }}
-                    onFocus={() => {
-                      if (searchTerms[index] && searchTerms[index].length > 0) {
-                        filterArticles(searchTerms[index], index);
-                      }
-                    }}
-                    onBlur={() => setTimeout(() => {
-                      setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
-                    }, 200)}
-                    className="w-full rounded-md border-gray-200 p-1.5 text-sm font-bold border bg-white relative z-20 shadow-sm"
-                    placeholder="Description de l'article"
-                    required
-                  />
-                  {showArticleDropdown[index] && filteredArticles.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                      {filteredArticles.map((article, idx) => (
-                        <div 
-                          key={idx}
-                          className="px-3 py-1.5 hover:bg-gray-50 cursor-pointer flex justify-between items-center"
-                          onMouseDown={() => handleArticleSelect(article, index)}
-                        >
-                          <span className="text-sm font-bold">{article.name}</span>
-                          <span className="text-[10px] text-gray-500">{article.prices[0]?.price || 0} DA</span>
-                        </div>
-                      ))}
+        <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden mt-4">
+          <table className="w-full border-collapse">
+            <thead className="bg-[#1e90ff] text-white text-[11px] uppercase tracking-widest font-black">
+              <tr>
+                <th className="px-4 py-3 text-left rounded-tl-xl">Description</th>
+                <th className="px-2 py-3 text-center">Unité</th>
+                <th className="px-2 py-3 text-center w-20">Qté</th>
+                <th className="px-2 py-3 text-center w-32">P.U (DZD)</th>
+                <th className="px-4 py-3 text-right">Total HT</th>
+                <th className="px-4 py-3 w-10 rounded-tr-xl"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {items.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-400 italic bg-gray-50/30">
+                    <div className="flex flex-col items-center gap-3">
+                      <svg className="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <p className="text-[11px] font-black uppercase tracking-widest">Aucun article dans le devis</p>
+                      <p className="text-xs font-medium">Cliquez sur « Ajouter une ligne » pour commencer</p>
                     </div>
-                  )}
-                </div>
-                
-                <div className="col-span-2">
-                  <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1">
-                    Qté
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={item.quantity}
-                    onChange={(e) => handleItemChange(index, 'quantity', parseInt(e.target.value) || 1)}
-                    className="w-full rounded-md border-gray-200 p-1.5 text-sm font-bold border bg-white shadow-sm"
-                    required
-                  />
-                </div>
-                
-                <div className="col-span-2">
-                  <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1">
-                    Prix Unitaire (DZD)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={item.unitPrice.toFixed(2)}
-                    onChange={(e) => handleItemChange(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                    className="w-full rounded-md border-gray-200 p-1.5 text-sm font-bold border bg-white shadow-sm"
-                    placeholder="0.00"
-                    required
-                  />
-                </div>
-                
-                <div className="col-span-2">
-                  <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1">
-                    Total
-                  </label>
-                  <div className="flex items-center gap-2 h-7 mt-0.5">
-                    <p className="font-black text-emerald-600 flex-1 truncate text-xs">
-                      {(item.quantity * item.unitPrice).toFixed(2)} DZD
-                    </p>
-                    {item.priceTypeIndicator && (
-                      <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 text-[8px] font-bold rounded-full">
-                        {item.priceTypeIndicator}
+                  </td>
+                </tr>
+              ) : (
+                items.map((item, index) => (
+                  <tr key={index} className="hover:bg-blue-50/20 transition-colors group">
+                    <td className="px-4 py-2 relative">
+                      <input
+                        type="text"
+                        value={searchTerms[index] || item.description}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setSearchTerms(prev => ({ ...prev, [index]: value }));
+                          handleItemChange(index, 'description', value);
+                          filterArticles(value, index);
+                        }}
+                        onFocus={() => {
+                          if (searchTerms[index] && searchTerms[index].length > 0) {
+                            filterArticles(searchTerms[index], index);
+                          }
+                        }}
+                        onBlur={() => setTimeout(() => {
+                          setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
+                        }, 200)}
+                        className="w-full text-[13px] font-semibold bg-transparent border-transparent focus:border-blue-200 focus:bg-white rounded p-1 transition-all"
+                        placeholder="Description..."
+                      />
+                      {showArticleDropdown[index] && filteredArticles.length > 0 && (
+                        <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                          {filteredArticles.map((article, idx) => (
+                            <div 
+                              key={idx}
+                              className="px-4 py-2 hover:bg-blue-50 cursor-pointer flex justify-between items-center transition-colors border-b border-gray-50 last:border-0"
+                              onMouseDown={() => handleArticleSelect(article, index)}
+                            >
+                              <span className="text-sm font-bold text-gray-700">{article.name}</span>
+                              <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded">{article.prices[0]?.price || 0} DA</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-2 py-2 text-center">
+                      <span className="text-[11px] font-black text-blue-600 bg-blue-50 px-2 py-1 rounded uppercase">
+                        {item.unit || 'U'}
                       </span>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="col-span-2 flex items-center justify-end gap-1 h-7 mt-0.5">
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveItem(index)}
-                    className="text-rose-500 hover:text-rose-700 p-1.5 rounded-md hover:bg-rose-50 transition-colors"
-                    title="Supprimer cet article"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-          
-          <div className="mt-4">
+                    </td>
+                    <td className="px-2 py-2">
+                      <input
+                        type="number"
+                        min="1"
+                        value={item.quantity}
+                        onChange={(e) => handleItemChange(index, 'quantity', parseInt(e.target.value) || 1)}
+                        className="w-full text-center text-[13px] font-bold bg-transparent border-transparent focus:border-blue-200 focus:bg-white rounded p-1"
+                      />
+                    </td>
+                    <td className="px-2 py-2">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={item.unitPrice}
+                        onChange={(e) => handleItemChange(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                        className="w-full text-center text-[13px] font-black text-gray-700 bg-transparent border-transparent focus:border-blue-200 focus:bg-white rounded p-1"
+                      />
+                    </td>
+                    <td className="px-4 py-2 text-right">
+                      <div className="flex flex-col items-end gap-1">
+                        <span className="text-[13px] font-black text-blue-600">
+                          {(item.quantity * item.unitPrice).toFixed(2)} DA
+                        </span>
+                        {item.priceTypeIndicator && (
+                          <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 text-[8px] font-black rounded-full uppercase tracking-tighter">
+                            {item.priceTypeIndicator}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-2">
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveItem(index)}
+                        className="text-gray-300 hover:text-red-500 transition-colors p-1"
+                        title="Supprimer la ligne"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+          <div className="p-4 bg-gray-50/50 border-t border-gray-100">
             <button
               type="button"
               onClick={handleAddItem}

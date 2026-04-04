@@ -173,7 +173,7 @@ export interface Article {
   description: string;
   prices: ArticlePrice[];
   category: string;
-  unit: 'M²' | 'M3' | 'ML' | 'U' | 'NULL';
+  unit: 'M²' | 'M2' | 'M3' | 'ML' | 'U' | 'NULL';
   material?: string;
   class?: string;
   nominalPressure?: string;

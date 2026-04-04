@@ -125,6 +125,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
 
     const newItems = [...items];
     newItems[index].description = article.name;
+    newItems[index].unit = article.unit;
 
     // Filtrer les prix non nuls
     const validPrices = article.prices.filter((price: any) => price.price > 0);
@@ -501,17 +502,10 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                             )}
                           </div>
                         </td>
-                        <td className="px-2 py-4">
-                          <select 
-                            className="w-full border border-gray-200 rounded-md p-2.5 text-[13px] bg-white text-center text-gray-600 focus:border-blue-400 transition-all appearance-none"
-                            value={item.unit}
-                            onChange={e => updateItem(index, 'unit', e.target.value)}
-                          >
-                            <option value="U">U</option>
-                            <option value="M²">M²</option>
-                            <option value="ML">ML</option>
-                            <option value="M3">M3</option>
-                          </select>
+                        <td className="px-2 py-4 text-center border-b border-gray-100">
+                          <span className="text-[11px] font-black text-blue-600 bg-blue-50 px-2 py-1 rounded uppercase">
+                            {item.unit || 'U'}
+                          </span>
                         </td>
                         <td className="px-2 py-4">
                           <input 
