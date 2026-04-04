@@ -85,7 +85,24 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
     const currentYear = new Date().getFullYear();
     
     // Obtenir le préfixe du centre d'appartenance de la demande
-    const centre = centres.find(c => c.id === request.centreId);
+    // Essayer d'abord avec request.centreId, sinon via l'agence
+    let centre = centres.find(c => c.id === request.centreId);
+    
+    // Si pas de centreId dans la demande, essayer de trouver via l'agence
+    if (!centre && request.agencyId) {
+      const agency = agencies.find(a => a.id === request.agencyId);
+      if (agency) {
+        centre = centres.find(c => c.id === agency.centreId);
+      }
+    }
+    
+    console.log('Debug Centre:', { 
+      requestCentreId: request.centreId, 
+      requestAgencyId: request.agencyId,
+      foundCentre: centre, 
+      prefix: centre?.prefix 
+    });
+    
     const prefix = centre?.prefix || 'DV'; // Utiliser le préfixe du centre ou DV par défaut
     
     // Compter le nombre de devis existants pour ce centre et cette année
@@ -104,6 +121,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
     const nextNumber = existingQuotesForCentre.length + 1;
     const sequenceNumber = String(nextNumber).padStart(4, '0');
     
+    console.log('Generated Quote Number:', `${sequenceNumber}/${prefix}/${currentYear}`);
     return `${sequenceNumber}/${prefix}/${currentYear}`;
   };
 
