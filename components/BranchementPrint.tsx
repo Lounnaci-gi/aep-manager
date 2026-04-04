@@ -128,13 +128,6 @@ export const BranchementPrint: React.FC<BranchementPrintProps> = ({ request, age
           </div>
         </div>
 
-        {/* New Zone/Unit Header Bar */}
-        <div style={{ backgroundColor: '#f3f4f6', border: '1px solid #9ca3af', padding: '6px 10px', marginBottom: '15px', display: 'flex', justifyContent: 'space-between', fontSize: '10pt', fontWeight: 'bold' }}>
-          <span>Zone d'Alger</span>
-          <span>Unité de {centre?.name || 'Médéa'}</span>
-          <span style={{ textTransform: 'uppercase' }}>Agence : {agency?.name || '........................'}</span>
-        </div>
-
         {/* === TITLE === */}
         <div style={{ textAlign: 'center', marginBottom: '2px', marginTop: '4px' }}>
           <h1 style={{ fontSize: '20pt', fontWeight: 'normal', margin: 0, letterSpacing: '1px' }}>DEMANDE DE BRANCHEMENT D'EAU POTABLE</h1>
