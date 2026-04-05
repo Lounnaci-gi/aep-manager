@@ -32,34 +32,35 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
   const [articles, setArticles] = useState<Article[]>([]);
   const [loadingArticles, setLoadingArticles] = useState(true);
   const [formData, setFormData] = useState({
-    clientId: request.clientId || '',
-    clientName: request.clientName || '',
-    clientEmail: request.clientEmail || '',
-    clientPhone: request.clientPhone || '',
-    centreId: request.centreId || '',
-    agencyId: request.agencyId || '',
-    installationAddress: request.installationAddress || '',
-    installationCommune: request.installationCommune || '',
-    serviceType: request.serviceType || '',
-    description: request.description || '',
-    type: request.type || 'Propriétaire',
-    category: request.category || undefined,
-    civility: request.civility || '',
-    businessName: request.businessName || '',
-    idDocumentType: request.idDocumentType || '',
-    idDocumentNumber: request.idDocumentNumber || '',
-    idDocumentIssueDate: request.idDocumentIssueDate || '',
-    idDocumentIssuer: request.idDocumentIssuer || '',
-    address: request.address || '',
-    commune: request.commune || '',
-    branchementType: request.branchementType || undefined,
-    branchementDetails: request.branchementDetails || '',
-    diameter: request.diameter || '',
-    flowRate: request.flowRate || '',
+    clientId: existingQuote?.clientId || request.clientId || '',
+    clientName: existingQuote?.clientName || request.clientName || '',
+    clientEmail: existingQuote?.clientEmail || request.clientEmail || request.correspondenceEmail || '',
+    clientPhone: existingQuote?.clientPhone || request.clientPhone || request.correspondencePhone || '',
+    centreId: existingQuote?.centreId || request.centreId || '',
+    agencyId: existingQuote?.agencyId || request.agencyId || '',
+    installationAddress: existingQuote?.installationAddress || request.installationAddress || '',
+    installationCommune: existingQuote?.installationCommune || request.installationCommune || '',
+    serviceType: existingQuote?.serviceType || request.serviceType || '',
+    description: existingQuote?.description || request.description || '',
+    type: existingQuote?.type || request.type || 'Propriétaire',
+    category: existingQuote?.category || request.category || undefined,
+    civility: existingQuote?.civility || request.civility || 'M.',
+    businessName: existingQuote?.businessName || request.businessName || '',
+    idDocumentType: existingQuote?.idDocumentType || request.idDocumentType || 'CNI',
+    idDocumentNumber: existingQuote?.idDocumentNumber || request.idDocumentNumber || '',
+    idDocumentIssueDate: existingQuote?.idDocumentIssueDate || request.idDocumentIssueDate || '',
+    idDocumentIssuer: existingQuote?.idDocumentIssuer || request.idDocumentIssuer || '',
+    address: existingQuote?.address || request.address || '',
+    commune: existingQuote?.commune || request.commune || '',
+    branchementType: existingQuote?.branchementType || request.branchementType || undefined,
+    branchementDetails: existingQuote?.branchementDetails || request.branchementDetails || '',
+    diameter: existingQuote?.diameter || request.diameter || '',
+    flowRate: existingQuote?.flowRate || request.flowRate || '',
     correspondencePhone: request.correspondencePhone || '',
     correspondenceEmail: request.correspondenceEmail || '',
     installationPhone: request.installationPhone || '',
     installationEmail: request.installationEmail || '',
+    clientFax: existingQuote?.clientFax || request.clientFax || '',
   });
 
   const [items, setItems] = useState<QuoteItem[]>([]);
@@ -515,30 +516,75 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
         {/* Informations Client */}
         <div className="space-y-6">
           <h3 className="text-lg font-black text-blue-600 uppercase tracking-widest border-l-4 border-blue-600 pl-3">
-            Informations Client
+            Destinataire (Abonné)
           </h3>
           
-          <div className="bg-gray-50 p-4 rounded-xl">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5">
-                  Client
-                </label>
-                <p className="font-bold text-gray-900 text-lg">{formData.clientName}</p>
+          <div className="w-full md:w-[450px] bg-gray-50/50 p-6 rounded-xl border border-gray-100 flex flex-col space-y-3 relative">
+            <div className="space-y-2">
+              <div className="flex gap-2 text-sm">
+                <span className="font-bold text-gray-500 whitespace-nowrap min-w-[140px]">DOIT A :</span>
+                <span className="text-gray-800 font-bold">{formData.civility} {formData.clientName || formData.businessName || '……………………….'}</span>
               </div>
-              <div>
-                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5">
-                  Qualité
-                </label>
-                <p className="font-bold text-gray-900 text-lg">{formData.type}</p>
+              
+              <div className="flex gap-2 text-sm">
+                <span className="font-bold text-gray-500 whitespace-nowrap min-w-[140px]">Adresse :</span>
+                <span className="text-gray-700">{formData.address || '…………………………………………….'}</span>
+              </div>
+
+              <div className="flex gap-2 text-sm">
+                <span className="font-bold text-gray-500 whitespace-nowrap min-w-[140px]">Commune :</span>
+                <span className="text-gray-700">{formData.commune || '……………………….'}</span>
+              </div>
+
+              <div className="pt-2 border-t border-gray-100 mt-2 space-y-2">
+                <div className="flex gap-2 text-sm">
+                  <span className="font-bold text-gray-400 whitespace-nowrap min-w-[140px]">Tél :</span>
+                  <span className="text-gray-700 font-medium">{formData.clientPhone || '……………………….'}</span>
+                </div>
+                
+                <div className="flex gap-2 text-sm">
+                  <span className="font-bold text-gray-400 whitespace-nowrap min-w-[140px]">Fax :</span>
+                  <span className="text-gray-700 font-medium">{formData.clientFax || '……………………….'}</span>
+                </div>
+
+                <div className="flex gap-2 text-sm">
+                  <span className="font-bold text-gray-400 whitespace-nowrap min-w-[140px]">Email :</span>
+                  <span className="text-gray-700 font-medium truncate">{formData.clientEmail || '……………………….'}</span>
+                </div>
               </div>
             </div>
-            
-            <div className="mt-5">
-              <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5">
-                Adresse de branchement
-              </label>
-              <p className="font-bold text-gray-900 text-base">{formData.installationAddress}, {formData.installationCommune}</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+            <div className="space-y-1">
+              <span className="text-[10px] font-black uppercase text-gray-400 ml-1">Téléphone de contact</span>
+              <input 
+                type="text" 
+                placeholder="Téléphone"
+                className="w-full bg-gray-50 border-none rounded-lg p-2.5 text-sm font-medium text-gray-700 focus:ring-2 focus:ring-blue-100 transition-all"
+                value={formData.clientPhone}
+                onChange={e => setFormData({...formData, clientPhone: e.target.value})}
+              />
+            </div>
+            <div className="space-y-1">
+              <span className="text-[10px] font-black uppercase text-gray-400 ml-1">Fax</span>
+              <input 
+                type="text" 
+                placeholder="Fax"
+                className="w-full bg-gray-50 border-none rounded-lg p-2.5 text-sm font-medium text-gray-700 focus:ring-2 focus:ring-blue-100 transition-all"
+                value={formData.clientFax}
+                onChange={e => setFormData({...formData, clientFax: e.target.value})}
+              />
+            </div>
+            <div className="col-span-1 sm:col-span-2 space-y-1">
+              <span className="text-[10px] font-black uppercase text-gray-400 ml-1">Email</span>
+              <input 
+                type="email" 
+                placeholder="Email professionnel"
+                className="w-full bg-gray-50 border-none rounded-lg p-2.5 text-sm font-medium text-gray-700 focus:ring-2 focus:ring-blue-100 transition-all"
+                value={formData.clientEmail}
+                onChange={e => setFormData({...formData, clientEmail: e.target.value})}
+              />
             </div>
           </div>
         </div>

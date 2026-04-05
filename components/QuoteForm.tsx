@@ -66,11 +66,17 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
     clientFax: initialData?.clientFax || '',
   });
 
-  const [items, setItems] = useState<QuoteItem[]>(
-    initialData?.items && initialData.items.length > 0
-      ? initialData.items
-      : []
-  );
+  const [items, setItems] = useState<QuoteItem[]>(() => {
+    if (initialData?.items && initialData.items.length > 0) {
+      // Recalculer totalHT pour chaque ligne au chargement pour garantir la cohérence
+      return initialData.items.map(item => ({
+        ...item,
+        tva: item.tva ?? 19,
+        totalHT: (item.quantity || 0) * (item.unitPrice || 0),
+      }));
+    }
+    return [];
+  });
 
   const [loadingAI, setLoadingAI] = useState(false);
   const [aiRec, setAiRec] = useState(initialData?.aiNotes || '');
@@ -94,6 +100,31 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
     };
     loadArticles();
   }, []);
+
+  // Auto-complétion des informations client manquantes depuis la demande source
+  useEffect(() => {
+    if (initialData?.requestId && requests.length > 0) {
+      const sourceRequest = requests.find(r => r.id === initialData.requestId);
+      if (sourceRequest) {
+        setFormData(prev => ({
+          ...prev,
+          // Compléter uniquement si le champ est vide
+          clientPhone: prev.clientPhone || sourceRequest.clientPhone || sourceRequest.correspondencePhone || '',
+          clientEmail: prev.clientEmail || sourceRequest.clientEmail || sourceRequest.correspondenceEmail || '',
+          clientFax: prev.clientFax || sourceRequest.clientFax || '',
+          address: prev.address || sourceRequest.address || '',
+          commune: prev.commune || sourceRequest.commune || '',
+          civility: prev.civility || sourceRequest.civility || 'M.',
+          clientName: prev.clientName || sourceRequest.clientName || '',
+          businessName: prev.businessName || sourceRequest.businessName || '',
+          idDocumentType: prev.idDocumentType || sourceRequest.idDocumentType || 'CNI',
+          idDocumentNumber: prev.idDocumentNumber || sourceRequest.idDocumentNumber || '',
+          idDocumentIssueDate: prev.idDocumentIssueDate || sourceRequest.idDocumentIssueDate || '',
+          idDocumentIssuer: prev.idDocumentIssuer || sourceRequest.idDocumentIssuer || '',
+        }));
+      }
+    }
+  }, [initialData?.requestId, requests]);
 
   // Fonction pour filtrer les articles basés sur la recherche
   const filterArticles = (term: string, index: number) => {
@@ -508,6 +539,39 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                 value={formData.serviceType}
                 readOnly
               />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-black uppercase text-gray-400 ml-1">Téléphone</span>
+                  <input 
+                    type="text" 
+                    placeholder="Téléphone"
+                    className="w-full bg-gray-50 border-none rounded-lg p-2.5 text-sm font-medium text-gray-700 focus:ring-2 focus:ring-blue-100 transition-all"
+                    value={formData.clientPhone}
+                    onChange={e => setFormData({...formData, clientPhone: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[10px] font-black uppercase text-gray-400 ml-1">Fax</span>
+                  <input 
+                    type="text" 
+                    placeholder="Fax"
+                    className="w-full bg-gray-50 border-none rounded-lg p-2.5 text-sm font-medium text-gray-700 focus:ring-2 focus:ring-blue-100 transition-all"
+                    value={formData.clientFax}
+                    onChange={e => setFormData({...formData, clientFax: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[10px] font-black uppercase text-gray-400 ml-1">Email</span>
+                  <input 
+                    type="email" 
+                    placeholder="Email"
+                    className="w-full bg-gray-50 border-none rounded-lg p-2.5 text-sm font-medium text-gray-700 focus:ring-2 focus:ring-blue-100 transition-all"
+                    value={formData.clientEmail}
+                    onChange={e => setFormData({...formData, clientEmail: e.target.value})}
+                  />
+                </div>
+              </div>
+
               <div className="flex gap-2">
                 <button type="button" className="p-2 text-gray-300 hover:text-gray-600 transition-colors">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
@@ -702,10 +766,8 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                   <span className="text-2xl font-black tracking-tighter">{total.toLocaleString()} DA</span>
                 </div>
                 
-                <div className="space-y-1 pt-3 px-4 text-[9px] font-black uppercase tracking-widest text-blue-400/60 transition-colors">
-                  <div className="flex justify-between"><span>Marge brute HT</span><span>{grossMargin.toLocaleString()} DA</span></div>
-                  <div className="flex justify-between"><span>Taux de marge</span><span>{marginRate.toFixed(2)} %</span></div>
-                </div>
+
+
               </div>
 
               <div className="pt-10 flex gap-4 w-full justify-end">

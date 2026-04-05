@@ -783,22 +783,42 @@ const App: React.FC = () => {
           />
         )}
                 
-        {(view === 'create' || view === 'edit-quote') && (
-          <QuoteForm 
-            clients={clients} 
-            requests={requests}
-            quotes={quotes}
-            workTypes={workTypes} 
-            agencies={agencies}
-            centres={centres}
-            units={units}
-            initialData={editingQuote}
-            currentUserAgencyId={currentUser.agencyId}
-            onSave={handleSaveQuote}
-            onDelete={handleDeleteQuote}
-            onCancel={() => { setView('list'); setEditingQuote(undefined); }} 
-          />
-        )}
+        {(view === 'create' || view === 'edit-quote') && (() => {
+          const canManageQuotes = currentUser.role === UserRole.CHEF_CENTRE || 
+                                  currentUser.role === UserRole.TECHICO_COMMERCIAL;
+          if (!canManageQuotes) {
+            return (
+              <div className="flex flex-col items-center justify-center py-24 text-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.07 16.5C2.3 17.333 3.262 19 4.803 19z" />
+                  </svg>
+                </div>
+                <h2 className="text-lg font-black text-gray-700 uppercase tracking-widest">Accès Non Autorisé</h2>
+                <p className="text-sm text-gray-400 max-w-sm">Seuls le Chef de Centre et le Technico-Commercial sont autorisés à créer ou modifier des devis.</p>
+                <button onClick={() => setView('list')} className="mt-2 px-6 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition-all">
+                  Retour à la liste
+                </button>
+              </div>
+            );
+          }
+          return (
+            <QuoteForm 
+              clients={clients} 
+              requests={requests}
+              quotes={quotes}
+              workTypes={workTypes} 
+              agencies={agencies}
+              centres={centres}
+              units={units}
+              initialData={editingQuote}
+              currentUserAgencyId={currentUser.agencyId}
+              onSave={handleSaveQuote}
+              onDelete={handleDeleteQuote}
+              onCancel={() => { setView('list'); setEditingQuote(undefined); }} 
+            />
+          );
+        })()}
         {view === 'clients' && (
           <div className="space-y-4">
             <div className="flex justify-end">

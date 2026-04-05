@@ -194,19 +194,25 @@ export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies,
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right">
                     <div className="flex justify-end items-center gap-3">
-                      <button onClick={() => onEdit(quote)} className="text-blue-500 hover:text-blue-700 p-2 hover:bg-blue-50 rounded-xl transition-all">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                      </button>
-                      <select
-                        className="text-[10px] font-black uppercase bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 focus:ring-2 focus:ring-blue-500/20"
-                        value={quote.status}
-                        onChange={(e) => onUpdateStatus(quote.id, e.target.value as QuoteStatus)}
-                      >
-                        {Object.values(QuoteStatus).map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
+                      {(currentUser?.role === UserRole.CHEF_CENTRE || 
+                        currentUser?.role === UserRole.TECHICO_COMMERCIAL) && (
+                        <button onClick={() => onEdit(quote)} className="text-blue-500 hover:text-blue-700 p-2 hover:bg-blue-50 rounded-xl transition-all" title="Modifier le devis">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                        </button>
+                      )}
+                      {(currentUser?.role === UserRole.CHEF_CENTRE || 
+                        currentUser?.role === UserRole.TECHICO_COMMERCIAL ||
+                        currentUser?.role === UserRole.ADMIN) && (
+                        <select
+                          className="text-[10px] font-black uppercase bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 focus:ring-2 focus:ring-blue-500/20"
+                          value={quote.status}
+                          onChange={(e) => onUpdateStatus(quote.id, e.target.value as QuoteStatus)}
+                        >
+                          {Object.values(QuoteStatus).map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      )}
                       {(currentUser?.role === UserRole.ADMIN || 
                         currentUser?.role === UserRole.CHEF_CENTRE || 
-                        currentUser?.role === UserRole.CHEF_AGENCE || 
                         currentUser?.role === UserRole.TECHICO_COMMERCIAL) && (
                         <button onClick={() => onDelete(quote.id)} className="text-gray-200 hover:text-rose-500 p-2 hover:bg-rose-50 rounded-xl transition-all" title="Supprimer le devis">
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
