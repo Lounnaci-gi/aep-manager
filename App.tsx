@@ -727,6 +727,7 @@ const App: React.FC = () => {
             onUpdateRequestWithValidations={handleUpdateRequestWithValidations}
             currentUser={currentUser}
             quotes={quotes}
+            units={units}
           />
         )}
         {view === 'request-form' && (

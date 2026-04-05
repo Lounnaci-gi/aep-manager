@@ -1,15 +1,16 @@
 
 import React from 'react';
-import { WorkRequest, RequestStatus, CommercialAgency, Centre, BranchementType, ValidationType } from '../types';
+import { WorkRequest, RequestStatus, CommercialAgency, Centre, BranchementType, ValidationType, Unit } from '../types';
 
 interface WorkRequestPrintProps {
   request: WorkRequest;
   agency?: CommercialAgency;
   centre?: Centre;
+  unit?: Unit;
   onClose: () => void;
 }
 
-export const WorkRequestPrint: React.FC<WorkRequestPrintProps> = ({ request, agency, centre, onClose }) => {
+export const WorkRequestPrint: React.FC<WorkRequestPrintProps> = ({ request, agency, centre, unit, onClose }) => {
   const handlePrint = () => {
     window.print();
   };
@@ -19,7 +20,7 @@ export const WorkRequestPrint: React.FC<WorkRequestPrintProps> = ({ request, age
       {/* Controls - Hidden during print */}
       <div className="sticky top-0 bg-gray-900 text-white p-4 flex justify-between items-center print:hidden shadow-xl">
         <div className="flex items-center gap-4">
-          <button 
+          <button
             onClick={onClose}
             className="p-2 hover:bg-gray-800 rounded-full transition-colors"
           >
@@ -27,7 +28,7 @@ export const WorkRequestPrint: React.FC<WorkRequestPrintProps> = ({ request, age
           </button>
           <h2 className="font-black uppercase tracking-widest text-sm">Aperçu de la Demande - {request.id}</h2>
         </div>
-        <button 
+        <button
           onClick={handlePrint}
           className="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-xl font-black uppercase text-xs tracking-widest transition-all shadow-lg shadow-blue-900/20 flex items-center gap-2"
         >
@@ -93,33 +94,23 @@ export const WorkRequestPrint: React.FC<WorkRequestPrintProps> = ({ request, age
 
       {/* Document Content */}
       <div className="work-request-print-doc max-w-[210mm] mx-auto p-6 md:p-8 bg-white print:p-0 print:m-0" style={{ fontSize: '10pt' }}>
-        
-        {/* Republic Text */}
-        <div style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '11pt', marginBottom: '8px' }}>
-          الجمهورية الجزائرية الديمقراطية الشعبية
-        </div>
+
 
         {/* === HEADER (3 colonnes) === */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-          <div style={{ textAlign: 'left', lineHeight: 1.2, width: '33%' }}>
-            <div style={{ fontSize: '9pt', fontWeight: 'bold' }}>Ministère des ressources en eau</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+          <div style={{ textAlign: 'center', lineHeight: 1.2, width: '33%' }}>
             <div style={{ fontSize: '9pt', fontWeight: 'bold' }}>E.P ALGERIENNE DES EAUX</div>
+            <div style={{ fontSize: '9pt', fontWeight: 'bold' }}>Zone d'Alger</div>
+            <div style={{ fontSize: '9pt', fontWeight: 'bold' }}>Unité de {unit?.name || (centre?.name ? centre.name : 'Médéa')}</div>
           </div>
           <div style={{ textAlign: 'center', width: '33%' }}>
             <img src="/ade.png" alt="ADE Logo" style={{ height: '70px', margin: '0 auto' }} />
           </div>
-          <div style={{ textAlign: 'right', width: '33%', fontSize: '9pt', fontWeight: 'bold' }} dir="rtl">
-            وزارة المــــوارد المائيــــــة<br />
-            الجزائريــــــة للميــــــــــاه
+          <div style={{ textAlign: 'right', width: '33%', fontSize: '10pt', fontWeight: 'bold' }}>
+            Agence de {agency?.name || '........................'}
           </div>
         </div>
 
-        {/* New Zone/Unit Header Bar */}
-        <div style={{ backgroundColor: '#f3f4f6', border: '1px solid #9ca3af', padding: '6px 10px', marginBottom: '15px', display: 'flex', justifyContent: 'space-between', fontSize: '10pt', fontWeight: 'bold' }}>
-          <span>Zone d'Alger</span>
-          <span>Unité de {centre?.name || 'Médéa'}</span>
-          <span style={{ textTransform: 'uppercase' }}>Agence : {agency?.name || '........................'}</span>
-        </div>
 
         {/* === TITLE === */}
         <div style={{ textAlign: 'center', marginBottom: '2px', marginTop: '4px' }}>
@@ -141,7 +132,7 @@ export const WorkRequestPrint: React.FC<WorkRequestPrintProps> = ({ request, age
           <p style={{ fontWeight: 'bold', fontSize: '10pt', marginBottom: '3px' }}>
             Je soussigné (e) <span style={{ fontSize: '8.5pt', fontStyle: 'italic' }}>Madame, Mademoiselle, Monsieur (rayer les mentions inutiles)</span>
           </p>
-          
+
           <div style={{ display: 'flex', gap: '0', marginBottom: '3px' }}>
             <span style={{ fontSize: '9pt', textDecoration: 'underline', whiteSpace: 'nowrap' }}>Nom</span>
             <span style={{ fontSize: '9pt', whiteSpace: 'nowrap' }}>&nbsp;(ou Raison sociale)</span>
@@ -149,7 +140,7 @@ export const WorkRequestPrint: React.FC<WorkRequestPrintProps> = ({ request, age
               {request.businessName || request.clientName?.split(' ')[0] || ''}
             </span>
           </div>
-          
+
           <div style={{ display: 'flex', gap: '0', marginBottom: '3px' }}>
             <span style={{ fontSize: '9pt' }}>Prénom</span>
             <span className="field-line" style={{ flex: 1, marginLeft: '4px' }}>
@@ -160,17 +151,17 @@ export const WorkRequestPrint: React.FC<WorkRequestPrintProps> = ({ request, age
           <div style={{ marginBottom: '1px' }}>
             <span style={{ fontSize: '9pt', textDecoration: 'underline' }}>Adresse de correspondance</span><span style={{ fontSize: '9pt' }}>:</span>
           </div>
-          
+
           <div style={{ display: 'flex', marginBottom: '2px' }}>
             <span style={{ fontSize: '9pt', whiteSpace: 'nowrap' }}>Rue</span>
             <span className="field-line" style={{ flex: 1, marginLeft: '4px' }}>{request.address || ''}</span>
           </div>
-          
+
           <div style={{ display: 'flex', marginBottom: '2px' }}>
             <span style={{ fontSize: '9pt', whiteSpace: 'nowrap' }}>Commune</span>
             <span className="field-line" style={{ flex: 1, marginLeft: '4px' }}>{request.commune || ''}</span>
           </div>
-          
+
           <div style={{ display: 'flex', marginBottom: '3px' }}>
             <span style={{ fontSize: '9pt', whiteSpace: 'nowrap' }}>Tél</span>
             <span className="field-line" style={{ flex: 1, marginLeft: '4px' }}>{request.clientPhone || request.correspondencePhone || ''}</span>
@@ -199,7 +190,7 @@ export const WorkRequestPrint: React.FC<WorkRequestPrintProps> = ({ request, age
         {/* === POUR DES BESOINS === */}
         <div style={{ marginBottom: '20px', paddingLeft: '20px' }}>
           <p style={{ fontSize: '9.5pt', fontWeight: 'bold', marginBottom: '3px' }}>Pour des besoins : <span style={{ fontSize: '8pt', fontWeight: 'normal', fontStyle: 'italic' }}>(cocher la case correspondante)</span></p>
-          
+
           <div style={{ paddingLeft: '10px', lineHeight: '1.5', fontSize: '9.5pt' }}>
             <div>
               <span className={`checkbox ${request.branchementType === BranchementType.DOMESTIQUE ? 'checked' : ''}`}></span>
@@ -228,8 +219,8 @@ export const WorkRequestPrint: React.FC<WorkRequestPrintProps> = ({ request, age
             <div>
               <span className={`checkbox ${(!request.branchementType || request.branchementType === BranchementType.AUTRE) ? 'checked' : ''}`}></span>
               Autres (à préciser) : <span className="field-line" style={{ width: '200px' }}>
-                {(!request.branchementType) 
-                  ? (request.serviceType || '') 
+                {(!request.branchementType)
+                  ? (request.serviceType || '')
                   : (request.branchementType === BranchementType.AUTRE ? (request.branchementDetails || '') : '')}
               </span>
             </div>

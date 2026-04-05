@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import Swal from 'sweetalert2';
-import { WorkRequest, RequestStatus, CommercialAgency, Centre, BranchementType, UserRole, User, ValidationType, ValidationRecord, WorkType, Quote } from '../types';
+import { WorkRequest, RequestStatus, CommercialAgency, Centre, BranchementType, UserRole, User, ValidationType, ValidationRecord, WorkType, Quote, Unit } from '../types';
 import { WorkRequestPrint } from './WorkRequestPrint';
 
 
@@ -18,6 +18,7 @@ interface WorkRequestListProps {
   onUpdateRequestWithValidations?: (request: WorkRequest) => void;
   currentUser?: User;
   quotes: Quote[];
+  units: Unit[];
 }
 
 type SortOption = 'date-desc' | 'date-asc' | 'name-asc';
@@ -34,7 +35,8 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
   onUpdateStatus,
   onUpdateRequestWithValidations,
   currentUser,
-  quotes
+  quotes,
+  units
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<RequestStatus | ''>('');
@@ -845,6 +847,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
           request={printingRequest}
           agency={agencies.find(a => a.id === printingRequest.agencyId)}
           centre={centres.find(c => c.id === (agencies.find(a => a.id === printingRequest.agencyId)?.centreId || printingRequest.centreId))}
+          unit={units.find(u => u.id === centres.find(c => c.id === (agencies.find(a => a.id === printingRequest.agencyId)?.centreId || printingRequest.centreId))?.unitId)}
           onClose={() => setPrintingRequest(null)}
         />
       )}
