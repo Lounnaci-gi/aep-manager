@@ -172,6 +172,120 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
     setShowArticleDropdown(prev => ({ ...prev, [index]: filtered.length > 0 }));
   };
 
+  // Fonction pour ouvrir la boîte de dialogue de sélection de prix
+  const openPriceSelectionDialog = (article: Article, index: number) => {
+    // Filtrer les prix non nuls
+    const validPrices = article.prices.filter(price => price.price > 0);
+    
+    // Vérifier si on a à la fois pose et fourniture
+    const fourniturePrice = article.prices.find(p => p.type === 'fourniture' && p.price > 0);
+    const posePrice = article.prices.find(p => p.type === 'pose' && p.price > 0);
+    const hasBothFournitureAndPose = fourniturePrice && posePrice;
+    
+    if (validPrices.length === 0) {
+      Swal.fire({
+        title: 'Aucun prix disponible',
+        text: `L'article "${article.name}" n'a aucun prix de vente défini.`,
+        icon: 'info',
+        confirmButtonColor: '#3b82f6'
+      });
+      return;
+    }
+
+    // Plusieurs prix valides ou combinés possibles, demander à l'utilisateur de choisir
+    if (validPrices.length > 1 || hasBothFournitureAndPose) {
+      const options: Array<{id: string, value: string | number, label: string, price: number, type: string}> = [
+        ...validPrices.map((price, i) => ({
+          id: `price-${i}`,
+          value: i,
+          label: `${price.type === 'fourniture' ? 'Fourniture' : 
+                  price.type === 'pose' ? 'Pose' : 'Prestation'}`,
+          price: price.price,
+          type: price.type
+        }))
+      ];
+      
+      // Ajouter l'option combinée si les deux prix existent
+      if (hasBothFournitureAndPose) {
+        options.push({
+          id: 'combined',
+          value: 'combined',
+          label: 'Fourniture + Pose',
+          price: (fourniturePrice?.price || 0) + (posePrice?.price || 0),
+          type: 'combined'
+        });
+      }
+      
+      Swal.fire({
+        title: 'Choisir le type de prix',
+        html: `
+          <div class="text-left font-sans">
+            <p class="mb-4 text-sm text-gray-600">Sélectionnez le type de prix souhaité pour l'article :<br><strong class="text-gray-900">${article.name}</strong></p>
+            <div class="space-y-2">
+              ${options.map((option, i) => `
+                <label class="flex items-center p-3 border-2 border-gray-100 rounded-xl cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-all group">
+                  <input type="radio" id="${option.id}" name="priceType" value="${option.value}" 
+                         class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500" ${i === 0 ? 'checked' : ''}>
+                  <div class="ml-3 flex-1">
+                    <div class="text-sm font-bold text-gray-900">${option.label}</div>
+                    <div class="text-xs font-black text-blue-600">${option.price.toLocaleString()} DA</div>
+                  </div>
+                </label>
+              `).join('')}
+            </div>
+          </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Appliquer ce prix',
+        cancelButtonText: 'Conserver l\'actuel',
+        confirmButtonColor: '#2563eb', // blue-600
+        cancelButtonColor: '#64748b', // slate-500
+        preConfirm: () => {
+          const selectedRadio = document.querySelector('input[name="priceType"]:checked') as HTMLInputElement;
+          return selectedRadio ? selectedRadio.value : null;
+        }
+      }).then((result) => {
+        if (result.isConfirmed && result.value !== null) {
+          const selectedValue = result.value;
+          const newItems = [...items];
+          
+          if (selectedValue === 'combined') {
+            // Prix combiné
+            newItems[index].unitPrice = (fourniturePrice?.price || 0) + (posePrice?.price || 0);
+            newItems[index].priceTypeIndicator = 'F/P';
+          } else {
+            // Prix individuel
+            const selectedIndex = parseInt(selectedValue);
+            const selectedPrice = validPrices[selectedIndex];
+            newItems[index].unitPrice = selectedPrice.price;
+            newItems[index].priceTypeIndicator = selectedPrice.type === 'fourniture' ? 'F' : 
+                                               selectedPrice.type === 'pose' ? 'P' : 'PS';
+          }
+          setItems(newItems);
+          setSearchTerms(prev => ({ ...prev, [index]: article.name }));
+        }
+      });
+    } else {
+      // Un seul prix possible
+      const newItems = [...items];
+      newItems[index].unitPrice = validPrices[0].price;
+      newItems[index].priceTypeIndicator = validPrices[0].type === 'fourniture' ? 'F' : 
+                                          validPrices[0].type === 'pose' ? 'P' : 'PS';
+      setItems(newItems);
+      setSearchTerms(prev => ({ ...prev, [index]: article.name }));
+      
+      // Petit feedback visuel
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'info',
+        title: 'Prix mis à jour (Type unique)',
+        showConfirmButton: false,
+        timer: 2000
+      });
+    }
+  };
+
   // Gérer la sélection d'un article
   const handleArticleSelect = (article: Article, index: number) => {
     // Vérifier si l'article est déjà dans le devis
@@ -192,100 +306,15 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
     newItems[index].description = article.name;
     newItems[index].unit = article.unit;
     
-    // Filtrer les prix non nuls
-    const validPrices = article.prices.filter(price => price.price > 0);
+    // Mettre à jour l'item localement d'abord pour avoir la description
+    setItems(newItems);
     
-    // Vérifier si on a à la fois pose et fourniture
-    const fourniturePrice = article.prices.find(p => p.type === 'fourniture' && p.price > 0);
-    const posePrice = article.prices.find(p => p.type === 'pose' && p.price > 0);
-    const hasBothFournitureAndPose = fourniturePrice && posePrice;
+    // Ouvrir la boîte de dialogue de sélection de prix (ou appliquer automatiquement si un seul prix)
+    openPriceSelectionDialog(article, index);
     
-    if (validPrices.length === 0) {
-      // Aucun prix valide
-      newItems[index].unitPrice = 0;
-      newItems[index].unit = article.unit;
-      setItems(newItems);
-      setSearchTerms(prev => ({ ...prev, [index]: article.name }));
-      setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
-    } else if (validPrices.length === 1) {
-      // Un seul prix valide, l'utiliser directement
-      newItems[index].unitPrice = validPrices[0].price;
-      newItems[index].unit = article.unit;
-      // Ajouter l'indicateur de type de prix
-      newItems[index].priceTypeIndicator = validPrices[0].type === 'fourniture' ? 'F' : 
-                                          validPrices[0].type === 'pose' ? 'P' : 'PS';
-      setItems(newItems);
-      setSearchTerms(prev => ({ ...prev, [index]: article.name }));
-      setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
-    } else {
-      // Plusieurs prix valides, demander à l'utilisateur de choisir
-      const options: Array<{id: string, value: string | number, label: string, price: number, type: string}> = [
-        ...validPrices.map((price, i) => ({
-          id: `price-${i}`,
-          value: i,
-          label: `${price.type === 'fourniture' ? 'Fourniture' : 
-                  price.type === 'pose' ? 'Pose' : 'Prestation'}`,
-          price: price.price,
-          type: price.type
-        }))
-      ];
-      
-      // Ajouter l'option combinée si les deux prix existent
-      if (hasBothFournitureAndPose) {
-        options.push({
-          id: 'combined',
-          value: 'combined',
-          label: 'Fourniture + Pose',
-          price: fourniturePrice.price + posePrice.price,
-          type: 'combined'
-        });
-      }
-      
-      Swal.fire({
-        title: 'Choisir le type de prix',
-        html: `
-          <div class="text-left">
-            <p class="mb-3">Sélectionnez le type de prix pour "${article.name}":</p>
-            ${options.map((option, i) => `
-              <div class="flex items-center mb-2">
-                <input type="radio" id="${option.id}" name="priceType" value="${option.value}" 
-                       class="mr-2" ${i === 0 ? 'checked' : ''}>
-                <label for="${option.id}" class="flex-1">
-                  <span class="font-medium">${option.label}</span>
-                  <span class="ml-2 text-gray-600">(${option.price.toLocaleString()} DA)</span>
-                </label>
-              </div>
-            `).join('')}
-          </div>
-        `,
-        showCancelButton: true,
-        confirmButtonText: 'Sélectionner',
-        cancelButtonText: 'Annuler',
-        preConfirm: () => {
-          const selectedRadio = document.querySelector('input[name="priceType"]:checked') as HTMLInputElement;
-          return selectedRadio ? selectedRadio.value : '0';
-        }
-      }).then((result) => {
-        if (result.isConfirmed) {
-          const selectedValue = result.value;
-          if (selectedValue === 'combined') {
-            // Prix combiné
-            newItems[index].unitPrice = fourniturePrice!.price + posePrice!.price;
-            newItems[index].priceTypeIndicator = 'F/P';
-          } else {
-            // Prix individuel
-            const selectedIndex = parseInt(selectedValue);
-            const selectedPrice = validPrices[selectedIndex];
-            newItems[index].unitPrice = selectedPrice.price;
-            newItems[index].priceTypeIndicator = selectedPrice.type === 'fourniture' ? 'F' : 
-                                               selectedPrice.type === 'pose' ? 'P' : 'PS';
-          }
-          setItems(newItems);
-          setSearchTerms(prev => ({ ...prev, [index]: article.name }));
-          setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
-        }
-      });
-    }
+    // Fermer le dropdown et mettre à jour le terme de recherche
+    setSearchTerms(prev => ({ ...prev, [index]: article.name }));
+    setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
   };
 
   // Calcul des totaux
@@ -628,7 +657,23 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
                         step="0.01"
                         value={item.unitPrice}
                         onChange={(e) => handleItemChange(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                        className="w-full text-center text-[13px] font-black text-gray-700 bg-transparent border-transparent focus:border-blue-200 focus:bg-white rounded p-1"
+                        onDoubleClick={() => {
+                          const article = allArticles.find(a => a.name === item.description);
+                          if (article) {
+                            openPriceSelectionDialog(article, index);
+                          } else {
+                            Swal.fire({
+                              toast: true,
+                              position: 'top-end',
+                              icon: 'warning',
+                              title: 'Article non trouvé dans la base',
+                              showConfirmButton: false,
+                              timer: 2000
+                            });
+                          }
+                        }}
+                        className="w-full text-center text-[13px] font-black text-gray-700 bg-transparent border-transparent focus:border-blue-200 focus:bg-white rounded p-1 cursor-pointer"
+                        title="Double-cliquez pour choisir le type de prix"
                       />
                     </td>
                     <td className="px-4 py-2 text-right">
