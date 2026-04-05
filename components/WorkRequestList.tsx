@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import Swal from 'sweetalert2';
 import { WorkRequest, RequestStatus, CommercialAgency, Centre, BranchementType, UserRole, User, ValidationType, ValidationRecord, WorkType, Quote, Unit } from '../types';
 import { WorkRequestPrint } from './WorkRequestPrint';
+import { QuoteEstablishmentRequestPrint } from './QuoteEstablishmentRequestPrint';
 
 
 interface WorkRequestListProps {
@@ -40,6 +41,8 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<RequestStatus | ''>('');
+  const [activePrintRequest, setActivePrintRequest] = useState<WorkRequest | null>(null);
+  const [printMode, setPrintMode] = useState<'standard' | 'quote-request'>('standard');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('date-desc');
@@ -774,7 +777,8 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                         return isAllowedForWorkType ? (
                           <button 
                             onClick={() => {
-                              setPrintingRequest(req);
+                              setPrintMode('standard');
+                              setActivePrintRequest(req);
                             }} 
                             className="text-gray-400 hover:text-blue-600 transition-colors p-1.5 hover:bg-blue-50 rounded-lg"
                             title="Imprimer la demande"
@@ -806,7 +810,8 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                                 cancelButtonText: 'Annuler'
                               }).then((result) => {
                                 if (result.isConfirmed) {
-                                  setPrintingRequest(req);
+                                  setPrintMode('quote-request');
+                                  setActivePrintRequest(req);
                                 }
                               });
                             }} 
@@ -842,13 +847,23 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
         </div>
       </div>
       
-      {printingRequest && (
+      {activePrintRequest && printMode === 'standard' && (
         <WorkRequestPrint 
-          request={printingRequest}
-          agency={agencies.find(a => a.id === printingRequest.agencyId)}
-          centre={centres.find(c => c.id === (agencies.find(a => a.id === printingRequest.agencyId)?.centreId || printingRequest.centreId))}
-          unit={units.find(u => u.id === centres.find(c => c.id === (agencies.find(a => a.id === printingRequest.agencyId)?.centreId || printingRequest.centreId))?.unitId)}
-          onClose={() => setPrintingRequest(null)}
+          request={activePrintRequest}
+          agency={agencies.find(a => a.id === activePrintRequest.agencyId)}
+          centre={centres.find(c => c.id === (agencies.find(a => a.id === activePrintRequest.agencyId)?.centreId || activePrintRequest.centreId))}
+          unit={units.find(u => u.id === centres.find(c => c.id === (agencies.find(a => a.id === activePrintRequest.agencyId)?.centreId || activePrintRequest.centreId))?.unitId)}
+          onClose={() => setActivePrintRequest(null)}
+        />
+      )}
+      
+      {activePrintRequest && printMode === 'quote-request' && (
+        <QuoteEstablishmentRequestPrint 
+          request={activePrintRequest}
+          agency={agencies.find(a => a.id === activePrintRequest.agencyId)}
+          centre={centres.find(c => c.id === (agencies.find(a => a.id === activePrintRequest.agencyId)?.centreId || activePrintRequest.centreId))}
+          unit={units.find(u => u.id === centres.find(c => c.id === (agencies.find(a => a.id === activePrintRequest.agencyId)?.centreId || activePrintRequest.centreId))?.unitId)}
+          onClose={() => setActivePrintRequest(null)}
         />
       )}
     </div>

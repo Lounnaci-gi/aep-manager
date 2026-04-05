@@ -1,11 +1,12 @@
 
 import React from 'react';
-import { WorkRequest, RequestStatus, CommercialAgency, Centre, ValidationType } from '../types';
+import { WorkRequest, RequestStatus, CommercialAgency, Centre, ValidationType, Unit } from '../types';
 
 interface QuoteEstablishmentRequestPrintProps {
   request: WorkRequest;
   agency?: CommercialAgency;
   centre?: Centre;
+  unit?: Unit;
   onClose: () => void;
 }
 
@@ -13,15 +14,26 @@ export const QuoteEstablishmentRequestPrint: React.FC<QuoteEstablishmentRequestP
   request, 
   agency, 
   centre, 
+  unit,
   onClose 
 }) => {
   const handlePrint = () => {
     window.print();
   };
 
-  // Calculer les validations complètes
-  const allValidationsComplete = request.validations && 
-    request.validations.filter(v => v.status === 'validated').length >= 3;
+  // Helper to render boxed digits
+  const renderDigitBoxes = (text: string, length: number) => {
+    const chars = text.padEnd(length, '_').split('');
+    return (
+      <div className="flex gap-1 items-center ml-2">
+        {chars.map((char, i) => (
+          <div key={i} className="w-5 h-6 border-[1.5px] border-black flex items-center justify-center text-[13px]" style={{ fontFamily: 'Arial' }}>
+            {char === '_' ? '' : char}
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="fixed inset-0 z-[100] bg-white overflow-y-auto print:static print:bg-white">
@@ -46,11 +58,11 @@ export const QuoteEstablishmentRequestPrint: React.FC<QuoteEstablishmentRequestP
       </div>
 
       {/* Document Content - Format A4 */}
-      <div id="quote-print-container" className="relative max-w-[210mm] mx-auto bg-white text-black min-h-[297mm] p-10 print:p-0 print:m-0 print:w-[210mm]" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
+      <div id="quote-print-container" className="relative max-w-[210mm] mx-auto bg-white text-black min-h-[297mm] p-10 print:p-0 print:m-0 print:w-[210mm]">
         <style>
           {`
             @media print {
-              @page { size: A4 portrait; margin: 15mm; }
+              @page { size: A4 portrait; margin: 10mm; }
               body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background-color: white !important; }
               body * { visibility: hidden; }
               #quote-print-container, #quote-print-container * { visibility: visible; }
@@ -61,164 +73,166 @@ export const QuoteEstablishmentRequestPrint: React.FC<QuoteEstablishmentRequestP
                 width: 100%; 
                 margin: 0; 
                 padding: 10mm !important;
-                border: 1.2mm solid black !important;
-                border-radius: 10mm !important;
-                overflow: hidden;
               }
+            }
+            #quote-print-container {
+              font-family: Arial, Helvetica, sans-serif;
+              color: #000;
+              line-height: 1.25;
+            }
+            #quote-print-container .field-line {
+              border-bottom: 1.5px solid #000;
+              min-height: 18px;
+              display: inline-block;
+              padding: 0 4px;
+              text-transform: uppercase;
+              text-align: center;
             }
           `}
         </style>
 
-        {/* Republic Text */}
-        <div className="text-center font-bold text-[14px] mb-4">
-          الجمهورية الجزائرية الديمقراطية الشعبية
-        </div>
+        {/* 1. Official Header (Match Image & WorkRequestPrint font sizes) */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+          <div style={{ textAlign: 'center', lineHeight: 1.2, width: '33%' }}>
+            <div style={{ fontSize: '9pt' }}>E.P ALGERIENNE DES EAUX</div>
+            <div style={{ fontSize: '9pt' }}>Unité de {unit?.name || 'Médéa'}</div>
+            <div style={{ fontSize: '9pt' }}>Zone d'Alger</div>
+          </div>
+          
+          <div style={{ textAlign: 'center', width: '33%' }}>
+            <img src="/ade.png" alt="ADE Logo" style={{ height: '70px', margin: '0 auto' }} />
+          </div>
 
-        {/* En-tête (3 colonnes) */}
-        <div className="flex justify-between items-center mb-6 text-black">
-          <div className="text-[10px] font-bold text-left leading-tight w-1/3">
-            Ministère des ressources en eau<br />
-            E.P ALGERIENNE DES EAUX
-          </div>
-          <div className="flex flex-col items-center w-1/3">
-            <img src="/ade.png" alt="ADE" className="h-16 w-auto object-contain mb-1" />
-          </div>
-          <div className="text-[10px] font-bold text-right leading-tight w-1/3" dir="rtl">
-            وزارة المــــوارد المائيــــــة<br />
-            الجزائريــــــة للميــــــــــاه
+          <div style={{ textAlign: 'right', width: '33%', fontSize: '10pt' }}>
+            Agence de : {agency?.name || '........................'}
           </div>
         </div>
 
-        {/* Ref Box Style (Simplified for Request) */}
-        <div className="bg-gray-100 border border-gray-400 p-2 mb-6" style={{ borderRadius: '8px' }}>
-          <div className="flex justify-between font-bold text-[11px]">
-            <span>Zone d'Alger</span>
-            <span>Unité de {centre?.name || 'Médéa'}</span>
-            <span className="uppercase">Agence : {agency?.name || '........................'}</span>
-          </div>
-        </div>
-
-        {/* Titre */}
-        <div className="text-center mb-6 px-4">
-          <h1 className="text-[17px] font-bold uppercase tracking-tight text-black border-b-[12px] border-black pb-2 inline-block w-full">
+        {/* 2. Title Section */}
+        <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+          <h1 style={{ fontSize: '15pt', margin: '0 0 4px 0' }}>
             DEMANDE D'ETABLISSEMENT DE DEVIS QUANTITATIF ET ESTIMATIF
           </h1>
+          <div style={{ height: '6px', backgroundColor: '#000', width: '100%' }}></div>
         </div>
 
-        {/* N° et Date */}
-        <div className="flex justify-between mb-8 text-[13px] px-2 text-black">
-          <div className="flex items-center">
-            <span className="mr-2">N° d'enregistrement de la demande : </span>
-            <span className="font-mono tracking-widest">{request.id || '!___!___!___!___!___!'}</span>
+        {/* 3. Registration Box Section */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', fontSize: '10pt', alignItems: 'center', padding: '0 8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <span>N° d'enregistrement de la demande </span>
+            {renderDigitBoxes(request.id?.slice(-5) || '', 5)}
           </div>
-          <div className="flex items-center">
-            <span className="mr-4">Date</span>
-            <span className="font-mono tracking-widest">
-              {request.createdAt ? new Date(request.createdAt).toLocaleDateString('fr-DZ') : '!___!___! / !___!___! / !___!___!___!___!'}
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <span style={{ marginRight: '16px' }}>Date</span>
+            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+              {renderDigitBoxes(new Date(request.createdAt).getDate().toString().padStart(2, '0'), 2)}
+              <span style={{ margin: '0 2px' }}>/</span>
+              {renderDigitBoxes((new Date(request.createdAt).getMonth() + 1).toString().padStart(2, '0'), 2)}
+              <span style={{ margin: '0 2px' }}>/</span>
+              {renderDigitBoxes(new Date(request.createdAt).getFullYear().toString(), 4)}
+            </div>
           </div>
         </div>
 
-        {/* Form Body */}
-        <div className="px-2 space-y-5 text-[12px] text-black">
+        {/* 4. Form Body */}
+        <div style={{ padding: '0 8px', fontSize: '10pt', lineHeight: '1.5' }}>
           
-          <div className="font-bold mb-4 text-[11px]">
+          <div style={{ textDecoration: 'underline', marginBottom: '12px', fontSize: '11pt' }}>
             Veuillez établir un devis quantitatif et estimatif pour :
           </div>
 
-          {(() => {
-            const names = request.clientName ? request.clientName.trim().split(' ') : [''];
-            const nom = request.businessName || (names.length > 1 ? names[0] : request.clientName);
-            const prenom = request.businessName ? '' : (names.length > 1 ? names.slice(1).join(' ') : '');
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', marginBottom: '8px' }}>
+              <span style={{ marginRight: '8px', whiteSpace: 'nowrap' }}><span style={{ textDecoration: 'underline' }}>Nom</span> (ou Raison sociale)</span>
+              <div className="field-line" style={{ flexGrow: 1, fontWeight: 'normal' }}>
+                {request.businessName || request.clientName?.split(' ')[0]}
+              </div>
+            </div>
             
-            return (
-              <>
-                <div className="flex items-end">
-                  <span className="mr-2 whitespace-nowrap">Nom (ou Raison sociale)</span>
-                  <div className="flex-grow border-b border-gray-400 relative h-5">
-                    <span className="absolute bottom-0 left-4 font-bold">{nom}</span>
-                  </div>
-                </div>
-                <div className="flex items-end">
-                  <span className="mr-2 whitespace-nowrap">Prénom</span>
-                  <div className="flex-grow border-b border-gray-400 relative h-5">
-                    <span className="absolute bottom-0 left-4 font-bold">{prenom}</span>
-                  </div>
-                </div>
-              </>
-            );
-          })()}
-
-          <div className="pt-4 space-y-4">
-            <div className="underline font-bold mb-2 text-[12px]">Adresse de branchement :</div>
-            <div className="flex items-end mb-2">
-              <span className="mr-2 whitespace-nowrap">Rue</span>
-              <div className="flex-grow border-b border-gray-400 relative h-5">
-                <span className="absolute bottom-0 left-4 font-bold">{request.installationAddress}</span>
-              </div>
-            </div>
-            <div className="flex items-end">
-              <span className="mr-2 whitespace-nowrap">Commune</span>
-              <div className="flex-grow border-b border-gray-400 relative h-5">
-                <span className="absolute bottom-0 left-4 font-bold">{request.installationCommune}</span>
+            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+              <span style={{ marginRight: '8px', whiteSpace: 'nowrap' }}>Prénom</span>
+              <div className="field-line" style={{ flexGrow: 1 }}>
+                {request.businessName ? '' : request.clientName?.split(' ').slice(1).join(' ')}
               </div>
             </div>
           </div>
 
-          <div className="pt-4 space-y-4">
-            <div className="underline font-bold mb-2 text-[12px]">Adresse de correspondance:</div>
-            <div className="flex items-end mb-2">
-              <span className="mr-2 whitespace-nowrap">Rue</span>
-              <div className="flex-grow border-b border-gray-400 relative h-5">
-                <span className="absolute bottom-0 left-4 font-bold">{request.address || request.installationAddress}</span>
+          <div style={{ marginBottom: '15px' }}>
+            <div style={{ textDecoration: 'underline', marginBottom: '6px', fontSize: '10.5pt' }}>Adresse de branchement :</div>
+            <div style={{ display: 'flex', alignItems: 'flex-end', marginBottom: '6px' }}>
+              <span style={{ marginRight: '8px', whiteSpace: 'nowrap' }}>Rue</span>
+              <div className="field-line" style={{ flexGrow: 1 }}>
+                {request.installationAddress}
               </div>
             </div>
-            <div className="flex items-end mb-2">
-              <span className="mr-2 whitespace-nowrap">Commune</span>
-              <div className="flex-grow border-b border-gray-400 relative h-5">
-                <span className="absolute bottom-0 left-4 font-bold">{request.commune || request.installationCommune}</span>
-              </div>
-            </div>
-            <div className="flex items-end">
-              <span className="mr-2 whitespace-nowrap">Tél</span>
-              <div className="flex-grow border-b border-gray-400 relative h-5">
-                <span className="absolute bottom-0 left-4 font-bold">{request.correspondencePhone || request.clientPhone}</span>
+            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+              <span style={{ marginRight: '8px', whiteSpace: 'nowrap' }}>Commune</span>
+              <div className="field-line" style={{ flexGrow: 1 }}>
+                {request.installationCommune}
               </div>
             </div>
           </div>
 
-          <div className="pt-4">
-            <div className="underline font-bold mb-8 text-[12px]">Nature des travaux demandés :</div>
-            <div className="w-full border-b border-gray-400 relative h-6">
-              <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 font-bold text-[13px]">{request.serviceType}</span>
+          <div style={{ marginBottom: '15px' }}>
+            <div style={{ textDecoration: 'underline', marginBottom: '6px', fontSize: '10.5pt' }}>Adresse de correspondance :</div>
+            <div style={{ display: 'flex', alignItems: 'flex-end', marginBottom: '6px' }}>
+              <span style={{ marginRight: '8px', whiteSpace: 'nowrap' }}>Rue</span>
+              <div className="field-line" style={{ flexGrow: 1 }}>
+                {request.address || request.installationAddress}
+              </div>
             </div>
+            <div style={{ display: 'flex', alignItems: 'flex-end', marginBottom: '6px' }}>
+              <span style={{ marginRight: '8px', whiteSpace: 'nowrap' }}>Commune</span>
+              <div className="field-line" style={{ flexGrow: 1 }}>
+                {request.commune || request.installationCommune}
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'flex-end', width: '50%' }}>
+              <span style={{ marginRight: '8px', whiteSpace: 'nowrap' }}>Tél</span>
+              <div className="field-line" style={{ flexGrow: 1 }}>
+                {request.correspondencePhone || request.clientPhone}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ paddingTop: '5px' }}>
+            <div style={{ textDecoration: 'underline', marginBottom: '8px', fontSize: '11pt' }}>Nature des travaux demandés :</div>
+            <div style={{ borderBottom: '1.5px solid #000', height: '30px', position: 'relative', width: '100%' }}>
+              <span style={{ position: 'absolute', bottom: '2px', left: '50%', transform: 'translateX(-50%)', fontSize: '11pt', textTransform: 'uppercase', color: '#000' }}>{request.serviceType}</span>
+            </div>
+            <div style={{ borderBottom: '1.5px solid #000', height: '30px', width: '100%' }}></div>
           </div>
 
         </div>
 
-        {/* Visas */}
-        <div className="mt-12 px-2 w-full pb-8">
-          <table className="w-full border-collapse border-[2px] border-black text-center text-sm table-fixed" style={{ border: '2px solid black' }}>
+        {/* 5. Visas Section (Match Image) */}
+        <div style={{ marginTop: 'auto', paddingTop: '30px', paddingLeft: '8px', paddingRight: '8px', width: '100%' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', border: '2.5px solid #000', tableLayout: 'fixed' }}>
             <thead>
-              <tr style={{ backgroundColor: '#808080' }}>
-                <th colSpan={3} className="py-1 border-b-[2px] border-black" style={{ borderBottom: '2px solid black' }}>
-                  <span className="text-white uppercase font-bold tracking-widest text-[12px]">Fait à , {agency?.name?.toUpperCase() || '........................'} le {new Date(request.createdAt).toLocaleDateString()}</span>
+              <tr style={{ backgroundColor: '#5c5c5c', color: '#fff' }}>
+                <th colSpan={3} style={{ padding: '5px 0', borderBottom: '2.5px solid #000', textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '11pt', textAlign: 'center' }}>
+                  VISAS
                 </th>
               </tr>
-              <tr className="bg-white text-black border-b-[2px] border-black" style={{ borderBottom: '2px solid black' }}>
-                <th className="py-2 border-r-[2px] border-black w-1/3 text-[11px] font-bold" style={{ borderRight: '2px solid black' }}>Chef de Section « Clientèle »</th>
-                <th className="py-2 border-r-[2px] border-black w-1/3 text-[11px] font-bold" style={{ borderRight: '2px solid black' }}>Juriste</th>
-                <th className="py-2 w-1/3 text-[11px] font-bold">Chef d'Agence Commerciale</th>
+              <tr style={{ backgroundColor: '#fff', color: '#000', borderBottom: '2.5px solid #000' }}>
+                <th style={{ padding: '6px', borderRight: '2.5px solid #000', fontSize: '9pt', textTransform: 'uppercase', width: '33.33%', textAlign: 'center' }}>Chef de Section « Clientèle »</th>
+                <th style={{ padding: '6px', borderRight: '2.5px solid #000', fontSize: '9pt', textTransform: 'uppercase', width: '33.33%', textAlign: 'center' }}>Juriste</th>
+                <th style={{ padding: '6px', fontSize: '9pt', textTransform: 'uppercase', width: '33.33%', textAlign: 'center' }}>Chef d'Agence Commerciale</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td className="h-32 border-r-[2px] border-black" style={{ borderRight: '2px solid black' }}></td>
-                <td className="h-32 border-r-[2px] border-black" style={{ borderRight: '2px solid black' }}></td>
-                <td className="h-32"></td>
+                <td style={{ height: '120px', borderRight: '2.5px solid #000', padding: '6px', verticalAlign: 'top' }}></td>
+                <td style={{ height: '120px', borderRight: '2.5px solid #000', padding: '6px', verticalAlign: 'top' }}></td>
+                <td style={{ height: '120px', padding: '6px', verticalAlign: 'top' }}></td>
               </tr>
             </tbody>
           </table>
+        </div>
+
+        {/* Print Disclaimer (Invisible) */}
+        <div className="hidden print:block fixed bottom-4 right-4 italic text-[8pt] text-gray-400">
+           Document généré le {new Date().toLocaleString()}
         </div>
       </div>
     </div>
