@@ -126,6 +126,7 @@ export interface Client {
   idDocumentNumber?: string;
   idDocumentIssueDate?: string;
   idDocumentIssuer?: string;
+  fax?: string;
   createdAt: string;
 }
 
@@ -214,6 +215,7 @@ export interface WorkRequest {
   correspondenceEmail?: string;
   installationPhone?: string;
   installationEmail?: string;
+  clientFax?: string;
   createdAt: string;
   // Nouveau système de validation
   validations?: ValidationRecord[];
@@ -259,6 +261,7 @@ export interface Quote {
   iban?: string;
   bic?: string;
   wasteManagement?: string;
+  clientFax?: string;
 }
 
 export interface WorkType {

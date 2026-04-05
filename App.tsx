@@ -476,8 +476,14 @@ const App: React.FC = () => {
       setView('branchement-quote');
     } else {
       // Pour les autres types, utiliser le formulaire existant
+      const agency = agencies.find(a => a.id === request.agencyId);
+      const centre = agency ? centres.find(c => c.id === agency.centreId) : centres[0];
+      const prefix = centre?.prefix || 'DV';
+      const year = new Date().getFullYear();
+      const tempId = `TEMP-QUOTE-${Date.now()}-${prefix}-${year}`;
+
       const partialQuote: Partial<Quote> = existingQuote || {
-        id: `AEP-${Date.now().toString().slice(-6)}`,
+        id: tempId,
         requestId: request.id,
         agencyId: request.agencyId,
         category: request.category,
@@ -488,8 +494,9 @@ const App: React.FC = () => {
         idDocumentNumber: request.idDocumentNumber,
         idDocumentIssueDate: request.idDocumentIssueDate,
         idDocumentIssuer: request.idDocumentIssuer,
-        clientEmail: request.clientEmail,
-        clientPhone: request.clientPhone,
+        clientEmail: request.clientEmail || request.correspondenceEmail || '',
+        clientPhone: request.clientPhone || request.correspondencePhone || '',
+        clientFax: request.clientFax || '',
         address: request.address,
         commune: request.commune,
         installationAddress: request.installationAddress,
@@ -779,6 +786,8 @@ const App: React.FC = () => {
         {(view === 'create' || view === 'edit-quote') && (
           <QuoteForm 
             clients={clients} 
+            requests={requests}
+            quotes={quotes}
             workTypes={workTypes} 
             agencies={agencies}
             centres={centres}

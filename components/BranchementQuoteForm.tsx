@@ -247,31 +247,37 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
       }).then((result) => {
         if (result.isConfirmed && result.value !== null) {
           const selectedValue = result.value;
-          const newItems = [...items];
           
-          if (selectedValue === 'combined') {
-            // Prix combiné
-            newItems[index].unitPrice = (fourniturePrice?.price || 0) + (posePrice?.price || 0);
-            newItems[index].priceTypeIndicator = 'F/P';
-          } else {
-            // Prix individuel
-            const selectedIndex = parseInt(selectedValue);
-            const selectedPrice = validPrices[selectedIndex];
-            newItems[index].unitPrice = selectedPrice.price;
-            newItems[index].priceTypeIndicator = selectedPrice.type === 'fourniture' ? 'F' : 
-                                               selectedPrice.type === 'pose' ? 'P' : 'PS';
-          }
-          setItems(newItems);
+          setItems(prevItems => {
+            const newItems = [...prevItems];
+            if (selectedValue === 'combined') {
+              // Prix combiné
+              newItems[index].unitPrice = (fourniturePrice?.price || 0) + (posePrice?.price || 0);
+              newItems[index].priceTypeIndicator = 'F/P';
+            } else {
+              // Prix individuel
+              const selectedIndex = parseInt(selectedValue);
+              const selectedPrice = validPrices[selectedIndex];
+              newItems[index].unitPrice = selectedPrice.price;
+              newItems[index].priceTypeIndicator = selectedPrice.type === 'fourniture' ? 'F' : 
+                                                 selectedPrice.type === 'pose' ? 'P' : 'PS';
+            }
+            newItems[index].totalHT = (newItems[index].quantity || 0) * (newItems[index].unitPrice || 0);
+            return newItems;
+          });
           setSearchTerms(prev => ({ ...prev, [index]: article.name }));
         }
       });
     } else {
       // Un seul prix possible
-      const newItems = [...items];
-      newItems[index].unitPrice = validPrices[0].price;
-      newItems[index].priceTypeIndicator = validPrices[0].type === 'fourniture' ? 'F' : 
-                                          validPrices[0].type === 'pose' ? 'P' : 'PS';
-      setItems(newItems);
+      setItems(prevItems => {
+        const newItems = [...prevItems];
+        newItems[index].unitPrice = validPrices[0].price;
+        newItems[index].priceTypeIndicator = validPrices[0].type === 'fourniture' ? 'F' : 
+                                            validPrices[0].type === 'pose' ? 'P' : 'PS';
+        newItems[index].totalHT = (newItems[index].quantity || 0) * (newItems[index].unitPrice || 0);
+        return newItems;
+      });
       setSearchTerms(prev => ({ ...prev, [index]: article.name }));
       
       // Petit feedback visuel
@@ -302,12 +308,15 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
       return;
     }
     
-    const newItems = [...items];
-    newItems[index].description = article.name;
-    newItems[index].unit = article.unit;
-    
-    // Mettre à jour l'item localement d'abord pour avoir la description
-    setItems(newItems);
+    setItems(prevItems => {
+      const newItems = [...prevItems];
+      newItems[index] = {
+        ...newItems[index],
+        description: article.name,
+        unit: article.unit
+      };
+      return newItems;
+    });
     
     // Ouvrir la boîte de dialogue de sélection de prix (ou appliquer automatiquement si un seul prix)
     openPriceSelectionDialog(article, index);
@@ -572,7 +581,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
           Détails du Devis
         </h3>
         
-        <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden mt-4">
+        <div className="bg-white border border-gray-100 rounded-xl shadow-sm mt-4">
           <table className="w-full border-collapse">
             <thead className="bg-[#1e90ff] text-white text-[11px] uppercase tracking-widest font-black">
               <tr>

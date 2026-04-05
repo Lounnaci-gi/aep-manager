@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Quote, QuoteItem, QuoteStatus, WorkType, Client, CommercialAgency, Centre, ClientCategory, Unit } from '../types';
+import { Quote, QuoteItem, QuoteStatus, WorkType, Client, CommercialAgency, Centre, ClientCategory, Unit, WorkRequest } from '../types';
 import { getAIRecommendation } from '../services/geminiService';
 import { numberToFrenchLetters } from '../utils/numberToLetters';
 import { ArticleService } from '../services/articleService';
@@ -11,6 +11,8 @@ interface QuoteFormProps {
   onDelete?: (id: string) => void;
   onCancel: () => void;
   clients: Client[];
+  requests: WorkRequest[];
+  quotes: Quote[];
   workTypes: WorkType[];
   agencies: CommercialAgency[];
   centres: Centre[];
@@ -24,12 +26,14 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
   onDelete,
   onCancel,
   clients,
+  quotes,
   workTypes,
   agencies,
   centres,
   units,
   initialData,
-  currentUserAgencyId
+  currentUserAgencyId,
+  requests
 }) => {
   const [formData, setFormData] = useState({
     category: initialData?.category || ClientCategory.PHYSICAL,
@@ -59,6 +63,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
     iban: initialData?.iban || 'FR76 1478 9563 1254 4789 4598',
     bic: initialData?.bic || 'MCPRIFRPP',
     wasteManagement: initialData?.wasteManagement || 'À définir',
+    clientFax: initialData?.clientFax || '',
   });
 
   const [items, setItems] = useState<QuoteItem[]>(
@@ -93,8 +98,8 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
   // Fonction pour filtrer les articles basés sur la recherche
   const filterArticles = (term: string, index: number) => {
     if (!term) {
-      setFilteredArticles([]);
-      setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
+      setFilteredArticles(articles);
+      setShowArticleDropdown(prev => ({ ...prev, [index]: true }));
       return;
     }
 
@@ -105,6 +110,126 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
 
     setFilteredArticles(filtered);
     setShowArticleDropdown(prev => ({ ...prev, [index]: filtered.length > 0 }));
+  };
+
+  // Fonction pour ouvrir la boîte de dialogue de sélection de prix
+  const openPriceSelectionDialog = (article: any, index: number) => {
+    // Filtrer les prix non nuls
+    const validPrices = article.prices.filter((price: any) => price.price > 0);
+    
+    // Vérifier si on a à la fois pose et fourniture
+    const fourniturePrice = article.prices.find((p: any) => p.type === 'fourniture' && p.price > 0);
+    const posePrice = article.prices.find((p: any) => p.type === 'pose' && p.price > 0);
+    const hasBothFournitureAndPose = fourniturePrice && posePrice;
+    
+    if (validPrices.length === 0) {
+      Swal.fire({
+        title: 'Aucun prix disponible',
+        text: `L'article "${article.name}" n'a aucun prix de vente défini.`,
+        icon: 'info',
+        confirmButtonColor: '#3b82f6'
+      });
+      return;
+    }
+
+    // Plusieurs prix valides ou combinés possibles, demander à l'utilisateur de choisir
+    if (validPrices.length > 1 || hasBothFournitureAndPose) {
+      const options: Array<{ id: string, value: string | number, label: string, price: number, type: string }> = [
+        ...validPrices.map((price: any, i: number) => ({
+          id: `price-${i}`,
+          value: i,
+          label: `${price.type === 'fourniture' ? 'Fourniture' :
+            price.type === 'pose' ? 'Pose' : 'Prestation'}`,
+          price: price.price,
+          type: price.type
+        }))
+      ];
+      
+      // Ajouter l'option combinée si les deux prix existent
+      if (hasBothFournitureAndPose) {
+        options.push({
+          id: 'combined',
+          value: 'combined',
+          label: 'Fourniture + Pose',
+          price: (fourniturePrice?.price || 0) + (posePrice?.price || 0),
+          type: 'combined'
+        });
+      }
+      
+      Swal.fire({
+        title: 'Choisir le type de prix',
+        html: `
+          <div class="text-left font-sans">
+            <p class="mb-4 text-sm text-gray-600">Sélectionnez le type de prix souhaité pour l'article :<br><strong class="text-gray-900">${article.name}</strong></p>
+            <div class="space-y-2">
+              ${options.map((option, i) => `
+                <label class="flex items-center p-3 border-2 border-gray-100 rounded-xl cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-all group">
+                  <input type="radio" id="${option.id}" name="priceType" value="${option.value}" 
+                         class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500" ${i === 0 ? 'checked' : ''}>
+                  <div class="ml-3 flex-1">
+                    <div class="text-sm font-bold text-gray-900">${option.label}</div>
+                    <div class="text-xs font-black text-blue-600">${option.price.toLocaleString()} DA</div>
+                  </div>
+                </label>
+              `).join('')}
+            </div>
+          </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Appliquer ce prix',
+        cancelButtonText: 'Conserver l\'actuel',
+        confirmButtonColor: '#2563eb', // blue-600
+        cancelButtonColor: '#64748b', // slate-500
+        preConfirm: () => {
+          const selectedRadio = document.querySelector('input[name="priceType"]:checked') as HTMLInputElement;
+          return selectedRadio ? selectedRadio.value : null;
+        }
+      }).then((result) => {
+        if (result.isConfirmed && result.value !== null) {
+          const selectedValue = result.value;
+          
+          setItems(prevItems => {
+            const newItems = [...prevItems];
+            if (selectedValue === 'combined') {
+              // Prix combiné
+              newItems[index].unitPrice = (fourniturePrice?.price || 0) + (posePrice?.price || 0);
+              newItems[index].priceTypeIndicator = 'F/P';
+            } else {
+              // Prix individuel
+              const selectedIndex = parseInt(selectedValue);
+              const selectedPrice = validPrices[selectedIndex];
+              newItems[index].unitPrice = selectedPrice.price;
+              newItems[index].priceTypeIndicator = selectedPrice.type === 'fourniture' ? 'F' :
+                selectedPrice.type === 'pose' ? 'P' : 'PS';
+            }
+            newItems[index].totalHT = (newItems[index].quantity || 0) * (newItems[index].unitPrice || 0);
+            return newItems;
+          });
+          setSearchTerm(prev => ({ ...prev, [index]: article.name }));
+        }
+      });
+    } else {
+      // Un seul prix possible
+      setItems(prevItems => {
+        const newItems = [...prevItems];
+        newItems[index].unitPrice = validPrices[0].price;
+        newItems[index].priceTypeIndicator = validPrices[0].type === 'fourniture' ? 'F' :
+          validPrices[0].type === 'pose' ? 'P' : 'PS';
+        newItems[index].totalHT = (newItems[index].quantity || 0) * (newItems[index].unitPrice || 0);
+        return newItems;
+      });
+      setSearchTerm(prev => ({ ...prev, [index]: article.name }));
+      
+      // Petit feedback visuel
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'info',
+        title: 'Prix mis à jour (Type unique)',
+        showConfirmButton: false,
+        timer: 2000
+      });
+    }
   };
 
   // Gérer la sélection d'un article
@@ -123,102 +248,22 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
       return;
     }
 
-    const newItems = [...items];
-    newItems[index].description = article.name;
-    newItems[index].unit = article.unit;
+    setItems(prevItems => {
+      const newItems = [...prevItems];
+      newItems[index] = {
+        ...newItems[index],
+        description: article.name,
+        unit: article.unit
+      };
+      return newItems;
+    });
 
-    // Filtrer les prix non nuls
-    const validPrices = article.prices.filter((price: any) => price.price > 0);
+    // Ouvrir la boîte de dialogue de sélection de prix (ou appliquer automatiquement si un seul prix)
+    openPriceSelectionDialog(article, index);
 
-    // Vérifier si on a à la fois pose et fourniture
-    const fourniturePrice = article.prices.find((p: any) => p.type === 'fourniture' && p.price > 0);
-    const posePrice = article.prices.find((p: any) => p.type === 'pose' && p.price > 0);
-    const hasBothFournitureAndPose = fourniturePrice && posePrice;
-
-    if (validPrices.length === 0) {
-      // Aucun prix valide
-      newItems[index].unitPrice = 0;
-      setItems(newItems);
-      setSearchTerm(prev => ({ ...prev, [index]: article.name }));
-      setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
-    } else if (validPrices.length === 1) {
-      // Un seul prix valide, l'utiliser directement
-      newItems[index].unitPrice = validPrices[0].price;
-      // Ajouter l'indicateur de type de prix
-      newItems[index].priceTypeIndicator = validPrices[0].type === 'fourniture' ? 'F' :
-        validPrices[0].type === 'pose' ? 'P' : 'PS';
-      setItems(newItems);
-      setSearchTerm(prev => ({ ...prev, [index]: article.name }));
-      setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
-    } else {
-      // Plusieurs prix valides, demander à l'utilisateur de choisir
-      const options: Array<{ id: string, value: string | number, label: string, price: number, type: string }> = [
-        ...validPrices.map((price: any, i: number) => ({
-          id: `price-${i}`,
-          value: i,
-          label: `${price.type === 'fourniture' ? 'Fourniture' :
-            price.type === 'pose' ? 'Pose' : 'Prestation'}`,
-          price: price.price,
-          type: price.type
-        }))
-      ];
-
-      // Ajouter l'option combinée si les deux prix existent
-      if (hasBothFournitureAndPose) {
-        options.push({
-          id: 'combined',
-          value: 'combined',
-          label: 'Fourniture + Pose',
-          price: fourniturePrice.price + posePrice.price,
-          type: 'combined'
-        });
-      }
-
-      Swal.fire({
-        title: 'Choisir le type de prix',
-        html: `
-          <div class="text-left">
-            <p class="mb-3">Sélectionnez le type de prix pour "${article.name}":</p>
-            ${options.map((option, i) => `
-              <div class="flex items-center mb-2">
-                <input type="radio" id="${option.id}" name="priceType" value="${option.value}" 
-                       class="mr-2" ${i === 0 ? 'checked' : ''}>
-                <label for="${option.id}" class="flex-1">
-                  <span class="font-medium">${option.label}</span>
-                  <span class="ml-2 text-gray-600">(${option.price.toLocaleString()} DA)</span>
-                </label>
-              </div>
-            `).join('')}
-          </div>
-        `,
-        showCancelButton: true,
-        confirmButtonText: 'Sélectionner',
-        cancelButtonText: 'Annuler',
-        preConfirm: () => {
-          const selectedRadio = document.querySelector('input[name="priceType"]:checked') as HTMLInputElement;
-          return selectedRadio ? selectedRadio.value : '0';
-        }
-      }).then((result) => {
-        if (result.isConfirmed) {
-          const selectedValue = result.value;
-          if (selectedValue === 'combined') {
-            // Prix combiné
-            newItems[index].unitPrice = fourniturePrice!.price + posePrice!.price;
-            newItems[index].priceTypeIndicator = 'F/P';
-          } else {
-            // Prix individuel
-            const selectedIndex = parseInt(selectedValue);
-            const selectedPrice = validPrices[selectedIndex];
-            newItems[index].unitPrice = selectedPrice.price;
-            newItems[index].priceTypeIndicator = selectedPrice.type === 'fourniture' ? 'F' :
-              selectedPrice.type === 'pose' ? 'P' : 'PS';
-          }
-          setItems(newItems);
-          setSearchTerm(prev => ({ ...prev, [index]: article.name }));
-          setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
-        }
-      });
-    }
+    // Fermer le dropdown et mettre à jour le terme de recherche
+    setSearchTerm(prev => ({ ...prev, [index]: article.name }));
+    setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
   };
 
   useEffect(() => {
@@ -243,10 +288,39 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
         idDocumentIssuer: selected.idDocumentIssuer || '',
         clientEmail: selected.email,
         clientPhone: selected.phone,
+        clientFax: selected.fax || '',
         address: selected.address,
         commune: selected.commune,
         installationAddress: selected.installationAddress || selected.address,
         installationCommune: selected.installationCommune || selected.commune,
+        type: selected.type || 'Propriétaire',
+      });
+    }
+  };
+
+  const handleSelectRequest = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const requestId = e.target.value;
+    const selected = requests.find(r => r.id === requestId);
+    if (selected) {
+      setFormData({
+        ...formData,
+        category: selected.category || ClientCategory.PHYSICAL,
+        civility: selected.civility || 'M.',
+        businessName: selected.businessName || '',
+        clientName: selected.clientName,
+        idDocumentType: selected.idDocumentType || 'CNI',
+        idDocumentNumber: selected.idDocumentNumber || '',
+        idDocumentIssueDate: selected.idDocumentIssueDate || '',
+        idDocumentIssuer: selected.idDocumentIssuer || '',
+        clientEmail: selected.clientEmail || selected.correspondenceEmail || '',
+        clientPhone: selected.clientPhone || selected.correspondencePhone || '',
+        clientFax: selected.clientFax || '',
+        address: selected.address || '',
+        commune: selected.commune || '',
+        installationAddress: selected.installationAddress || selected.address || '',
+        installationCommune: selected.installationCommune || selected.commune || '',
+        serviceType: selected.serviceType,
+        description: selected.description,
         type: selected.type || 'Propriétaire',
       });
     }
@@ -347,67 +421,77 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
 
   const isEditMode = !!initialData;
 
+  // Calcule le prochain numéro de devis incrémental pour ce centre et cette année
+  const getNextQuoteNumber = (): string => {
+    const prefix = activeCentre?.prefix || 'DV';
+    const year = new Date().getFullYear();
+    const regex = new RegExp(`^\\d{4}/${prefix}/${year}$`);
+    let maxNum = 0;
+    quotes.forEach(q => {
+      if (regex.test(q.id)) {
+        const num = parseInt(q.id.split('/')[0]) || 0;
+        if (num > maxNum) maxNum = num;
+      }
+    });
+    const nextNum = maxNum + 1;
+    return `${nextNum.toString().padStart(4, '0')}/${prefix}/${year}`;
+  };
+
   return (
-    <div className="max-w-5xl mx-auto mb-10 w-full animate-in fade-in duration-500">
+    <div className="max-w-7xl mx-auto mb-10 w-full animate-in fade-in duration-500">
 
       <div className={activeTab === 'form' ? 'block' : 'hidden'}>
-        <form onSubmit={handleSubmit} className="bg-white p-10 rounded-[1.5rem] shadow-xl border border-gray-100 max-w-6xl mx-auto space-y-8">
+        <form onSubmit={handleSubmit} className="bg-white p-10 rounded-[1.5rem] shadow-xl border border-gray-100 max-w-7xl mx-auto space-y-8">
           
           {/* Header Section: Devis Info + Client Box */}
           <div className="flex flex-col md:flex-row justify-between items-start gap-10 border-b border-gray-50 pb-10">
             <div className="space-y-4 w-full md:w-1/2">
               <div className="space-y-1">
                 <h2 className="text-3xl font-bold text-gray-800 tracking-tight">
-                  Devis n°{initialData?.id || 'NOUVEAU'}
+                  {initialData?.id && !initialData.id.startsWith('TEMP-') && !initialData.id.startsWith('AEP-')
+                    ? `Devis n° ${initialData.id}`
+                    : `Devis n° ${getNextQuoteNumber()}`
+                  }
                 </h2>
                 <p className="text-sm text-gray-500">En date du {new Date().toLocaleDateString('fr-FR')}</p>
               </div>
-              
-              <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
-                <div className="flex flex-col">
-                  <span className="text-gray-400 text-xs">Valable jusqu'au</span>
-                  <input 
-                    type="date" 
-                    className="border-none p-0 font-medium text-gray-700 bg-transparent focus:ring-0" 
-                    value={formData.validUntil} 
-                    onChange={e => setFormData({...formData, validUntil: e.target.value})}
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-gray-400 text-xs text-blue-600">Début des travaux le <button type="button" className="text-blue-600 underline">définir</button></span>
-                  <input 
-                    type="date" 
-                    className="border-none p-0 font-medium text-gray-700 bg-transparent focus:ring-0 hidden" 
-                    value={formData.workStartDate}
-                    onChange={e => setFormData({...formData, workStartDate: e.target.value})}
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-gray-400 text-xs text-blue-600">Durée estimée à <button type="button" className="text-blue-600 underline">définir</button></span>
-                  <input 
-                    type="text" 
-                    placeholder="Ex: 15 jours"
-                    className="border-none p-0 font-medium text-gray-700 bg-transparent focus:ring-0 hidden"
-                  />
-                </div>
-              </div>
+              {/* Sections Début des travaux et Durée estimée supprimées */}
             </div>
 
-            <div className="w-full md:w-[350px] bg-gray-50/50 p-6 rounded-xl border border-gray-100 flex flex-col space-y-2 relative">
-              {!isEditMode && (
-                <div className="absolute -top-3 left-4">
-                  <select 
-                    className="text-[10px] bg-white border border-gray-200 rounded-md px-2 py-1 font-bold text-blue-600 shadow-sm"
-                    onChange={handleSelectClient}
-                  >
-                    <option value="">Sélectionner un client</option>
-                    {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+            <div className="w-full md:w-[450px] bg-gray-50/50 p-6 rounded-xl border border-gray-100 flex flex-col space-y-3 relative">
+              <div className="space-y-2">
+                <div className="flex gap-2 text-sm">
+                  <span className="font-bold text-gray-500 whitespace-nowrap min-w-[140px]">DOIT A :</span>
+                  <span className="text-gray-800 font-bold">{formData.civility} {formData.clientName || formData.businessName || '……………………….'}</span>
                 </div>
-              )}
-              <p className="font-bold text-gray-700">{formData.civility} {formData.clientName || formData.businessName || 'Client à définir'}</p>
-              <p className="text-sm text-gray-500 whitespace-pre-wrap">{formData.address || 'Adresse...'}</p>
-              <p className="text-sm text-gray-500">{formData.commune}</p>
+                
+                <div className="flex gap-2 text-sm">
+                  <span className="font-bold text-gray-500 whitespace-nowrap min-w-[140px]">Adresse :</span>
+                  <span className="text-gray-700">{formData.address || '…………………………………………….'}</span>
+                </div>
+
+                <div className="flex gap-2 text-sm">
+                  <span className="font-bold text-gray-500 whitespace-nowrap min-w-[140px]">Commune :</span>
+                  <span className="text-gray-700">{formData.commune || '……………………….'}</span>
+                </div>
+
+                <div className="pt-2 border-t border-gray-100 mt-2 space-y-2">
+                  <div className="flex gap-2 text-sm">
+                    <span className="font-bold text-gray-400 whitespace-nowrap min-w-[140px]">Tél :</span>
+                    <span className="text-gray-700 font-medium">{formData.clientPhone || '……………………….'}</span>
+                  </div>
+                  
+                  <div className="flex gap-2 text-sm">
+                    <span className="font-bold text-gray-400 whitespace-nowrap min-w-[140px]">Fax :</span>
+                    <span className="text-gray-700 font-medium">{formData.clientFax || '……………………….'}</span>
+                  </div>
+
+                  <div className="flex gap-2 text-sm">
+                    <span className="font-bold text-gray-400 whitespace-nowrap min-w-[140px]">Email :</span>
+                    <span className="text-gray-700 font-medium truncate">{formData.clientEmail || '……………………….'}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -419,10 +503,10 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
             <div className="flex items-center gap-3 group relative max-w-2xl">
               <input 
                 type="text" 
-                placeholder="Titre du projet (ex: Rénovation Appartement)"
-                className="w-full bg-gray-50 border-none rounded-lg p-3 text-lg font-medium text-gray-700 focus:ring-2 focus:ring-blue-100 transition-all"
-                value={formData.projectTitle}
-                onChange={e => setFormData({...formData, projectTitle: e.target.value})}
+                placeholder="Nature de la demande"
+                className="w-full bg-gray-50 border-none rounded-lg p-3 text-lg font-medium text-gray-700 cursor-default select-none"
+                value={formData.serviceType}
+                readOnly
               />
               <div className="flex gap-2">
                 <button type="button" className="p-2 text-gray-300 hover:text-gray-600 transition-colors">
@@ -438,15 +522,15 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
           {/* Advanced Table Section (Quote Details) */}
           <div className="space-y-4">
             <h3 className="text-[#1e90ff] font-extrabold text-sm uppercase pl-2 tracking-wide">Details du Devis</h3>
-            <div className="overflow-hidden bg-white border border-gray-100 rounded-xl shadow-sm">
+            <div className="bg-white border border-gray-100 rounded-xl shadow-sm">
               <table className="w-full text-sm border-collapse">
                 <thead className="bg-[#1e90ff] text-white">
                   <tr>
-                    <th className="px-6 py-4 text-left font-bold text-[11px] uppercase tracking-wider">Description</th>
-                    <th className="px-4 py-4 text-center font-bold text-[11px] uppercase tracking-wider w-28">Unité</th>
-                    <th className="px-4 py-4 text-center font-bold text-[11px] uppercase tracking-wider w-28">Qté</th>
-                    <th className="px-4 py-4 text-center font-bold text-[11px] uppercase tracking-wider w-44">Prix Unitaire (DZD)</th>
-                    <th className="px-6 py-4 text-right font-bold text-[11px] uppercase tracking-wider w-56">Total</th>
+                    <th className="px-6 py-4 text-left font-bold text-[11px] uppercase tracking-wider rounded-tl-xl w-1/2">Description</th>
+                    <th className="px-4 py-4 text-center font-bold text-[11px] uppercase tracking-wider w-20">Unité</th>
+                    <th className="px-4 py-4 text-center font-bold text-[11px] uppercase tracking-wider w-20">Qté</th>
+                    <th className="px-4 py-4 text-center font-bold text-[11px] uppercase tracking-wider w-36">Prix Unitaire (DZD)</th>
+                    <th className="px-6 py-4 text-right font-bold text-[11px] uppercase tracking-wider w-44 rounded-tr-xl">Total</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -478,9 +562,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                                 filterArticles(value, index);
                               }}
                               onFocus={() => {
-                                if (searchTerm[index] && searchTerm[index].length > 0) {
-                                  filterArticles(searchTerm[index], index);
-                                }
+                                filterArticles(searchTerm[index] || '', index);
                               }}
                               onBlur={() => setTimeout(() => {
                                 setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
@@ -491,11 +573,16 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                                 {filteredArticles.map((article, idx) => (
                                   <div
                                     key={idx}
-                                    className="px-4 py-2 hover:bg-blue-50 cursor-pointer flex justify-between items-center transition-colors"
+                                    className="px-4 py-2 hover:bg-blue-50 cursor-pointer flex justify-between items-center transition-colors border-b border-gray-50 last:border-0"
                                     onMouseDown={() => handleArticleSelect(article, index)}
                                   >
-                                    <span className="text-sm font-medium">{article.name}</span>
-                                    <span className="text-[10px] font-bold text-blue-600">{article.prices[0]?.price || 0} DA</span>
+                                    <div className="flex flex-col">
+                                      <span className="text-sm font-bold text-gray-700">{article.name}</span>
+                                      <span className="text-[10px] text-gray-400 font-medium">{article.category}</span>
+                                    </div>
+                                    <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                                      {article.prices[0]?.price || 0} DA
+                                    </span>
                                   </div>
                                 ))}
                               </div>
@@ -516,11 +603,27 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                           />
                         </td>
                         <td className="px-2 py-4">
-                          <input 
-                            type="number" 
-                            className="w-full border border-gray-200 rounded-md p-2.5 text-[13px] bg-white text-center text-gray-700 focus:border-blue-400 transition-all font-semibold" 
-                            value={item.unitPrice} 
-                            onChange={e => updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)} 
+                          <input
+                            type="number"
+                            className="w-full border border-gray-200 rounded-md p-2.5 text-[13px] bg-white text-center text-gray-700 focus:border-blue-400 transition-all font-semibold cursor-pointer"
+                            value={item.unitPrice}
+                            onChange={e => updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                            onDoubleClick={() => {
+                              const article = articles.find(a => a.name === item.description);
+                              if (article) {
+                                openPriceSelectionDialog(article, index);
+                              } else {
+                                Swal.fire({
+                                  toast: true,
+                                  position: 'top-end',
+                                  icon: 'warning',
+                                  title: 'Article non trouvé dans la base',
+                                  showConfirmButton: false,
+                                  timer: 2000
+                                });
+                              }
+                            }}
+                            title="Double-cliquez pour choisir le type de prix"
                           />
                         </td>
                         <td className="px-6 py-4">
@@ -529,12 +632,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                               {(item.totalHT || 0).toFixed(2)} DZD
                             </span>
                             <div className="flex items-center gap-2">
-                              <button 
-                                type="button" 
-                                className="p-2 bg-blue-50 text-blue-500 rounded hover:bg-blue-100 transition-colors shadow-sm"
-                              >
-                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                              </button>
+
                               <button 
                                 type="button" 
                                 onClick={() => setItems(items.filter((_, i) => i !== index))} 
