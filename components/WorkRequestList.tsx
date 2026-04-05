@@ -1,10 +1,8 @@
 
 import React, { useState, useMemo } from 'react';
 import Swal from 'sweetalert2';
-import { WorkRequest, RequestStatus, CommercialAgency, Centre, BranchementType, UserRole, User, ValidationType, ValidationRecord, WorkType } from '../types';
+import { WorkRequest, RequestStatus, CommercialAgency, Centre, BranchementType, UserRole, User, ValidationType, ValidationRecord, WorkType, Quote } from '../types';
 import { WorkRequestPrint } from './WorkRequestPrint';
-import { BranchementPrint } from './BranchementPrint';
-import { QuoteEstablishmentRequestPrint } from './QuoteEstablishmentRequestPrint';
 
 
 interface WorkRequestListProps {
@@ -19,6 +17,7 @@ interface WorkRequestListProps {
   onUpdateStatus: (id: string, status: RequestStatus) => void;
   onUpdateRequestWithValidations?: (request: WorkRequest) => void;
   currentUser?: User;
+  quotes: Quote[];
 }
 
 type SortOption = 'date-desc' | 'date-asc' | 'name-asc';
@@ -34,7 +33,8 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
   onCreateQuote, 
   onUpdateStatus,
   onUpdateRequestWithValidations,
-  currentUser
+  currentUser,
+  quotes
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<RequestStatus | ''>('');
@@ -43,8 +43,6 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
   const [sortBy, setSortBy] = useState<SortOption>('date-desc');
   const [validationFilter, setValidationFilter] = useState<'all' | 'pending' | 'validated'>('all');
   const [printingRequest, setPrintingRequest] = useState<WorkRequest | null>(null);
-  const [printingBranchement, setPrintingBranchement] = useState<WorkRequest | null>(null);
-  const [printingQuoteEstablishment, setPrintingQuoteEstablishment] = useState<WorkRequest | null>(null);
 
 
   const normalizedRequests = useMemo(() => {
@@ -696,6 +694,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                        req.validations.length > 0 &&
                        req.validations.every(v => v.status === 'validated') && 
                        req.status !== RequestStatus.QUOTED && 
+                       !quotes.some(q => q.requestId === req.id) &&
                        req.status !== RequestStatus.REJECTED && 
                        (currentUser?.role === UserRole.TECHICO_COMMERCIAL || currentUser?.role === UserRole.CHEF_CENTRE) && (
                         <button 
@@ -773,11 +772,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                         return isAllowedForWorkType ? (
                           <button 
                             onClick={() => {
-                              if (req.serviceType.toLowerCase().includes('branchement')) {
-                                setPrintingBranchement(req);
-                              } else {
-                                setPrintingRequest(req);
-                              }
+                              setPrintingRequest(req);
                             }} 
                             className="text-gray-400 hover:text-blue-600 transition-colors p-1.5 hover:bg-blue-50 rounded-lg"
                             title="Imprimer la demande"
@@ -809,7 +804,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                                 cancelButtonText: 'Annuler'
                               }).then((result) => {
                                 if (result.isConfirmed) {
-                                  setPrintingQuoteEstablishment(req);
+                                  setPrintingRequest(req);
                                 }
                               });
                             }} 
@@ -851,24 +846,6 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
           agency={agencies.find(a => a.id === printingRequest.agencyId)}
           centre={centres.find(c => c.id === (agencies.find(a => a.id === printingRequest.agencyId)?.centreId || printingRequest.centreId))}
           onClose={() => setPrintingRequest(null)}
-        />
-      )}
-
-      {printingBranchement && (
-        <BranchementPrint 
-          request={printingBranchement}
-          agency={agencies.find(a => a.id === printingBranchement.agencyId)}
-          centre={centres.find(c => c.id === (agencies.find(a => a.id === printingBranchement.agencyId)?.centreId || printingBranchement.centreId))}
-          onClose={() => setPrintingBranchement(null)}
-        />
-      )}
-
-      {printingQuoteEstablishment && (
-        <QuoteEstablishmentRequestPrint 
-          request={printingQuoteEstablishment}
-          agency={agencies.find(a => a.id === printingQuoteEstablishment.agencyId)}
-          centre={centres.find(c => c.id === (agencies.find(a => a.id === printingQuoteEstablishment.agencyId)?.centreId || printingQuoteEstablishment.centreId))}
-          onClose={() => setPrintingQuoteEstablishment(null)}
         />
       )}
     </div>

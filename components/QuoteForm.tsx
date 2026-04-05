@@ -36,6 +36,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
   requests
 }) => {
   const [formData, setFormData] = useState({
+    requestId: initialData?.requestId || '',
     category: initialData?.category || ClientCategory.PHYSICAL,
     civility: initialData?.civility || 'M.',
     businessName: initialData?.businessName || '',
@@ -971,6 +972,14 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
       <div className="px-8 py-6 mb-10 max-w-4xl mx-auto print:hidden">
         <div className="flex justify-end gap-4">
           <button type="button" onClick={() => setActiveTab('form')} className="px-8 py-3 text-[10px] font-black uppercase tracking-widest text-slate-500 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all">Retour à l'édition</button>
+          <button 
+            type="button" 
+            onClick={() => handleSubmit()} 
+            className="px-8 py-3 text-[10px] font-black uppercase tracking-widest text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 active:scale-95 flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+            Enregistrer & Valider
+          </button>
           <button type="button" onClick={() => window.print()} className="px-8 py-3 text-[10px] font-black uppercase tracking-widest text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center gap-2">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
             Imprimer le Devis

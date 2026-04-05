@@ -290,6 +290,7 @@ COLLECTIONS.forEach(colName => {
       // Logique spéciale pour la génération d'ID incrémental pour les devis
       if (colName === 'quotes' && doc.id.startsWith('TEMP-QUOTE-')) {
         console.log('🔧 Détection ID temporaire devis:', doc.id);
+        console.log('   Payload reçu:', JSON.stringify(doc));
         // Extraire les infos du format TEMP-QUOTE-timestamp-prefix-year
         const parts = doc.id.split('-');
         console.log('   Parties:', parts);
