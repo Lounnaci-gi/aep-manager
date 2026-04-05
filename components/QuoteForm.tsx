@@ -147,12 +147,12 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
   const openPriceSelectionDialog = (article: any, index: number) => {
     // Filtrer les prix non nuls
     const validPrices = article.prices.filter((price: any) => price.price > 0);
-    
+
     // Vérifier si on a à la fois pose et fourniture
     const fourniturePrice = article.prices.find((p: any) => p.type === 'fourniture' && p.price > 0);
     const posePrice = article.prices.find((p: any) => p.type === 'pose' && p.price > 0);
     const hasBothFournitureAndPose = fourniturePrice && posePrice;
-    
+
     if (validPrices.length === 0) {
       Swal.fire({
         title: 'Aucun prix disponible',
@@ -175,7 +175,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
           type: price.type
         }))
       ];
-      
+
       // Ajouter l'option combinée si les deux prix existent
       if (hasBothFournitureAndPose) {
         options.push({
@@ -186,7 +186,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
           type: 'combined'
         });
       }
-      
+
       Swal.fire({
         title: 'Choisir le type de prix',
         html: `
@@ -218,7 +218,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
       }).then((result) => {
         if (result.isConfirmed && result.value !== null) {
           const selectedValue = result.value;
-          
+
           setItems(prevItems => {
             const newItems = [...prevItems];
             if (selectedValue === 'combined') {
@@ -250,7 +250,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
         return newItems;
       });
       setSearchTerm(prev => ({ ...prev, [index]: article.name }));
-      
+
       // Petit feedback visuel
       Swal.fire({
         toast: true,
@@ -429,23 +429,23 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
     const agency = agencies.find(a => a.id === formData.agencyId);
     const centre = agency ? centres.find(c => c.id === agency.centreId) : null;
     const unit = centre ? units.find(u => u.id === centre.unitId) : null;
-    return { 
-      agency: agency || agencies[0], 
-      centre: centre || centres[0], 
-      unit: unit || units[0] 
+    return {
+      agency: agency || agencies[0],
+      centre: centre || centres[0],
+      unit: unit || units[0]
     };
   })();
 
   // Fonction pour générer un ID temporaire pour les devis
   const generateTempQuoteId = () => {
     const currentYear = new Date().getFullYear();
-    
+
     // Utiliser le préfixe du centre de l'agence sélectionnée
     let prefix = 'DV'; // Préfixe par défaut pour Devis
     if (activeCentre && activeCentre.prefix) {
       prefix = activeCentre.prefix;
     }
-    
+
     // ID spécial pour indiquer au backend de générer le vrai numéro incrémental
     return `TEMP-QUOTE-${Date.now()}-${prefix}-${currentYear}`;
   };
@@ -473,7 +473,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
 
       <div className={activeTab === 'form' ? 'block' : 'hidden'}>
         <form onSubmit={handleSubmit} className="bg-white p-10 rounded-[1.5rem] shadow-xl border border-gray-100 max-w-7xl mx-auto space-y-8">
-          
+
           {/* Header Section: Devis Info + Client Box */}
           <div className="flex flex-col md:flex-row justify-between items-start gap-10 border-b border-gray-50 pb-10">
             <div className="space-y-4 w-full md:w-1/2">
@@ -495,7 +495,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                   <span className="font-bold text-gray-500 whitespace-nowrap min-w-[140px]">DOIT A :</span>
                   <span className="text-gray-800 font-bold">{formData.civility} {formData.clientName || formData.businessName || '……………………….'}</span>
                 </div>
-                
+
                 <div className="flex gap-2 text-sm">
                   <span className="font-bold text-gray-500 whitespace-nowrap min-w-[140px]">Adresse :</span>
                   <span className="text-gray-700">{formData.address || '…………………………………………….'}</span>
@@ -511,7 +511,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                     <span className="font-bold text-gray-400 whitespace-nowrap min-w-[140px]">Tél :</span>
                     <span className="text-gray-700 font-medium">{formData.clientPhone || '……………………….'}</span>
                   </div>
-                  
+
                   <div className="flex gap-2 text-sm">
                     <span className="font-bold text-gray-400 whitespace-nowrap min-w-[140px]">Fax :</span>
                     <span className="text-gray-700 font-medium">{formData.clientFax || '……………………….'}</span>
@@ -525,53 +525,15 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
               </div>
             </div>
           </div>
-
-          <div className="space-y-4">
-            <button type="button" className="text-blue-500 text-sm font-medium flex items-center gap-1 hover:underline">
-              Ajouter une description
-            </button>
-
+          <div className="-mt-10">
             <div className="flex items-center gap-3 group relative max-w-2xl">
-              <input 
-                type="text" 
+              <input
+                type="text"
                 placeholder="Nature de la demande"
                 className="w-full bg-gray-50 border-none rounded-lg p-3 text-lg font-medium text-gray-700 cursor-default select-none"
                 value={formData.serviceType}
                 readOnly
               />
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="space-y-1">
-                  <span className="text-[10px] font-black uppercase text-gray-400 ml-1">Téléphone</span>
-                  <input 
-                    type="text" 
-                    placeholder="Téléphone"
-                    className="w-full bg-gray-50 border-none rounded-lg p-2.5 text-sm font-medium text-gray-700 focus:ring-2 focus:ring-blue-100 transition-all"
-                    value={formData.clientPhone}
-                    onChange={e => setFormData({...formData, clientPhone: e.target.value})}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <span className="text-[10px] font-black uppercase text-gray-400 ml-1">Fax</span>
-                  <input 
-                    type="text" 
-                    placeholder="Fax"
-                    className="w-full bg-gray-50 border-none rounded-lg p-2.5 text-sm font-medium text-gray-700 focus:ring-2 focus:ring-blue-100 transition-all"
-                    value={formData.clientFax}
-                    onChange={e => setFormData({...formData, clientFax: e.target.value})}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <span className="text-[10px] font-black uppercase text-gray-400 ml-1">Email</span>
-                  <input 
-                    type="email" 
-                    placeholder="Email"
-                    className="w-full bg-gray-50 border-none rounded-lg p-2.5 text-sm font-medium text-gray-700 focus:ring-2 focus:ring-blue-100 transition-all"
-                    value={formData.clientEmail}
-                    onChange={e => setFormData({...formData, clientEmail: e.target.value})}
-                  />
-                </div>
-              </div>
-
               <div className="flex gap-2">
                 <button type="button" className="p-2 text-gray-300 hover:text-gray-600 transition-colors">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
@@ -659,11 +621,11 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                           </span>
                         </td>
                         <td className="px-2 py-4">
-                          <input 
-                            type="number" 
-                            className="w-full border border-gray-200 rounded-md p-2.5 text-[13px] bg-white text-center text-gray-700 focus:border-blue-400 transition-all font-medium" 
-                            value={item.quantity} 
-                            onChange={e => updateItem(index, 'quantity', parseFloat(e.target.value) || 0)} 
+                          <input
+                            type="number"
+                            className="w-full border border-gray-200 rounded-md p-2.5 text-[13px] bg-white text-center text-gray-700 focus:border-blue-400 transition-all font-medium"
+                            value={item.quantity}
+                            onChange={e => updateItem(index, 'quantity', parseFloat(e.target.value) || 0)}
                           />
                         </td>
                         <td className="px-2 py-4">
@@ -697,9 +659,9 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                             </span>
                             <div className="flex items-center gap-2">
 
-                              <button 
-                                type="button" 
-                                onClick={() => setItems(items.filter((_, i) => i !== index))} 
+                              <button
+                                type="button"
+                                onClick={() => setItems(items.filter((_, i) => i !== index))}
                                 className="p-2 bg-red-50 text-red-500 rounded hover:bg-red-100 transition-colors shadow-sm"
                               >
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -715,8 +677,8 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
             </div>
 
             <div className="py-2">
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setItems([...items, { description: '', quantity: 1, unitPrice: 0, unit: 'U', margin: 0, tva: 19, totalHT: 0 }])}
                 className="bg-transparent border-[1.5px] border-dashed border-[#1e90ff] text-[#1e90ff] rounded-[4px] px-[18px] py-[6px] text-[13px] font-semibold cursor-pointer tracking-[0.3px] hover:bg-blue-50 transition-colors flex items-center gap-2 mt-2"
               >
@@ -765,15 +727,15 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                   </div>
                   <span className="text-2xl font-black tracking-tighter">{total.toLocaleString()} DA</span>
                 </div>
-                
+
 
 
               </div>
 
               <div className="pt-10 flex gap-4 w-full justify-end">
-                  <button type="button" onClick={onCancel} className="px-6 py-2 text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors">Annuler</button>
-                  <button type="button" onClick={() => setActiveTab('preview')} className="px-6 py-2 text-xs font-bold text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-all">Aperçu</button>
-                  <button type="submit" className="px-8 py-3 bg-[#1e90ff] text-white text-xs font-bold rounded-lg shadow-lg shadow-blue-100 hover:bg-blue-600 transition-all">VALIDER ET ENREGISTRER</button>
+                <button type="button" onClick={onCancel} className="px-6 py-2 text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors">Annuler</button>
+                <button type="button" onClick={() => setActiveTab('preview')} className="px-6 py-2 text-xs font-bold text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-all">Aperçu</button>
+                <button type="submit" className="px-8 py-3 bg-[#1e90ff] text-white text-xs font-bold rounded-lg shadow-lg shadow-blue-100 hover:bg-blue-600 transition-all">VALIDER ET ENREGISTRER</button>
               </div>
             </div>
           </div>
@@ -863,11 +825,11 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                 <span className="font-bold text-[11px] border-b border-black inline-block pb-0.5">Centre de {activeCentre?.name || '................'}</span>
               </div>
               <div>
-                <h1 className="font-black text-[13px] border-b-[8px] border-black inline-block pb-1 uppercase tracking-tight leading-tight">
-                  DEVIS QUANTITATIF<br />ET ESTIMATIF
+                <h1 className="font-black text-[13px] border-b-[2px] border-black inline-block pb-1 uppercase tracking-tight leading-tight">
+                  DEVIS QUANTITATIF ET ESTIMATIF
                 </h1>
                 <div className="text-[11px] font-bold mt-3">
-                  N°: {initialData?.id || `AEP-${Date.now().toString().slice(-6)}`} / {new Date().getFullYear()} du: {new Date().toLocaleDateString('fr-DZ')}
+                  N°: {initialData?.id || `AEP-${Date.now().toString().slice(-6)}`} du: {new Date().toLocaleDateString('fr-DZ')}
                 </div>
               </div>
             </div>
@@ -886,8 +848,8 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
           {/* Object & Project Title */}
           <div className="mb-6 pt-4 space-y-2">
             <div>
-              <span className="font-bold text-[11px] lowercase italic">Objet :</span>
-              <span className="font-black text-[11px] ml-2 uppercase border-b border-black pb-0.5 leading-relaxed">{formData.serviceType}</span>
+              <span className="font-black text-[11px] uppercase border-b border-black pb-0.5">OBJET :</span>
+              <span className="text-[11px] ml-2 leading-relaxed">{formData.serviceType}</span>
             </div>
             {formData.projectTitle && (
               <div>
@@ -913,7 +875,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
               <tbody>
                 {items.map((item, i) => {
                   const unit = item.unit || 'U';
-                  
+
                   return (
                     <tr key={i} className="hover:bg-gray-50/50">
                       <td className="border-b border-r border-gray-400 px-2 py-1.5 font-medium">
@@ -935,22 +897,22 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                   <td rowSpan={3} className="border-r border-gray-400 p-1.5 text-left align-top leading-tight space-y-0.5">
                     <p>Compte CCP N°: <span className="font-bold">{activeCentre?.comptePostale || activeUnit?.comptePostale || '...........................'}</span></p>
                     <p>Compte <span className="font-bold">{activeCentre?.bankName || activeUnit?.bankName || '..........'}</span> N°: <span className="font-bold">{activeCentre?.bankAccount || activeUnit?.bankAccount || '...........................'}</span></p>
-                    <p>mode de paiement : versement bancaire</p>
+                    <p>Mode de paiement : Chèque,Espece,versement</p>
                   </td>
-                  <td colSpan={2} className="border-b border-r border-gray-400 font-bold p-2 text-left uppercase text-gray-600">Total HT</td>
-                  <td colSpan={2} className="border-b border-gray-400 p-2 text-right font-black text-[12px]">
+                  <td colSpan={3} className="border-b border-r border-gray-400 font-bold p-2 text-left uppercase text-gray-600">Total HT</td>
+                  <td colSpan={1} className="border-b border-gray-400 p-2 text-right font-black text-[12px]">
                     {subtotal.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
                   </td>
                 </tr>
                 <tr>
-                  <td colSpan={2} className="border-b border-r border-gray-400 font-bold p-2 text-left uppercase text-gray-600">TVA (19%)</td>
-                  <td colSpan={2} className="border-b border-gray-400 p-2 text-right font-bold">
+                  <td colSpan={3} className="border-b border-r border-gray-400 font-bold p-2 text-left uppercase text-gray-600">TVA (19%)</td>
+                  <td colSpan={1} className="border-b border-gray-400 p-2 text-right font-bold">
                     {tax.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
                   </td>
                 </tr>
-                <tr className="bg-gray-900 text-white">
-                  <td colSpan={2} className="font-black p-2 text-left uppercase text-[12px] border-r border-gray-400">NET A PAYER (TTC)</td>
-                  <td colSpan={2} className="p-2 text-right font-black text-[15px] tracking-tight">
+                <tr className="bg-gray-100 text-gray-900">
+                  <td colSpan={3} className="font-black p-2 text-left uppercase text-[12px] border-r border-gray-400">NET A PAYER (TTC)</td>
+                  <td colSpan={1} className="p-2 text-right font-black text-[11px] tracking-tight">
                     {total.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })} DA
                   </td>
                 </tr>
@@ -962,7 +924,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
           <div className="mt-8 text-[11px] space-y-3">
             <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
               <p className="font-black text-[11px] tracking-tight capitalize leading-relaxed">
-                {numberToFrenchLetters(total).toLowerCase()} Dinars Algériens.
+                {numberToFrenchLetters(total).toLowerCase()}.
               </p>
             </div>
             <p className="italic text-[9px] text-gray-500">Nb: ce devis est valable pour une durée de 01 mois à compter de sa date d'établissement.</p>
@@ -998,8 +960,8 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
             onClick={(e) => { setActiveTab('form'); handleSubmit(e as any); }}
             disabled={items.length === 0 || total === 0}
             className={`px-8 py-3 text-[10px] font-black uppercase tracking-widest text-white rounded-xl transition-all shadow-lg active:scale-95 ${(items.length === 0 || total === 0)
-                ? 'bg-gray-400 cursor-not-allowed opacity-60 shadow-none'
-                : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'
+              ? 'bg-gray-400 cursor-not-allowed opacity-60 shadow-none'
+              : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'
               }`}
             title={items.length === 0 || total === 0 ? "Le devis doit contenir au moins un article avec un montant pour être validé" : ""}
           >

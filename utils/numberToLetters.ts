@@ -8,10 +8,12 @@ export function numberToFrenchLetters(amount: number): string {
   
   const dinarsInWords = writtenNumber(wholePart, { lang: 'fr' });
   
-  let result = `La somme de ce présent devis est arrêtée à : ${dinarsInWords} dinars`;
+  let result = `La somme de ce présent devis est arrêtée à : ${dinarsInWords}`;
   
   if (parseInt(fractionalPartStr) > 0) {
-    result += ` et ${fractionalPartStr} centimes`;
+    result += ` dinars et ${fractionalPartStr} centimes`;
+  } else {
+    result += ` dinars algériens`;
   }
   
   return result;

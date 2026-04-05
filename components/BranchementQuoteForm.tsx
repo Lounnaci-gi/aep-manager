@@ -1050,7 +1050,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
         </div>
 
         <div className="mt-6 text-[11px] space-y-2">
-          <p className="font-black tracking-tight capitalize">{numberToFrenchLetters(total).toLowerCase()}</p>
+          <p className="font-black tracking-tight capitalize">{numberToFrenchLetters(total).toLowerCase()}.</p>
           <p className="italic">Nb: ce devis est valable pour une durée de 01 mois</p>
         </div>
 
