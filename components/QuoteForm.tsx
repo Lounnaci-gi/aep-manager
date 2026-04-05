@@ -397,6 +397,16 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
+    if (items.length === 0 || total === 0) {
+      Swal.fire({
+        title: 'Devis vide',
+        text: 'Vous ne pouvez pas enregistrer un devis sans aucun article ou avec un montant nul.',
+        icon: 'error',
+        confirmButtonColor: '#ef4444'
+      });
+      return;
+    }
+
     const result = await Swal.fire({
       title: 'Confirmer l\'enregistrement ?',
       text: "Voulez-vous vraiment enregistrer ce devis ?",
@@ -735,7 +745,17 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
               <div className="pt-10 flex gap-4 w-full justify-end">
                 <button type="button" onClick={onCancel} className="px-6 py-2 text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors">Annuler</button>
                 <button type="button" onClick={() => setActiveTab('preview')} className="px-6 py-2 text-xs font-bold text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-all">Aperçu</button>
-                <button type="submit" className="px-8 py-3 bg-[#1e90ff] text-white text-xs font-bold rounded-lg shadow-lg shadow-blue-100 hover:bg-blue-600 transition-all">VALIDER ET ENREGISTRER</button>
+                <button 
+                  type="submit" 
+                  disabled={items.length === 0 || total === 0}
+                  className={`px-8 py-3 text-xs font-bold rounded-lg shadow-lg transition-all ${
+                    (items.length === 0 || total === 0)
+                      ? 'bg-gray-400 text-white cursor-not-allowed opacity-60 shadow-none'
+                      : 'bg-[#1e90ff] text-white shadow-blue-100 hover:bg-blue-600'
+                  }`}
+                >
+                  VALIDER ET ENREGISTRER
+                </button>
               </div>
             </div>
           </div>
@@ -955,18 +975,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
             Imprimer le Devis
           </button>
-          <button
-            type="button"
-            onClick={(e) => { setActiveTab('form'); handleSubmit(e as any); }}
-            disabled={items.length === 0 || total === 0}
-            className={`px-8 py-3 text-[10px] font-black uppercase tracking-widest text-white rounded-xl transition-all shadow-lg active:scale-95 ${(items.length === 0 || total === 0)
-              ? 'bg-gray-400 cursor-not-allowed opacity-60 shadow-none'
-              : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'
-              }`}
-            title={items.length === 0 || total === 0 ? "Le devis doit contenir au moins un article avec un montant pour être validé" : ""}
-          >
-            Valider & Archiver
-          </button>
+
         </div>
       </div>
     </div>

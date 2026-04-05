@@ -417,10 +417,10 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
     if (e) e.preventDefault();
     
     // Validation
-    if (items.some(item => !item.description || item.unitPrice <= 0)) {
+    if (items.length === 0 || total === 0 || items.some(item => !item.description || item.unitPrice <= 0)) {
       Swal.fire({
-        title: 'Formulaire incomplet',
-        text: 'Veuillez remplir tous les champs obligatoires',
+        title: 'Devis vide ou incomplet',
+        text: 'Veuillez ajouter au moins un article avec un montant valide avant d\'enregistrer.',
         icon: 'warning',
         confirmButtonColor: '#dc2626'
       });
@@ -1065,19 +1065,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
         <div className="flex justify-end gap-3">
           <button type="button" onClick={() => setActiveTab('form')} className="px-6 py-2.5 text-xs font-bold text-slate-600 bg-white border border-slate-300 rounded-xl hover:bg-slate-100">Retour à l'édition</button>
           <button type="button" onClick={() => window.print()} className="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-md">Imprimer</button>
-          <button 
-            type="button" 
-            onClick={(e) => { setActiveTab('form'); handleSubmit(e as any); }} 
-            disabled={items.length === 0 || total === 0 || !items.some(it => it.description && it.unitPrice > 0)}
-            className={`px-6 py-2.5 text-xs font-bold text-white rounded-xl transition-all shadow-md active:scale-95 ${
-              (items.length === 0 || total === 0 || !items.some(it => it.description && it.unitPrice > 0))
-                ? 'bg-gray-400 cursor-not-allowed opacity-60 shadow-none'
-                : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'
-            }`}
-            title={total === 0 ? "Le devis doit contenir au moins un article avec un montant pour être validé" : ""}
-          >
-            Valider & Archiver
-          </button>
+
         </div>
       </div>
     </div>
