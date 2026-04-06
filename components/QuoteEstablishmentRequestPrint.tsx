@@ -50,9 +50,9 @@ export const QuoteEstablishmentRequestPrint: React.FC<QuoteEstablishmentRequestP
             onClick={onClose}
             className="p-2 hover:bg-gray-800 rounded-full transition-colors"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
           </button>
-          <h2 className="font-black uppercase tracking-widest text-sm">DEMANDE D'ÉTABLISSEMENT DE DEVIS - {request.id}</h2>
+          <h2 className="font-black uppercase tracking-widest text-sm text-white">DEMANDE D'ÉTABLISSEMENT DE DEVIS - {request.id}</h2>
         </div>
         <button 
           onClick={handlePrint}
@@ -108,7 +108,7 @@ export const QuoteEstablishmentRequestPrint: React.FC<QuoteEstablishmentRequestP
           </div>
           
           <div style={{ textAlign: 'center', width: '33%' }}>
-            <img src="/ade.png" alt="ADE Logo" style={{ height: '70px', margin: '0 auto' }} />
+            <img src="/ade.png" alt="ADE Logo" style={{ height: '100px', margin: '0 auto' }} />
           </div>
 
           <div style={{ textAlign: 'right', width: '33%', fontSize: '12pt' }}>

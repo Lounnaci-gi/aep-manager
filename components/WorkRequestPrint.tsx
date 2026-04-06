@@ -104,7 +104,7 @@ export const WorkRequestPrint: React.FC<WorkRequestPrintProps> = ({ request, age
             <div style={{ fontSize: '9pt', fontWeight: 'bold' }}>Unité de {unit?.name || (centre?.name ? centre.name : 'Médéa')}</div>
           </div>
           <div style={{ textAlign: 'center', width: '33%' }}>
-            <img src="/ade.png" alt="ADE Logo" style={{ height: '70px', margin: '0 auto' }} />
+            <img src="/ade.png" alt="ADE Logo" style={{ height: '100px', margin: '0 auto' }} />
           </div>
           <div style={{ textAlign: 'right', width: '33%', fontSize: '10pt', fontWeight: 'bold' }}>
             Agence de {agency?.name || '........................'}
