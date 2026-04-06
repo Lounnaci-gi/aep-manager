@@ -207,8 +207,8 @@ export const QuoteEstablishmentRequestPrint: React.FC<QuoteEstablishmentRequestP
         <div style={{ marginTop: 'auto', paddingTop: '30px', paddingLeft: '8px', paddingRight: '8px', width: '100%' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', border: '2.5px solid #000', tableLayout: 'fixed' }}>
             <thead>
-              <tr style={{ backgroundColor: '#f2f2f2', color: '#000' }}>
-                <th colSpan={3} style={{ padding: '5px 0', borderBottom: '2.5px solid #000', textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '11pt', textAlign: 'center' }}>
+              <tr style={{ backgroundColor: '#404040', color: '#fff' }}>
+                <th colSpan={3} style={{ padding: '3px 0', borderBottom: '2.5px solid #000', textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '11pt', textAlign: 'center' }}>
                   VISAS
                 </th>
               </tr>
