@@ -370,6 +370,58 @@ COLLECTIONS.forEach(colName => {
   });
 });
 
+// Route pour mettre à jour le statut d'une demande
+app.patch('/api/requests/:id/status', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    if (!status) {
+      return res.status(400).json({ error: 'Le statut est requis' });
+    }
+    
+    const result = await db.collection('requests').updateOne(
+      { id },
+      { $set: { status } }
+    );
+    
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'Demande non trouvée' });
+    }
+    
+    res.json({ success: true, status });
+  } catch (err) {
+    console.error('Erreur update status:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Route pour mettre à jour le statut d'un devis
+app.patch('/api/quotes/:id/status', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    if (!status) {
+      return res.status(400).json({ error: 'Le statut est requis' });
+    }
+    
+    const result = await db.collection('quotes').updateOne(
+      { id },
+      { $set: { status } }
+    );
+    
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'Devis non trouvé' });
+    }
+    
+    res.json({ success: true, status });
+  } catch (err) {
+    console.error('Erreur update status:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Route de statut pour vérifier la santé du serveur
 app.get('/api/status', (req, res) => {
   res.json({ 

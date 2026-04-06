@@ -210,11 +210,15 @@ export const DbService = {
   },
   
   async updateRequestStatus(id: string, status: RequestStatus): Promise<void> {
-    const requests = await this.getRequests();
-    const request = requests.find(r => r.id === id);
-    if (request) {
-      request.status = status;
-      await this.saveRequest(request);
+    const response = await fetch(`${API_URL}/${COLLECTIONS.REQUESTS}/${encodeURIComponent(id)}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Erreur lors de la mise à jour du statut');
     }
   },
 
@@ -241,11 +245,15 @@ export const DbService = {
   },
   
   async updateQuoteStatus(id: string, status: QuoteStatus): Promise<void> {
-    const quotes = await this.getQuotes();
-    const quote = quotes.find(q => q.id === id);
-    if (quote) {
-      quote.status = status;
-      await this.saveQuote(quote);
+    const response = await fetch(`${API_URL}/${COLLECTIONS.QUOTES}/${encodeURIComponent(id)}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Erreur lors de la mise à jour du statut');
     }
   },
 

@@ -50,16 +50,6 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
     try {
       const data = await ArticleService.getArticles();
       setArticles(data);
-      
-      // Vérifier si des articles ont besoin de migration de matière
-      const articlesWithoutMaterial = data.filter(article => !article.material);
-      if (articlesWithoutMaterial.length > 0) {
-        // Exécuter la migration automatiquement
-        await DbService.migrateArticlesWithMaterial();
-        // Recharger les articles après migration
-        const updatedData = await ArticleService.getArticles();
-        setArticles(updatedData);
-      }
     } catch (error) {
       console.error('Erreur chargement articles:', error);
       Swal.fire('Erreur', 'Impossible de charger les articles', 'error');
