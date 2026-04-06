@@ -126,9 +126,7 @@ export const QuoteEstablishmentRequestPrint: React.FC<QuoteEstablishmentRequestP
             <span style={{ marginRight: '16px' }}>Date</span>
             <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
               {renderDigitBoxes(new Date(request.createdAt).getDate().toString().padStart(2, '0'), 2)}
-              <span style={{ margin: '0 2px' }}>/</span>
               {renderDigitBoxes((new Date(request.createdAt).getMonth() + 1).toString().padStart(2, '0'), 2)}
-              <span style={{ margin: '0 2px' }}>/</span>
               {renderDigitBoxes(new Date(request.createdAt).getFullYear().toString(), 4)}
             </div>
           </div>
@@ -209,7 +207,7 @@ export const QuoteEstablishmentRequestPrint: React.FC<QuoteEstablishmentRequestP
         <div style={{ marginTop: 'auto', paddingTop: '30px', paddingLeft: '8px', paddingRight: '8px', width: '100%' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', border: '2.5px solid #000', tableLayout: 'fixed' }}>
             <thead>
-              <tr style={{ backgroundColor: '#5c5c5c', color: '#fff' }}>
+              <tr style={{ backgroundColor: '#f2f2f2', color: '#000' }}>
                 <th colSpan={3} style={{ padding: '5px 0', borderBottom: '2.5px solid #000', textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '11pt', textAlign: 'center' }}>
                   VISAS
                 </th>
