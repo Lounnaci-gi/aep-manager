@@ -836,7 +836,7 @@ const App: React.FC = () => {
           </div>
         )}
         {view === 'client-form' && <ClientForm initialData={editingClient} onSave={handleSaveClient} onCancel={() => setView('clients')} />}
-        {view === 'settings' && <WorkTypeManager workTypes={workTypes} onAdd={handleAddWorkType} onUpdate={handleUpdateWorkType} onDelete={handleDeleteWorkType} currentUser={currentUser} />}
+        {view === 'settings' && <WorkTypeManager workTypes={workTypes} users={users} onAdd={handleAddWorkType} onUpdate={handleUpdateWorkType} onDelete={handleDeleteWorkType} currentUser={currentUser} />}
         {view === 'users' && (
           <div className="space-y-4">
             {(currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.CHEF_CENTRE) && (

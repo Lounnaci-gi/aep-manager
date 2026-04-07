@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { WorkRequest, RequestStatus, WorkType, Client, CommercialAgency, Centre, ClientCategory, UserRole, WORK_TYPE_PERMISSIONS, BranchementType, ValidationType } from '../types';
+import { WorkflowEngine } from '../services/workflowEngine';
 
 interface WorkRequestFormProps {
   onSave: (request: WorkRequest) => void;
@@ -172,11 +172,31 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Déterminer les validations à assigner selon le type de service
-    const assignedValidations: ValidationType[] = [];
-    if (isBranchementEau) {
-      assignedValidations.push(ValidationType.AGENCY, ValidationType.CUSTOMER_SERVICE, ValidationType.LAWYER);
-    }
+    // NOUVEAU: Utiliser le moteur de workflow pour déterminer les validations
+    const tempRequest: WorkRequest = {
+      id: 'temp',
+      clientId: '',
+      clientName: formData.clientName,
+      clientPhone: formData.clientPhone,
+      centreId: '',
+      installationAddress: formData.installationAddress,
+      installationCommune: formData.installationCommune,
+      serviceType: formData.serviceType,
+      description: formData.description,
+      type: formData.type as any,
+      status: RequestStatus.RECEIVED,
+      agencyId: formData.agencyId,
+      createdAt: new Date().toISOString()
+    };
+
+    // Construire les validations basées sur le workflow
+    const validations = WorkflowEngine.buildInitialValidations(tempRequest);
+    const assignedValidations = validations.map(v => v.type);
+    
+    // Déterminer le statut initial
+    const initialStatus = validations.length > 0 
+      ? RequestStatus.AWAITING_AGENCY_VALIDATION 
+      : RequestStatus.RECEIVED;
     
     // Capitaliser la 1ère lettre de chaque mot
     const capitalizeWords = (str: string | undefined | null) => {
@@ -208,15 +228,9 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
     const request: WorkRequest = {
       id: initialData?.id || generateTempRequestId(),
       ...formattedData,
-      status: initialData?.status || (isBranchementEau ? RequestStatus.AWAITING_AGENCY_VALIDATION : RequestStatus.RECEIVED),
+      status: initialData?.status || initialStatus,
       assignedValidations,
-      validations: assignedValidations.map(type => ({
-        type,
-        userId: '',
-        userName: '',
-        validatedAt: '',
-        status: 'pending'
-      })),
+      validations,
       createdAt: initialData?.createdAt || new Date().toISOString(),
     };
     setIsSaving(true);

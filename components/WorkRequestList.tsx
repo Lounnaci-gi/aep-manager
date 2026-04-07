@@ -1,9 +1,11 @@
 
 import React, { useState, useMemo } from 'react';
 import Swal from 'sweetalert2';
-import { WorkRequest, RequestStatus, CommercialAgency, Centre, BranchementType, UserRole, User, ValidationType, ValidationRecord, WorkType, Quote, Unit } from '../types';
+import { WorkRequest, RequestStatus, CommercialAgency, Centre, BranchementType, UserRole, User, ValidationType, ValidationRecord, WorkType, Quote, Unit, WorkflowStepType } from '../types';
 import { WorkRequestPrint } from './WorkRequestPrint';
 import { QuoteEstablishmentRequestPrint } from './QuoteEstablishmentRequestPrint';
+import { WorkflowTracker } from './WorkflowTracker';
+import { WorkflowEngine } from '../services/workflowEngine';
 
 
 interface WorkRequestListProps {
@@ -48,6 +50,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
   const [sortBy, setSortBy] = useState<SortOption>('date-desc');
   const [validationFilter, setValidationFilter] = useState<'all' | 'pending' | 'validated'>('all');
   const [printingRequest, setPrintingRequest] = useState<WorkRequest | null>(null);
+  const [selectedRequestForWorkflow, setSelectedRequestForWorkflow] = useState<WorkRequest | null>(null);
 
 
   const normalizedRequests = useMemo(() => {
@@ -202,24 +205,21 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
     const filteredValidations = updatedValidations.filter(v => v.type !== validationType);
     filteredValidations.push(newValidation);
 
-    // Vérifier si TOUTES les validations assignées ont été effectuées et validées
-    const allValidated = !req.assignedValidations || req.assignedValidations.length === 0 || 
-                         req.assignedValidations.every(type => 
-                           filteredValidations.find(v => v.type === type && v.status === 'validated')
-                         );
-                         
-    const hasRejection = filteredValidations.some(v => v.status === 'rejected');
-    const newStatus = allValidated ? RequestStatus.VALIDATED : (hasRejection ? RequestStatus.REJECTED : RequestStatus.UNDER_STUDY);
-
+    // NOUVEAU: Utiliser le moteur de workflow pour calculer le statut
     const updatedRequest = {
       ...req,
-      validations: filteredValidations,
+      validations: filteredValidations
+    };
+    
+    const newStatus = WorkflowEngine.calculateNewStatus(updatedRequest);
+    const finalRequest = {
+      ...updatedRequest,
       status: newStatus,
-      rejectionReason: hasRejection ? reason : (allValidated ? '' : req.rejectionReason)
+      rejectionReason: newStatus === RequestStatus.REJECTED ? reason : (newStatus === RequestStatus.VALIDATED ? '' : req.rejectionReason)
     };
 
     if (onUpdateRequestWithValidations) {
-      onUpdateRequestWithValidations(updatedRequest);
+      onUpdateRequestWithValidations(finalRequest);
     } else {
       onUpdateStatus(req.id, newStatus);
     }
@@ -431,6 +431,26 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* NOUVEAU: Affichage du workflow tracker si une demande est sélectionnée */}
+      {selectedRequestForWorkflow && (
+        <WorkflowTracker
+          request={selectedRequestForWorkflow}
+          currentUser={currentUser ? { role: currentUser.role } : null}
+          onValidate={(validationType) => {
+            handleValidation(selectedRequestForWorkflow, validationType as ValidationType, 'validated');
+            setSelectedRequestForWorkflow(null);
+          }}
+          onCreateQuote={() => {
+            onCreateQuote(selectedRequestForWorkflow);
+            setSelectedRequestForWorkflow(null);
+          }}
+          onPrint={() => {
+            setPrintMode('standard');
+            setActivePrintRequest(selectedRequestForWorkflow);
+          }}
+        />
+      )}
+
       <div className="bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100 mx-2 sm:mx-0">
         <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50 space-y-4">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -766,6 +786,21 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                         </button>
                       )}
+
+                      {/* Bouton Voir Workflow */}
+                      <button 
+                        onClick={() => setSelectedRequestForWorkflow(req === selectedRequestForWorkflow ? null : req)} 
+                        className={`transition-colors p-1.5 rounded-lg ${
+                          req === selectedRequestForWorkflow 
+                            ? 'text-blue-600 bg-blue-100' 
+                            : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'
+                        }`}
+                        title="Voir le workflow"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                      </button>
 
                       {/* Bouton Imprimer - Réservé aux utilisateurs autorisés à créer des demandes pour ce type de travaux */}
                       {(() => {

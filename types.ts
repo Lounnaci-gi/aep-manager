@@ -270,6 +270,9 @@ export interface WorkType {
   description?: string;
   label?: string;
   allowedRoles?: UserRole[]; // Rôles autorisés à créer ce type de travail
+  requestValidationRoles?: UserRole[]; // Rôles autorisés à valider la demande
+  quoteAllowedRoles?: UserRole[]; // Rôles autorisés à créer des devis pour ce type
+  quoteValidationRoles?: UserRole[]; // Rôles autorisés à valider les devis pour ce type
 }
 
 export interface User {
@@ -297,3 +300,49 @@ export const WORK_TYPE_PERMISSIONS: Record<string, UserRole[]> = {
   'Audit technique': [UserRole.TECHICO_COMMERCIAL, UserRole.CHEF_AGENCE],
   // Ajoutez d'autres types selon vos besoins
 };
+
+// ============================================================================
+// NOUVEAU: Types pour le moteur de workflow dynamique
+// ============================================================================
+
+// Étapes possibles dans un workflow
+export enum WorkflowStepType {
+  VALIDATION = 'validation',
+  QUOTATION = 'quotation',
+  QUOTE_VALIDATION = 'quote_validation',
+  PRINTING = 'printing',
+  COMPLETION = 'completion'
+}
+
+// Configuration d'une étape de workflow
+export interface WorkflowStepConfig {
+  step: WorkflowStepType;
+  label: string;
+  requiredRoles: UserRole[]; // Rôles qui peuvent exécuter cette étape
+  validationType?: ValidationType; // Si c'est une étape de validation
+  skipCondition?: (request: WorkRequest) => boolean; // Condition pour ignorer l'étape
+  nextStep?: WorkflowStepType;
+}
+
+// Configuration complète du workflow pour un type de travaux
+export interface WorkTypeWorkflow {
+  workTypeId: string; // ou workTypeLabel
+  workTypeName: string;
+  steps: WorkflowStepConfig[];
+  requiresQuotation: boolean; // true si le devis est obligatoire
+}
+
+// État actuel d'une demande dans le workflow
+export interface WorkflowState {
+  currentStep: WorkflowStepType;
+  completedSteps: WorkflowStepType[];
+  isComplete: boolean;
+  canProceed: boolean;
+}
+
+// Résultat de vérification de permission
+export interface PermissionResult {
+  allowed: boolean;
+  reason?: string;
+  nextAction?: string;
+}

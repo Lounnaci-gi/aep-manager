@@ -1,23 +1,30 @@
 
 import React, { useState } from 'react';
-import { WorkType, UserRole } from '../types';
+import { WorkType, UserRole, User } from '../types';
 import Swal from 'sweetalert2';
 
 
 interface WorkTypeManagerProps {
   workTypes: WorkType[];
+  users?: User[];
   onAdd: (label: string, workType?: WorkType) => void;
   onUpdate: (id: string, label: string, workType?: WorkType) => void;
   onDelete: (id: string) => void;
   currentUser?: any;
 }
 
-export const WorkTypeManager: React.FC<WorkTypeManagerProps> = ({ workTypes, onAdd, onUpdate, onDelete, currentUser }) => {
+export const WorkTypeManager: React.FC<WorkTypeManagerProps> = ({ workTypes, users = [], onAdd, onUpdate, onDelete, currentUser }) => {
   const [newLabel, setNewLabel] = useState('');
-  const [newAllowedRoles, setNewAllowedRoles] = useState<UserRole[]>([]); // Par défaut, aucun rôle n'est sélectionné
+  const [newAllowedRoles, setNewAllowedRoles] = useState<UserRole[]>([]); // Rôles pour créer la demande
+  const [newRequestValidationRoles, setNewRequestValidationRoles] = useState<UserRole[]>([]); // Rôles pour valider la demande
+  const [newQuoteAllowedRoles, setNewQuoteAllowedRoles] = useState<UserRole[]>([]); // Rôles pour créer le devis
+  const [newQuoteValidationRoles, setNewQuoteValidationRoles] = useState<UserRole[]>([]); // Rôles pour valider le devis
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState('');
   const [editAllowedRoles, setEditAllowedRoles] = useState<UserRole[]>([]);
+  const [editRequestValidationRoles, setEditRequestValidationRoles] = useState<UserRole[]>([]);
+  const [editQuoteAllowedRoles, setEditQuoteAllowedRoles] = useState<UserRole[]>([]);
+  const [editQuoteValidationRoles, setEditQuoteValidationRoles] = useState<UserRole[]>([]);
 
 
   const handleAdd = (e: React.FormEvent) => {
@@ -26,7 +33,7 @@ export const WorkTypeManager: React.FC<WorkTypeManagerProps> = ({ workTypes, onA
       if (newAllowedRoles.length === 0) {
         Swal.fire({
           title: 'Aucun rôle sélectionné',
-          text: 'Veuillez sélectionner au moins un rôle autorisé pour ce type de travail.',
+          text: 'Veuillez sélectionner au moins un rôle autorisé pour créer ce type de travail.',
           icon: 'warning',
           confirmButtonColor: '#2563eb',
           timer: 3000,
@@ -67,11 +74,17 @@ export const WorkTypeManager: React.FC<WorkTypeManagerProps> = ({ workTypes, onA
           const newType: WorkType = {
             id: `WT-${Date.now().toString().slice(-4)}`,
             label: newLabel.trim(),
-            allowedRoles: newAllowedRoles
+            allowedRoles: newAllowedRoles,
+            requestValidationRoles: newRequestValidationRoles,
+            quoteAllowedRoles: newQuoteAllowedRoles,
+            quoteValidationRoles: newQuoteValidationRoles
           };
           onAdd(newLabel.trim(), newType);
           setNewLabel('');
-          setNewAllowedRoles([]); // Réinitialiser avec aucun rôle sélectionné
+          setNewAllowedRoles([]);
+          setNewRequestValidationRoles([]);
+          setNewQuoteAllowedRoles([]);
+          setNewQuoteValidationRoles([]);
           Swal.fire({
             title: 'Ajouté !',
             text: `Le type de travail "${newLabel.trim()}" a été ajouté avec succès.`,
@@ -91,6 +104,12 @@ export const WorkTypeManager: React.FC<WorkTypeManagerProps> = ({ workTypes, onA
     // Initialiser avec les rôles existants, ou un tableau vide si non définis
     const rolesToSet = type.allowedRoles && Array.isArray(type.allowedRoles) ? type.allowedRoles : [];
     setEditAllowedRoles(rolesToSet);
+    const reqValRoles = type.requestValidationRoles && Array.isArray(type.requestValidationRoles) ? type.requestValidationRoles : [];
+    setEditRequestValidationRoles(reqValRoles);
+    const quoteRoles = type.quoteAllowedRoles && Array.isArray(type.quoteAllowedRoles) ? type.quoteAllowedRoles : [];
+    setEditQuoteAllowedRoles(quoteRoles);
+    const quoteValidationRoles = type.quoteValidationRoles && Array.isArray(type.quoteValidationRoles) ? type.quoteValidationRoles : [];
+    setEditQuoteValidationRoles(quoteValidationRoles);
   };
 
   const handleUpdate = () => {
@@ -139,7 +158,10 @@ export const WorkTypeManager: React.FC<WorkTypeManagerProps> = ({ workTypes, onA
           const updatedType: WorkType = {
             id: editingId,
             label: editLabel.trim(),
-            allowedRoles: editAllowedRoles
+            allowedRoles: editAllowedRoles,
+            requestValidationRoles: editRequestValidationRoles,
+            quoteAllowedRoles: editQuoteAllowedRoles,
+            quoteValidationRoles: editQuoteValidationRoles
           };
           onUpdate(editingId, editLabel.trim(), updatedType);
           setEditingId(null);
@@ -176,7 +198,7 @@ export const WorkTypeManager: React.FC<WorkTypeManagerProps> = ({ workTypes, onA
               
               {/* Section pour sélectionner les rôles autorisés */}
               <div className="mt-3 pt-3 border-t border-gray-100">
-                <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2">Accès Autorisés :</p>
+                <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2">📝 Rôles - Création Demande :</p>
                 <div className="relative">
                   <button
                     type="button"
@@ -210,12 +232,10 @@ export const WorkTypeManager: React.FC<WorkTypeManagerProps> = ({ workTypes, onA
                           checked={newAllowedRoles.some(allowedRole => allowedRole === role)}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              // Ajouter le rôle
                               if (!newAllowedRoles.some(allowedRole => allowedRole === role)) {
                                 setNewAllowedRoles([...newAllowedRoles, role]);
                               }
                             } else {
-                              // Retirer le rôle
                               setNewAllowedRoles(newAllowedRoles.filter(allowedRole => allowedRole !== role));
                             }
                           }}
@@ -236,6 +256,204 @@ export const WorkTypeManager: React.FC<WorkTypeManagerProps> = ({ workTypes, onA
                         className="text-blue-600 hover:text-blue-800"
                         onClick={() => {
                           setNewAllowedRoles(newAllowedRoles.filter(r => r !== role));
+                        }}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* NOUVEAU: Section pour les rôles de validation de demande */}
+              <div className="mt-3 pt-3 border-t border-amber-100">
+                <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-2">✓ Rôles - Validation Demande :</p>
+                <div className="relative">
+                  <button
+                    type="button"
+                    className="w-full p-2 border border-amber-300 rounded-md text-xs bg-white text-left flex justify-between items-center"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const dropdowns = document.querySelectorAll('.role-dropdown');
+                      dropdowns.forEach(dropdown => {
+                        if (dropdown !== e.currentTarget.nextElementSibling) {
+                          (dropdown as HTMLElement).style.display = 'none';
+                        }
+                      });
+                      const dropdown = e.currentTarget.nextElementSibling;
+                      (dropdown as HTMLElement).style.display = (dropdown as HTMLElement).style.display === 'block' ? 'none' : 'block';
+                    }}
+                  >
+                    {newRequestValidationRoles.length > 0 ? `${newRequestValidationRoles.length} rôle(s) sélectionné(s)` : 'Sélectionner des rôles...'}
+                    <svg className="w-4 h-4 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </button>
+                  
+                  <div className="role-dropdown absolute z-10 w-full mt-1 bg-white border border-amber-300 rounded-md shadow-lg max-h-60 overflow-y-auto" style={{ display: 'none' }}>
+                    {Object.values(UserRole).map((role, index) => (
+                      <label key={index} className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="rounded text-amber-600 focus:ring-amber-500"
+                          checked={newRequestValidationRoles.some(allowedRole => allowedRole === role)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              if (!newRequestValidationRoles.some(allowedRole => allowedRole === role)) {
+                                setNewRequestValidationRoles([...newRequestValidationRoles, role]);
+                              }
+                            } else {
+                              setNewRequestValidationRoles(newRequestValidationRoles.filter(allowedRole => allowedRole !== role));
+                            }
+                          }}
+                        />
+                        <span className="ml-2 text-xs">{role}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {newRequestValidationRoles.map((role, index) => (
+                    <span key={index} className="inline-flex items-center gap-1 bg-amber-100 text-amber-800 px-2 py-1 rounded-full text-[8px] font-bold">
+                      {role}
+                      <button
+                        type="button"
+                        className="text-amber-600 hover:text-amber-800"
+                        onClick={() => {
+                          setNewRequestValidationRoles(newRequestValidationRoles.filter(r => r !== role));
+                        }}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* NOUVEAU: Section pour les rôles de création de devis */}
+              <div className="mt-3 pt-3 border-t border-emerald-100">
+                <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-2">💰 Rôles - Création Devis :</p>
+                <div className="relative">
+                  <button
+                    type="button"
+                    className="w-full p-2 border border-emerald-300 rounded-md text-xs bg-white text-left flex justify-between items-center"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const dropdowns = document.querySelectorAll('.role-dropdown');
+                      dropdowns.forEach(dropdown => {
+                        if (dropdown !== e.currentTarget.nextElementSibling) {
+                          (dropdown as HTMLElement).style.display = 'none';
+                        }
+                      });
+                      const dropdown = e.currentTarget.nextElementSibling;
+                      (dropdown as HTMLElement).style.display = (dropdown as HTMLElement).style.display === 'block' ? 'none' : 'block';
+                    }}
+                  >
+                    {newQuoteAllowedRoles.length > 0 ? `${newQuoteAllowedRoles.length} rôle(s) sélectionné(s)` : 'Sélectionner des rôles...'}
+                    <svg className="w-4 h-4 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </button>
+                  
+                  <div className="role-dropdown absolute z-10 w-full mt-1 bg-white border border-emerald-300 rounded-md shadow-lg max-h-60 overflow-y-auto" style={{ display: 'none' }}>
+                    {Object.values(UserRole).map((role, index) => (
+                      <label key={index} className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="rounded text-emerald-600 focus:ring-emerald-500"
+                          checked={newQuoteAllowedRoles.some(allowedRole => allowedRole === role)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              if (!newQuoteAllowedRoles.some(allowedRole => allowedRole === role)) {
+                                setNewQuoteAllowedRoles([...newQuoteAllowedRoles, role]);
+                              }
+                            } else {
+                              setNewQuoteAllowedRoles(newQuoteAllowedRoles.filter(allowedRole => allowedRole !== role));
+                            }
+                          }}
+                        />
+                        <span className="ml-2 text-xs">{role}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {newQuoteAllowedRoles.map((role, index) => (
+                    <span key={index} className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full text-[8px] font-bold">
+                      {role}
+                      <button
+                        type="button"
+                        className="text-emerald-600 hover:text-emerald-800"
+                        onClick={() => {
+                          setNewQuoteAllowedRoles(newQuoteAllowedRoles.filter(r => r !== role));
+                        }}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* NOUVEAU: Section pour les rôles de validation de devis */}
+              <div className="mt-3 pt-3 border-t border-purple-100">
+                <p className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-2">✓ Rôles - Validation Devis :</p>
+                <div className="relative">
+                  <button
+                    type="button"
+                    className="w-full p-2 border border-purple-300 rounded-md text-xs bg-white text-left flex justify-between items-center"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const dropdowns = document.querySelectorAll('.role-dropdown');
+                      dropdowns.forEach(dropdown => {
+                        if (dropdown !== e.currentTarget.nextElementSibling) {
+                          (dropdown as HTMLElement).style.display = 'none';
+                        }
+                      });
+                      const dropdown = e.currentTarget.nextElementSibling;
+                      (dropdown as HTMLElement).style.display = (dropdown as HTMLElement).style.display === 'block' ? 'none' : 'block';
+                    }}
+                  >
+                    {newQuoteValidationRoles.length > 0 ? `${newQuoteValidationRoles.length} rôle(s) sélectionné(s)` : 'Sélectionner des rôles...'}
+                    <svg className="w-4 h-4 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </button>
+                  
+                  <div className="role-dropdown absolute z-10 w-full mt-1 bg-white border border-purple-300 rounded-md shadow-lg max-h-60 overflow-y-auto" style={{ display: 'none' }}>
+                    {Object.values(UserRole).map((role, index) => (
+                      <label key={index} className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="rounded text-purple-600 focus:ring-purple-500"
+                          checked={newQuoteValidationRoles.some(allowedRole => allowedRole === role)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              if (!newQuoteValidationRoles.some(allowedRole => allowedRole === role)) {
+                                setNewQuoteValidationRoles([...newQuoteValidationRoles, role]);
+                              }
+                            } else {
+                              setNewQuoteValidationRoles(newQuoteValidationRoles.filter(allowedRole => allowedRole !== role));
+                            }
+                          }}
+                        />
+                        <span className="ml-2 text-xs">{role}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {newQuoteValidationRoles.map((role, index) => (
+                    <span key={index} className="inline-flex items-center gap-1 bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-[8px] font-bold">
+                      {role}
+                      <button
+                        type="button"
+                        className="text-purple-600 hover:text-purple-800"
+                        onClick={() => {
+                          setNewQuoteValidationRoles(newQuoteValidationRoles.filter(r => r !== role));
                         }}
                       >
                         ×
@@ -286,16 +504,135 @@ export const WorkTypeManager: React.FC<WorkTypeManagerProps> = ({ workTypes, onA
                         <>
                           <div className="flex-grow">
                             <span className="text-gray-900 font-bold text-sm italic">{type.label}</span>
-                            <div className="mt-1 flex flex-wrap gap-1">
-                              {type.allowedRoles && type.allowedRoles.length > 0 ? (
-                                type.allowedRoles.map((role, index) => (
-                                  <span key={index} className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-[8px] font-bold">
-                                    {role}
-                                  </span>
-                                ))
-                              ) : (
-                                <span className="text-gray-400 text-[10px] italic">Aucun rôle spécifique</span>
-                              )}
+                            
+                            <div className="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                              {/* Demandes */}
+                              <div className="bg-blue-50/50 p-3 rounded-lg border border-blue-100">
+                                <div className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2 flex items-center gap-1">
+                                  <span>📝 Demandes</span>
+                                </div>
+                                {type.allowedRoles && type.allowedRoles.length > 0 ? (
+                                  <div className="space-y-3">
+                                    {type.allowedRoles.map((role, i) => {
+                                      const roleUsers = users.filter(u => u.role === role);
+                                      return (
+                                        <div key={i} className="text-xs">
+                                          <div className="font-bold text-blue-800/80 mb-1.5 border-b border-blue-100/50 pb-1">{role}</div>
+                                          {roleUsers.length > 0 ? (
+                                            <div className="flex flex-wrap gap-1.5">
+                                              {roleUsers.map(u => (
+                                                <span key={u.id} className="inline-flex items-center bg-white text-blue-700 px-2 py-0.5 rounded shadow-sm text-[10px] border border-blue-100 font-medium">
+                                                  {u.fullName}
+                                                </span>
+                                              ))}
+                                            </div>
+                                          ) : (
+                                            <span className="text-[10px] text-gray-400 italic block mt-1">Aucun utilisateur</span>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                ) : (
+                                  <span className="text-[10px] text-gray-400 italic">Aucun rôle assigné</span>
+                                )}
+                              </div>
+
+                              {/* Validation Demande */}
+                              <div className="bg-amber-50/50 p-3 rounded-lg border border-amber-100">
+                                <div className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-2 flex items-center gap-1">
+                                  <span>✓ Valider Demande</span>
+                                </div>
+                                {type.requestValidationRoles && type.requestValidationRoles.length > 0 ? (
+                                  <div className="space-y-3">
+                                    {type.requestValidationRoles.map((role, i) => {
+                                      const roleUsers = users.filter(u => u.role === role);
+                                      return (
+                                        <div key={i} className="text-xs">
+                                          <div className="font-bold text-amber-800/80 mb-1.5 border-b border-amber-100/50 pb-1">{role}</div>
+                                          {roleUsers.length > 0 ? (
+                                            <div className="flex flex-wrap gap-1.5">
+                                              {roleUsers.map(u => (
+                                                <span key={u.id} className="inline-flex items-center bg-white text-amber-700 px-2 py-0.5 rounded shadow-sm text-[10px] border border-amber-100 font-medium">
+                                                  {u.fullName}
+                                                </span>
+                                              ))}
+                                            </div>
+                                          ) : (
+                                            <span className="text-[10px] text-gray-400 italic block mt-1">Aucun utilisateur</span>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                ) : (
+                                  <span className="text-[10px] text-gray-400 italic">Aucun rôle assigné</span>
+                                )}
+                              </div>
+
+                              {/* Devis */}
+                              <div className="bg-emerald-50/50 p-3 rounded-lg border border-emerald-100">
+                                <div className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-2 flex items-center gap-1">
+                                  <span>💰 Devis</span>
+                                </div>
+                                {type.quoteAllowedRoles && type.quoteAllowedRoles.length > 0 ? (
+                                  <div className="space-y-3">
+                                    {type.quoteAllowedRoles.map((role, i) => {
+                                      const roleUsers = users.filter(u => u.role === role);
+                                      return (
+                                        <div key={i} className="text-xs">
+                                          <div className="font-bold text-emerald-800/80 mb-1.5 border-b border-emerald-100/50 pb-1">{role}</div>
+                                          {roleUsers.length > 0 ? (
+                                            <div className="flex flex-wrap gap-1.5">
+                                              {roleUsers.map(u => (
+                                                <span key={u.id} className="inline-flex items-center bg-white text-emerald-700 px-2 py-0.5 rounded shadow-sm text-[10px] border border-emerald-100 font-medium">
+                                                  {u.fullName}
+                                                </span>
+                                              ))}
+                                            </div>
+                                          ) : (
+                                            <span className="text-[10px] text-gray-400 italic block mt-1">Aucun utilisateur</span>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                ) : (
+                                  <span className="text-[10px] text-gray-400 italic">Aucun rôle assigné</span>
+                                )}
+                              </div>
+
+                              {/* Validations Devis */}
+                              <div className="bg-purple-50/50 p-3 rounded-lg border border-purple-100">
+                                <div className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-2 flex items-center gap-1">
+                                  <span>✓ Validations Devis</span>
+                                </div>
+                                {type.quoteValidationRoles && type.quoteValidationRoles.length > 0 ? (
+                                  <div className="space-y-3">
+                                    {type.quoteValidationRoles.map((role, i) => {
+                                      const roleUsers = users.filter(u => u.role === role);
+                                      return (
+                                        <div key={i} className="text-xs">
+                                          <div className="font-bold text-purple-800/80 mb-1.5 border-b border-purple-100/50 pb-1">{role}</div>
+                                          {roleUsers.length > 0 ? (
+                                            <div className="flex flex-wrap gap-1.5">
+                                              {roleUsers.map(u => (
+                                                <span key={u.id} className="inline-flex items-center bg-white text-purple-700 px-2 py-0.5 rounded shadow-sm text-[10px] border border-purple-100 font-medium">
+                                                  {u.fullName}
+                                                </span>
+                                              ))}
+                                            </div>
+                                          ) : (
+                                            <span className="text-[10px] text-gray-400 italic block mt-1">Aucun utilisateur</span>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                ) : (
+                                  <span className="text-[10px] text-gray-400 italic">Aucun rôle assigné</span>
+                                )}
+                              </div>
                             </div>
                           </div>
                           <div className="flex gap-4">
@@ -333,73 +670,269 @@ export const WorkTypeManager: React.FC<WorkTypeManagerProps> = ({ workTypes, onA
                     </div>
                   </div>
                   {editingId === type.id && (
-                    <div className="mt-3 pt-3 border-t border-gray-100">
-                      <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2">Accès Autorisés :</p>
-                      <div className="relative">
-                        <button
-                          type="button"
-                          className="w-full p-2 border border-gray-300 rounded-md text-xs bg-white text-left flex justify-between items-center"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            // Fermer tous les autres dropdowns
-                            const dropdowns = document.querySelectorAll('.role-dropdown');
-                            dropdowns.forEach(dropdown => {
-                              if (dropdown !== e.currentTarget.nextElementSibling) {
-                                (dropdown as HTMLElement).style.display = 'none';
-                              }
-                            });
-                            // Basculer l'affichage de ce dropdown
-                            const dropdown = e.currentTarget.nextElementSibling;
-                            (dropdown as HTMLElement).style.display = (dropdown as HTMLElement).style.display === 'block' ? 'none' : 'block';
-                          }}
-                        >
-                          {editAllowedRoles.length > 0 ? `${editAllowedRoles.length} rôle(s) sélectionné(s)` : 'Sélectionner des rôles...'}
-                          <svg className="w-4 h-4 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-                          </svg>
-                        </button>
-                        
-                        <div className="role-dropdown absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto overflow-visible" style={{ display: 'none' }}>
-                          {Object.values(UserRole).map((role, index) => (
-                            <label key={index} className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                className="rounded text-blue-600 focus:ring-blue-500"
-                                checked={editAllowedRoles.some(allowedRole => allowedRole === role)}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    // Ajouter le rôle
-                                    if (!editAllowedRoles.some(allowedRole => allowedRole === role)) {
-                                      setEditAllowedRoles([...editAllowedRoles, role]);
+                    <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
+                      {/* Rôles création demande */}
+                      <div>
+                        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2">📝 Rôles - Création Demande :</p>
+                        <div className="relative">
+                          <button
+                            type="button"
+                            className="w-full p-2 border border-gray-300 rounded-md text-xs bg-white text-left flex justify-between items-center"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const dropdowns = document.querySelectorAll('.role-dropdown');
+                              dropdowns.forEach(dropdown => {
+                                if (dropdown !== e.currentTarget.nextElementSibling) {
+                                  (dropdown as HTMLElement).style.display = 'none';
+                                }
+                              });
+                              const dropdown = e.currentTarget.nextElementSibling;
+                              (dropdown as HTMLElement).style.display = (dropdown as HTMLElement).style.display === 'block' ? 'none' : 'block';
+                            }}
+                          >
+                            {editAllowedRoles.length > 0 ? `${editAllowedRoles.length} rôle(s) sélectionné(s)` : 'Sélectionner des rôles...'}
+                            <svg className="w-4 h-4 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                          </button>
+                          
+                          <div className="role-dropdown absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto overflow-visible" style={{ display: 'none' }}>
+                            {Object.values(UserRole).map((role, index) => (
+                              <label key={index} className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  className="rounded text-blue-600 focus:ring-blue-500"
+                                  checked={editAllowedRoles.some(allowedRole => allowedRole === role)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      if (!editAllowedRoles.some(allowedRole => allowedRole === role)) {
+                                        setEditAllowedRoles([...editAllowedRoles, role]);
+                                      }
+                                    } else {
+                                      setEditAllowedRoles(editAllowedRoles.filter(allowedRole => allowedRole !== role));
                                     }
-                                  } else {
-                                    // Retirer le rôle
-                                    setEditAllowedRoles(editAllowedRoles.filter(allowedRole => allowedRole !== role));
-                                  }
+                                  }}
+                                />
+                                <span className="ml-2 text-xs">{role}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {editAllowedRoles.map((role, index) => (
+                            <span key={index} className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-[8px] font-bold">
+                              {role}
+                              <button
+                                type="button"
+                                className="text-blue-600 hover:text-blue-800"
+                                onClick={() => {
+                                  setEditAllowedRoles(editAllowedRoles.filter(r => r !== role));
                                 }}
-                              />
-                              <span className="ml-2 text-xs">{role}</span>
-                            </label>
+                              >
+                                ×
+                              </button>
+                            </span>
                           ))}
                         </div>
                       </div>
-                      
-                      {/* Affichage des rôles sélectionnés sous forme de badges */}
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {editAllowedRoles.map((role, index) => (
-                          <span key={index} className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-[8px] font-bold">
-                            {role}
-                            <button
-                              type="button"
-                              className="text-blue-600 hover:text-blue-800"
-                              onClick={() => {
-                                setEditAllowedRoles(editAllowedRoles.filter(r => r !== role));
-                              }}
-                            >
-                              ×
-                            </button>
-                          </span>
-                        ))}
+
+                      {/* NOUVEAU: Rôles validation demande */}
+                      <div className="pt-3 border-t border-amber-100">
+                        <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-2">✓ Rôles - Validation Demande :</p>
+                        <div className="relative">
+                          <button
+                            type="button"
+                            className="w-full p-2 border border-amber-300 rounded-md text-xs bg-white text-left flex justify-between items-center"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const dropdowns = document.querySelectorAll('.role-dropdown');
+                              dropdowns.forEach(dropdown => {
+                                if (dropdown !== e.currentTarget.nextElementSibling) {
+                                  (dropdown as HTMLElement).style.display = 'none';
+                                }
+                              });
+                              const dropdown = e.currentTarget.nextElementSibling;
+                              (dropdown as HTMLElement).style.display = (dropdown as HTMLElement).style.display === 'block' ? 'none' : 'block';
+                            }}
+                          >
+                            {editRequestValidationRoles.length > 0 ? `${editRequestValidationRoles.length} rôle(s) sélectionné(s)` : 'Sélectionner des rôles...'}
+                            <svg className="w-4 h-4 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                          </button>
+                          
+                          <div className="role-dropdown absolute z-10 w-full mt-1 bg-white border border-amber-300 rounded-md shadow-lg max-h-60 overflow-y-auto" style={{ display: 'none' }}>
+                            {Object.values(UserRole).map((role, index) => (
+                              <label key={index} className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  className="rounded text-amber-600 focus:ring-amber-500"
+                                  checked={editRequestValidationRoles.some(allowedRole => allowedRole === role)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      if (!editRequestValidationRoles.some(allowedRole => allowedRole === role)) {
+                                        setEditRequestValidationRoles([...editRequestValidationRoles, role]);
+                                      }
+                                    } else {
+                                      setEditRequestValidationRoles(editRequestValidationRoles.filter(allowedRole => allowedRole !== role));
+                                    }
+                                  }}
+                                />
+                                <span className="ml-2 text-xs">{role}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {editRequestValidationRoles.map((role, index) => (
+                            <span key={index} className="inline-flex items-center gap-1 bg-amber-100 text-amber-800 px-2 py-1 rounded-full text-[8px] font-bold">
+                              {role}
+                              <button
+                                type="button"
+                                className="text-amber-600 hover:text-amber-800"
+                                onClick={() => {
+                                  setEditRequestValidationRoles(editRequestValidationRoles.filter(r => r !== role));
+                                }}
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* NOUVEAU: Rôles création devis */}
+                      <div className="pt-3 border-t border-emerald-100">
+                        <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-2">💰 Rôles - Création Devis :</p>
+                        <div className="relative">
+                          <button
+                            type="button"
+                            className="w-full p-2 border border-emerald-300 rounded-md text-xs bg-white text-left flex justify-between items-center"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const dropdowns = document.querySelectorAll('.role-dropdown');
+                              dropdowns.forEach(dropdown => {
+                                if (dropdown !== e.currentTarget.nextElementSibling) {
+                                  (dropdown as HTMLElement).style.display = 'none';
+                                }
+                              });
+                              const dropdown = e.currentTarget.nextElementSibling;
+                              (dropdown as HTMLElement).style.display = (dropdown as HTMLElement).style.display === 'block' ? 'none' : 'block';
+                            }}
+                          >
+                            {editQuoteAllowedRoles.length > 0 ? `${editQuoteAllowedRoles.length} rôle(s) sélectionné(s)` : 'Sélectionner des rôles...'}
+                            <svg className="w-4 h-4 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                          </button>
+                          
+                          <div className="role-dropdown absolute z-10 w-full mt-1 bg-white border border-emerald-300 rounded-md shadow-lg max-h-60 overflow-y-auto" style={{ display: 'none' }}>
+                            {Object.values(UserRole).map((role, index) => (
+                              <label key={index} className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  className="rounded text-emerald-600 focus:ring-emerald-500"
+                                  checked={editQuoteAllowedRoles.some(allowedRole => allowedRole === role)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      if (!editQuoteAllowedRoles.some(allowedRole => allowedRole === role)) {
+                                        setEditQuoteAllowedRoles([...editQuoteAllowedRoles, role]);
+                                      }
+                                    } else {
+                                      setEditQuoteAllowedRoles(editQuoteAllowedRoles.filter(allowedRole => allowedRole !== role));
+                                    }
+                                  }}
+                                />
+                                <span className="ml-2 text-xs">{role}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {editQuoteAllowedRoles.map((role, index) => (
+                            <span key={index} className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full text-[8px] font-bold">
+                              {role}
+                              <button
+                                type="button"
+                                className="text-emerald-600 hover:text-emerald-800"
+                                onClick={() => {
+                                  setEditQuoteAllowedRoles(editQuoteAllowedRoles.filter(r => r !== role));
+                                }}
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* NOUVEAU: Rôles validation devis */}
+                      <div className="pt-3 border-t border-purple-100">
+                        <p className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-2">✓ Rôles - Validation Devis :</p>
+                        <div className="relative">
+                          <button
+                            type="button"
+                            className="w-full p-2 border border-purple-300 rounded-md text-xs bg-white text-left flex justify-between items-center"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const dropdowns = document.querySelectorAll('.role-dropdown');
+                              dropdowns.forEach(dropdown => {
+                                if (dropdown !== e.currentTarget.nextElementSibling) {
+                                  (dropdown as HTMLElement).style.display = 'none';
+                                }
+                              });
+                              const dropdown = e.currentTarget.nextElementSibling;
+                              (dropdown as HTMLElement).style.display = (dropdown as HTMLElement).style.display === 'block' ? 'none' : 'block';
+                            }}
+                          >
+                            {editQuoteValidationRoles.length > 0 ? `${editQuoteValidationRoles.length} rôle(s) sélectionné(s)` : 'Sélectionner des rôles...'}
+                            <svg className="w-4 h-4 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                          </button>
+                          
+                          <div className="role-dropdown absolute z-10 w-full mt-1 bg-white border border-purple-300 rounded-md shadow-lg max-h-60 overflow-y-auto" style={{ display: 'none' }}>
+                            {Object.values(UserRole).map((role, index) => (
+                              <label key={index} className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  className="rounded text-purple-600 focus:ring-purple-500"
+                                  checked={editQuoteValidationRoles.some(allowedRole => allowedRole === role)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      if (!editQuoteValidationRoles.some(allowedRole => allowedRole === role)) {
+                                        setEditQuoteValidationRoles([...editQuoteValidationRoles, role]);
+                                      }
+                                    } else {
+                                      setEditQuoteValidationRoles(editQuoteValidationRoles.filter(allowedRole => allowedRole !== role));
+                                    }
+                                  }}
+                                />
+                                <span className="ml-2 text-xs">{role}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {editQuoteValidationRoles.map((role, index) => (
+                            <span key={index} className="inline-flex items-center gap-1 bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-[8px] font-bold">
+                              {role}
+                              <button
+                                type="button"
+                                className="text-purple-600 hover:text-purple-800"
+                                onClick={() => {
+                                  setEditQuoteValidationRoles(editQuoteValidationRoles.filter(r => r !== role));
+                                }}
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   )}
