@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Quote, QuoteItem, QuoteStatus, WorkType, Client, CommercialAgency, Centre, ClientCategory, Unit, WorkRequest } from '../types';
+import { Quote, QuoteItem, QuoteStatus, WorkType, Client, CommercialAgency, Centre, ClientCategory, Unit, WorkRequest, UserRole } from '../types';
 import { getAIRecommendation } from '../services/geminiService';
 import { numberToFrenchLetters } from '../utils/numberToLetters';
 import { ArticleService } from '../services/articleService';
@@ -19,6 +19,7 @@ interface QuoteFormProps {
   units: Unit[];
   initialData?: Quote;
   currentUserAgencyId?: string;
+  currentUser?: { role: UserRole };
 }
 
 export const QuoteForm: React.FC<QuoteFormProps> = ({
@@ -33,7 +34,8 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
   units,
   initialData,
   currentUserAgencyId,
-  requests
+  requests,
+  currentUser,
 }) => {
   const [formData, setFormData] = useState({
     requestId: initialData?.requestId || '',
@@ -81,11 +83,16 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
 
   const [loadingAI, setLoadingAI] = useState(false);
   const [aiRec, setAiRec] = useState(initialData?.aiNotes || '');
-  const [activeTab, setActiveTab] = useState<'form' | 'preview'>('form');
+  const [activeTab, setActiveTab] = useState<'form' | 'preview'>(
+    currentUser?.role === UserRole.AGENT || currentUser?.role === UserRole.CHEF_AGENCE ? 'preview' : 'form'
+  );
   const [articles, setArticles] = useState<any[]>([]);
   const [filteredArticles, setFilteredArticles] = useState<any[]>([]);
   const [showArticleDropdown, setShowArticleDropdown] = useState<{ [key: number]: boolean }>({});
   const [searchTerm, setSearchTerm] = useState<{ [key: number]: string }>({});
+
+  // Relation Clientèle et Chef d'Agence : mode lecture seule
+  const isReadOnly = currentUser?.role === UserRole.AGENT || currentUser?.role === UserRole.CHEF_AGENCE;
 
   const isLegal = formData.category === ClientCategory.LEGAL;
 
@@ -745,7 +752,9 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
 
               <div className="pt-10 flex gap-4 w-full justify-end">
                 <button type="button" onClick={onCancel} className="px-6 py-2 text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors">Annuler</button>
-                <button type="button" onClick={() => setActiveTab('preview')} className="px-6 py-2 text-xs font-bold text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-all">Aperçu</button>
+                {!isReadOnly && (
+                  <button type="button" onClick={() => setActiveTab('preview')} className="px-6 py-2 text-xs font-bold text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-all">Aperçu</button>
+                )}
                 <button 
                   type="submit" 
                   disabled={items.length === 0 || total === 0}
@@ -971,20 +980,21 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
 
       <div className="px-8 py-6 mb-10 max-w-4xl mx-auto print:hidden">
         <div className="flex justify-end gap-4">
-          <button type="button" onClick={() => setActiveTab('form')} className="px-8 py-3 text-[10px] font-black uppercase tracking-widest text-slate-500 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all">Retour à l'édition</button>
+          <button type="button" onClick={() => setActiveTab('form')} className="px-8 py-3 text-[10px] font-black uppercase tracking-widest text-slate-500 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all" style={{ display: isReadOnly ? 'none' : 'block' }}>Retour à l'édition</button>
           <button 
             type="button" 
             onClick={() => handleSubmit()} 
             className="px-8 py-3 text-[10px] font-black uppercase tracking-widest text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 active:scale-95 flex items-center gap-2"
+            style={{ display: isReadOnly ? 'none' : 'flex' }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
             Enregistrer & Valider
           </button>
-          <button type="button" onClick={() => window.print()} className="px-8 py-3 text-[10px] font-black uppercase tracking-widest text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center gap-2">
+          <button type="button" onClick={() => window.print()} className="px-8 py-3 text-[10px] font-black uppercase tracking-widest text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center gap-2" style={{ display: currentUser?.role === UserRole.JURISTE ? 'none' : 'flex' }}>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
             Imprimer le Devis
           </button>
-
+      
         </div>
       </div>
     </div>

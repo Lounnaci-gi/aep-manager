@@ -750,6 +750,7 @@ const App: React.FC = () => {
             centres={centres}
             agencies={agencies}
             workTypes={workTypes}
+            requests={requests}
             onDelete={handleDeleteQuote} 
             onUpdateStatus={handleUpdateStatus} 
             onEdit={(q) => { setEditingQuote(q); setView('edit-quote'); }}
@@ -787,7 +788,9 @@ const App: React.FC = () => {
                 
         {(view === 'create' || view === 'edit-quote') && (() => {
           const canManageQuotes = currentUser.role === UserRole.CHEF_CENTRE || 
-                                  currentUser.role === UserRole.TECHICO_COMMERCIAL;
+                                  currentUser.role === UserRole.TECHICO_COMMERCIAL ||
+                                  currentUser.role === UserRole.AGENT ||
+                                  currentUser.role === UserRole.CHEF_AGENCE;
           if (!canManageQuotes) {
             return (
               <div className="flex flex-col items-center justify-center py-24 text-center gap-4">
@@ -815,6 +818,7 @@ const App: React.FC = () => {
               units={units}
               initialData={editingQuote}
               currentUserAgencyId={currentUser.agencyId}
+              currentUser={currentUser}
               onSave={handleSaveQuote}
               onDelete={handleDeleteQuote}
               onCancel={() => { setView('list'); setEditingQuote(undefined); }} 

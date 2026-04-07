@@ -1076,7 +1076,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
             Enregistrer le Devis
           </button>
-          <button type="button" onClick={() => window.print()} className="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-md">Imprimer</button>
+          <button type="button" onClick={() => window.print()} className="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-md" style={{ display: currentUser.role === UserRole.JURISTE ? 'none' : 'block' }}>Imprimer</button>
 
         </div>
       </div>
