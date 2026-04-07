@@ -417,8 +417,11 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     
+    // Filtrer les articles valides (avec description et prix > 0)
+    const validItems = items.filter(item => item.description && item.unitPrice > 0);
+    
     // Validation
-    if (items.length === 0 || total === 0 || items.some(item => !item.description || item.unitPrice <= 0)) {
+    if (items.length === 0 || validItems.length === 0 || total === 0) {
       Swal.fire({
         title: 'Devis vide ou incomplet',
         text: 'Veuillez ajouter au moins un article avec un montant valide avant d\'enregistrer.',

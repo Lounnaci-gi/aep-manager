@@ -227,7 +227,8 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
 
   const handleCancelValidation = async (req: WorkRequest, validationType: ValidationType) => {
     // Si un devis a déjà été créé, on ne peut pas annuler la validation sans supprimer le devis d'abord
-    if (req.status === RequestStatus.QUOTED) {
+    const hasQuote = quotes.some(q => q.requestId === req.id);
+    if (req.status === RequestStatus.QUOTED || hasQuote) {
       Swal.fire({
         title: 'Action Impossible',
         text: 'Un devis a déjà été établi pour cette demande. Veuillez d\'abord supprimer le devis pour pouvoir annuler la validation de la demande.',
@@ -374,7 +375,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                 </div>
                 <div class="flex items-center gap-1.5">
                   <svg class="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.95 22.95 0 0110 13a22.95 22.95 0 01-10-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd"/>
+                    <path fillRule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.95 22.95 0 0110 13a22.95 22.95 0 01-10-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd"/>
                     <path d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z"/>
                   </svg>
                   <span class="text-xs font-black text-blue-600 uppercase tracking-wider">${roleUtilisateur}</span>
@@ -620,7 +621,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                                     Rejeter
                                   </button>
                                 </>
-                              ) : (
+                              ) : !quotes.some(q => q.requestId === req.id) && (
                                 <button 
                                   onClick={() => handleCancelValidation(req, ValidationType.AGENCY)}
                                   className="bg-amber-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-100/50 flex items-center gap-1.5"
@@ -650,7 +651,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                                     Rejeter
                                   </button>
                                 </>
-                              ) : (
+                              ) : !quotes.some(q => q.requestId === req.id) && (
                                 <button 
                                   onClick={() => handleCancelValidation(req, ValidationType.CUSTOMER_SERVICE)}
                                   className="bg-amber-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-100/50 flex items-center gap-1.5"
@@ -680,7 +681,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                                     Rejeter
                                   </button>
                                 </>
-                              ) : (
+                              ) : !quotes.some(q => q.requestId === req.id) && (
                                 <button 
                                   onClick={() => handleCancelValidation(req, ValidationType.LAWYER)}
                                   className="bg-amber-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-100/50 flex items-center gap-1.5"
@@ -832,7 +833,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                   <td colSpan={5} className="px-6 py-24 text-center">
                     <div className="flex flex-col items-center justify-center space-y-4">
                       <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center">
-                        <svg className="w-8 h-8 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                        <svg className="w-8 h-8 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002-2h2a2 2 0 002 2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
                       </div>
                       <div>
                         <p className="text-sm text-gray-400 font-black uppercase tracking-widest italic">Aucun dossier trouvé.</p>
