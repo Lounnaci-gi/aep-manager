@@ -26,15 +26,15 @@ interface WorkRequestListProps {
 
 type SortOption = 'date-desc' | 'date-asc' | 'name-asc';
 
-export const WorkRequestList: React.FC<WorkRequestListProps> = ({ 
-  requests, 
+export const WorkRequestList: React.FC<WorkRequestListProps> = ({
+  requests,
   agencies,
   centres,
   users,
   workTypes,
-  onDelete, 
-  onEdit, 
-  onCreateQuote, 
+  onDelete,
+  onEdit,
+  onCreateQuote,
   onUpdateStatus,
   onUpdateRequestWithValidations,
   currentUser,
@@ -56,26 +56,26 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
   const normalizedRequests = useMemo(() => {
     return requests.map(req => ({
       ...req,
-      assignedValidations: req.assignedValidations && req.assignedValidations.length > 0 
-        ? req.assignedValidations 
+      assignedValidations: req.assignedValidations && req.assignedValidations.length > 0
+        ? req.assignedValidations
         : [ValidationType.AGENCY, ValidationType.CUSTOMER_SERVICE, ValidationType.LAWYER]
     }));
   }, [requests]);
 
   // Compter les demandes en attente de validation pour chaque rôle
-  const pendingAgencyValidation = normalizedRequests.filter(req => 
+  const pendingAgencyValidation = normalizedRequests.filter(req =>
     req.assignedValidations?.includes(ValidationType.AGENCY) &&
     !req.validations?.find(v => v.type === ValidationType.AGENCY && v.status === 'validated') &&
     currentUser?.role === UserRole.CHEF_AGENCE
   ).length;
 
-  const pendingCustomerServiceValidation = normalizedRequests.filter(req => 
+  const pendingCustomerServiceValidation = normalizedRequests.filter(req =>
     req.assignedValidations?.includes(ValidationType.CUSTOMER_SERVICE) &&
     !req.validations?.find(v => v.type === ValidationType.CUSTOMER_SERVICE && v.status === 'validated') &&
     currentUser?.role === UserRole.AGENT
   ).length;
 
-  const pendingLawyerValidation = normalizedRequests.filter(req => 
+  const pendingLawyerValidation = normalizedRequests.filter(req =>
     req.assignedValidations?.includes(ValidationType.LAWYER) &&
     !req.validations?.find(v => v.type === ValidationType.LAWYER && v.status === 'validated') &&
     currentUser?.role === UserRole.JURISTE
@@ -84,14 +84,14 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
   // Filtrer les demandes selon le filtre de validation
   const getFilteredRequests = () => {
     if (validationFilter === 'pending') {
-      return normalizedRequests.filter(req => 
-        req.assignedValidations && 
+      return normalizedRequests.filter(req =>
+        req.assignedValidations &&
         req.assignedValidations.length > 0 &&
         !req.validations?.every(v => v.status === 'validated')
       );
     }
     if (validationFilter === 'validated') {
-      return normalizedRequests.filter(req => 
+      return normalizedRequests.filter(req =>
         req.status === RequestStatus.VALIDATED || req.status === RequestStatus.QUOTED
       );
     }
@@ -126,12 +126,12 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
 
   const filteredAndSortedRequests = useMemo(() => {
     let result = getFilteredRequests().filter(req => {
-      const matchesSearch = 
+      const matchesSearch =
         req.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         req.id.toLowerCase().includes(searchTerm.toLowerCase());
-        
+
       const matchesStatus = statusFilter === '' || req.status === statusFilter;
-        
+
       const reqDate = new Date(req.createdAt).getTime();
       let matchesDate = true;
       if (startDate) {
@@ -142,7 +142,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
         const end = new Date(endDate).setHours(23, 59, 59, 999);
         if (reqDate > end) matchesDate = false;
       }
-        
+
       return matchesSearch && matchesStatus && matchesDate;
     });
 
@@ -185,7 +185,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
           }
         }
       });
-      
+
       if (!text) return;
       reason = text;
     }
@@ -210,7 +210,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
       ...req,
       validations: filteredValidations
     };
-    
+
     const newStatus = WorkflowEngine.calculateNewStatus(updatedRequest);
     const finalRequest = {
       ...updatedRequest,
@@ -278,7 +278,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
     // Supprimer l'ancienne validation et ajouter l'enregistrement d'annulation
     const filteredValidations = updatedValidations.filter(v => v.type !== validationType);
     filteredValidations.push(cancellationRecord);
-    
+
     // Retour au statut initial
     const newStatus = RequestStatus.RECEIVED;
 
@@ -322,47 +322,39 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
 
   const handleShowReason = (req: WorkRequest) => {
     let reasonContent = '';
-    
+
     // Tous les motifs des validations avec raison
     if (req.validations && req.validations.length > 0) {
       const validationsWithReason = req.validations.filter(v => v.reason && v.reason.trim() !== '');
-      
+
       if (validationsWithReason.length > 0) {
         reasonContent += `
           <div class="space-y-4">
         `;
-        
+
         validationsWithReason.forEach((validation, index) => {
           // Récupérer l'utilisateur et son rôle depuis la collection Utilisateurs
           const validator = users.find(u => u.id === validation.userId);
           const roleUtilisateur = validator?.role || 'Non spécifié';
-          
+
           // Formatage de la date et heure
           const dateTime = new Date(validation.validatedAt || validation.date);
-          const dateStr = dateTime.toLocaleDateString('fr-FR', { 
-            day: 'numeric', 
-            month: 'short', 
-            year: 'numeric' 
+          const dateStr = dateTime.toLocaleDateString('fr-FR', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
           });
-          const timeStr = dateTime.toLocaleTimeString('fr-FR', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
+          const timeStr = dateTime.toLocaleTimeString('fr-FR', {
+            hour: '2-digit',
+            minute: '2-digit'
           });
-          
+
           reasonContent += `
             <div class="border border-gray-200 rounded-lg p-4 bg-white">
               <!-- En-tête avec statut et type -->
               <div class="flex items-center justify-between mb-3">
-                <div class="flex items-center gap-2">
-                  <span class="text-lg">${validation.status === 'validated' ? '✅' : (validation.status === 'rejected' ? '❌' : '⏳')}</span>
-                  <span class="text-sm font-black uppercase tracking-wider text-gray-700">
-                    ${validation.type === 'agency' ? 'Agence' : (validation.type === 'customer_service' ? 'Service Client' : 'Juriste')}
-                  </span>
-                </div>
-                <div class="text-right">
-                  <div class="text-[10px] text-gray-500 font-bold">${dateStr}</div>
-                  <div class="text-[9px] text-gray-400 font-bold">{timeStr}</div>
-                </div>
+                  <!-- Statut et type retirés car non nécessaires -->
+                <div class="text-[12px] text-gray-500 font-bold">${dateStr} à ${timeStr} </div>
               </div>
               
               <!-- Informations utilisateur -->
@@ -389,7 +381,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
             </div>
           `;
         });
-        
+
         reasonContent += `
           </div>
         `;
@@ -404,7 +396,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
         `;
       }
     }
-    
+
     Swal.fire({
       title: 'Historique des Motifs',
       html: `
@@ -462,41 +454,38 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
               <span className="text-xs font-black px-4 py-1.5 bg-blue-600 text-white rounded-full uppercase tracking-widest shadow-lg shadow-blue-200">
                 {filteredAndSortedRequests.length} Dossiers
               </span>
-              
+
               <div className="flex gap-2">
                 <button
                   onClick={() => setValidationFilter('all')}
-                  className={`px-4 py-2 text-xs font-black rounded-lg uppercase tracking-widest transition-all ${
-                    validationFilter === 'all' 
-                      ? 'bg-gray-600 text-white shadow-lg' 
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
+                  className={`px-4 py-2 text-xs font-black rounded-lg uppercase tracking-widest transition-all ${validationFilter === 'all'
+                    ? 'bg-gray-600 text-white shadow-lg'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
                 >
                   Tous
                 </button>
                 <button
                   onClick={() => setValidationFilter('pending')}
-                  className={`px-4 py-2 text-xs font-black rounded-lg uppercase tracking-widest transition-all ${
-                    validationFilter === 'pending' 
-                      ? 'bg-amber-500 text-white shadow-lg' 
-                      : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
-                  }`}
+                  className={`px-4 py-2 text-xs font-black rounded-lg uppercase tracking-widest transition-all ${validationFilter === 'pending'
+                    ? 'bg-amber-500 text-white shadow-lg'
+                    : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+                    }`}
                 >
                   En attente
                 </button>
                 <button
                   onClick={() => setValidationFilter('validated')}
-                  className={`px-4 py-2 text-xs font-black rounded-lg uppercase tracking-widest transition-all ${
-                    validationFilter === 'validated' 
-                      ? 'bg-emerald-500 text-white shadow-lg' 
-                      : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                  }`}
+                  className={`px-4 py-2 text-xs font-black rounded-lg uppercase tracking-widest transition-all ${validationFilter === 'validated'
+                    ? 'bg-emerald-500 text-white shadow-lg'
+                    : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                    }`}
                 >
                   Validés
                 </button>
               </div>
               {(searchTerm || statusFilter || startDate || endDate) && (
-                <button 
+                <button
                   onClick={clearFilters}
                   className="text-[9px] font-black text-rose-500 hover:text-rose-700 uppercase tracking-widest transition-colors flex items-center gap-1"
                 >
@@ -510,7 +499,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
             <div className="md:col-span-1 lg:col-span-2">
               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Recherche Rapide</label>
-              <input 
+              <input
                 type="text"
                 placeholder="Nom ou Réf..."
                 className="w-full rounded-lg border-gray-200 bg-white p-2.5 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border transition-all"
@@ -547,7 +536,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
             <div className="sm:col-span-2 md:col-span-2 lg:col-span-2 grid grid-cols-2 gap-2">
               <div>
                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Du</label>
-                <input 
+                <input
                   type="date"
                   className="w-full rounded-lg border-gray-200 bg-white p-2.5 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border transition-all"
                   value={startDate}
@@ -556,7 +545,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
               </div>
               <div>
                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Au</label>
-                <input 
+                <input
                   type="date"
                   className="w-full rounded-lg border-gray-200 bg-white p-2.5 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border transition-all"
                   value={endDate}
@@ -593,8 +582,8 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                     <div className="text-[11px] font-black text-blue-600 uppercase tracking-tighter">{req.serviceType}</div>
                     {req.serviceType === "Branchement d'eau potable" && req.branchementType && (
                       <div className="text-[10px] text-emerald-600 font-bold mt-1">
-                        {req.branchementType === BranchementType.AUTRE && req.branchementDetails 
-                          ? `${req.branchementType}: ${req.branchementDetails}` 
+                        {req.branchementType === BranchementType.AUTRE && req.branchementDetails
+                          ? `${req.branchementType}: ${req.branchementDetails}`
                           : req.branchementType}
                       </div>
                     )}
@@ -604,7 +593,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                     <span className={`px-3 py-1 text-[10px] font-black rounded-full uppercase border ${getStatusBadge(req.status)}`}>
                       {req.status}
                     </span>
-                    
+
                     {/* Indicateur visuel pour les demandes avec motif */}
                     {(req.rejectionReason || (req.validations && req.validations.some(v => v.reason))) && (
                       <button
@@ -623,147 +612,147 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                     <div className="flex justify-end items-center gap-2">
                       {req.assignedValidations && req.assignedValidations.length > 0 && (
                         <>
-                          {req.assignedValidations.includes(ValidationType.AGENCY) && 
-                           currentUser?.role === UserRole.CHEF_AGENCE && (
-                            <div className="flex gap-2">
-                              {!req.validations?.find(v => v.type === ValidationType.AGENCY && v.status === 'validated') ? (
-                                <>
-                                  <button 
-                                    onClick={() => handleValidation(req, ValidationType.AGENCY, 'validated')}
-                                    className="bg-green-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg shadow-green-100/50"
+                          {req.assignedValidations.includes(ValidationType.AGENCY) &&
+                            currentUser?.role === UserRole.CHEF_AGENCE && (
+                              <div className="flex gap-2">
+                                {!req.validations?.find(v => v.type === ValidationType.AGENCY && v.status === 'validated') ? (
+                                  <>
+                                    <button
+                                      onClick={() => handleValidation(req, ValidationType.AGENCY, 'validated')}
+                                      className="bg-green-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg shadow-green-100/50"
+                                    >
+                                      Valider Chef Agence
+                                    </button>
+                                    <button
+                                      onClick={() => handleValidation(req, ValidationType.AGENCY, 'rejected')}
+                                      className="bg-rose-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100/50"
+                                    >
+                                      Rejeter
+                                    </button>
+                                  </>
+                                ) : !quotes.some(q => q.requestId === req.id) && (
+                                  <button
+                                    onClick={() => handleCancelValidation(req, ValidationType.AGENCY)}
+                                    className="bg-amber-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-100/50 flex items-center gap-1.5"
                                   >
-                                    Valider Chef Agence
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                    Annuler Validation
                                   </button>
-                                  <button 
-                                    onClick={() => handleValidation(req, ValidationType.AGENCY, 'rejected')}
-                                    className="bg-rose-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100/50"
+                                )}
+                              </div>
+                            )}
+
+                          {req.assignedValidations.includes(ValidationType.CUSTOMER_SERVICE) &&
+                            currentUser?.role === UserRole.AGENT && (
+                              <div className="flex gap-2">
+                                {!req.validations?.find(v => v.type === ValidationType.CUSTOMER_SERVICE && v.status === 'validated') ? (
+                                  <>
+                                    <button
+                                      onClick={() => handleValidation(req, ValidationType.CUSTOMER_SERVICE, 'validated')}
+                                      className="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100/50"
+                                    >
+                                      Valider Relation Clientèle
+                                    </button>
+                                    <button
+                                      onClick={() => handleValidation(req, ValidationType.CUSTOMER_SERVICE, 'rejected')}
+                                      className="bg-rose-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100/50"
+                                    >
+                                      Rejeter
+                                    </button>
+                                  </>
+                                ) : !quotes.some(q => q.requestId === req.id) && (
+                                  <button
+                                    onClick={() => handleCancelValidation(req, ValidationType.CUSTOMER_SERVICE)}
+                                    className="bg-amber-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-100/50 flex items-center gap-1.5"
                                   >
-                                    Rejeter
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                    Annuler Validation
                                   </button>
-                                </>
-                              ) : !quotes.some(q => q.requestId === req.id) && (
-                                <button 
-                                  onClick={() => handleCancelValidation(req, ValidationType.AGENCY)}
-                                  className="bg-amber-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-100/50 flex items-center gap-1.5"
-                                >
-                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                                  Annuler Validation
-                                </button>
-                              )}
-                            </div>
-                          )}
-                          
-                          {req.assignedValidations.includes(ValidationType.CUSTOMER_SERVICE) && 
-                           currentUser?.role === UserRole.AGENT && (
-                            <div className="flex gap-2">
-                              {!req.validations?.find(v => v.type === ValidationType.CUSTOMER_SERVICE && v.status === 'validated') ? (
-                                <>
-                                  <button 
-                                    onClick={() => handleValidation(req, ValidationType.CUSTOMER_SERVICE, 'validated')}
-                                    className="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100/50"
+                                )}
+                              </div>
+                            )}
+
+                          {req.assignedValidations.includes(ValidationType.LAWYER) &&
+                            currentUser?.role === UserRole.JURISTE && (
+                              <div className="flex gap-2">
+                                {!req.validations?.find(v => v.type === ValidationType.LAWYER && v.status === 'validated') ? (
+                                  <>
+                                    <button
+                                      onClick={() => handleValidation(req, ValidationType.LAWYER, 'validated')}
+                                      className="bg-purple-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-purple-700 transition-all shadow-lg shadow-purple-100/50"
+                                    >
+                                      Valider Juriste
+                                    </button>
+                                    <button
+                                      onClick={() => handleValidation(req, ValidationType.LAWYER, 'rejected')}
+                                      className="bg-rose-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100/50"
+                                    >
+                                      Rejeter
+                                    </button>
+                                  </>
+                                ) : !quotes.some(q => q.requestId === req.id) && (
+                                  <button
+                                    onClick={() => handleCancelValidation(req, ValidationType.LAWYER)}
+                                    className="bg-amber-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-100/50 flex items-center gap-1.5"
                                   >
-                                    Valider Relation Clientèle
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                    Annuler Validation
                                   </button>
-                                  <button 
-                                    onClick={() => handleValidation(req, ValidationType.CUSTOMER_SERVICE, 'rejected')}
-                                    className="bg-rose-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100/50"
-                                  >
-                                    Rejeter
-                                  </button>
-                                </>
-                              ) : !quotes.some(q => q.requestId === req.id) && (
-                                <button 
-                                  onClick={() => handleCancelValidation(req, ValidationType.CUSTOMER_SERVICE)}
-                                  className="bg-amber-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-100/50 flex items-center gap-1.5"
-                                >
-                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                                  Annuler Validation
-                                </button>
-                              )}
-                            </div>
-                          )}
-                          
-                          {req.assignedValidations.includes(ValidationType.LAWYER) && 
-                           currentUser?.role === UserRole.JURISTE && (
-                            <div className="flex gap-2">
-                              {!req.validations?.find(v => v.type === ValidationType.LAWYER && v.status === 'validated') ? (
-                                <>
-                                  <button 
-                                    onClick={() => handleValidation(req, ValidationType.LAWYER, 'validated')}
-                                    className="bg-purple-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-purple-700 transition-all shadow-lg shadow-purple-100/50"
-                                  >
-                                    Valider Juriste
-                                  </button>
-                                  <button 
-                                    onClick={() => handleValidation(req, ValidationType.LAWYER, 'rejected')}
-                                    className="bg-rose-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100/50"
-                                  >
-                                    Rejeter
-                                  </button>
-                                </>
-                              ) : !quotes.some(q => q.requestId === req.id) && (
-                                <button 
-                                  onClick={() => handleCancelValidation(req, ValidationType.LAWYER)}
-                                  className="bg-amber-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-100/50 flex items-center gap-1.5"
-                                >
-                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                                  Annuler Validation
-                                </button>
-                              )}
-                            </div>
-                          )}
+                                )}
+                              </div>
+                            )}
                         </>
                       )}
-                      
+
                       {/* Bouton Établir Devis - Apparaît quand TOUTES les validations sont terminées */}
-                      {req.validations && 
-                       req.validations.length > 0 &&
-                       req.validations.every(v => v.status === 'validated') && 
-                       req.status !== RequestStatus.QUOTED && 
-                       !quotes.some(q => q.requestId === req.id) &&
-                       req.status !== RequestStatus.REJECTED && 
-                       (currentUser?.role === UserRole.TECHICO_COMMERCIAL || currentUser?.role === UserRole.CHEF_CENTRE) && (
-                        <button 
-                          onClick={() => onCreateQuote(req)}
-                          className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100/50 flex items-center gap-2"
-                          title="Toutes les validations sont terminées. Créer un devis."
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                          Établir Devis
-                        </button>
-                      )}
-                      
+                      {req.validations &&
+                        req.validations.length > 0 &&
+                        req.validations.every(v => v.status === 'validated') &&
+                        req.status !== RequestStatus.QUOTED &&
+                        !quotes.some(q => q.requestId === req.id) &&
+                        req.status !== RequestStatus.REJECTED &&
+                        (currentUser?.role === UserRole.TECHICO_COMMERCIAL || currentUser?.role === UserRole.CHEF_CENTRE) && (
+                          <button
+                            onClick={() => onCreateQuote(req)}
+                            className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100/50 flex items-center gap-2"
+                            title="Toutes les validations sont terminées. Créer un devis."
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                            Établir Devis
+                          </button>
+                        )}
+
                       {/* Message si validations en cours */}
-                      {req.validations && 
-                       req.validations.length > 0 &&
-                       !req.validations.every(v => v.status === 'validated') && 
-                       (currentUser?.role === UserRole.TECHICO_COMMERCIAL || currentUser?.role === UserRole.CHEF_CENTRE) && (
-                        <div className="text-[9px] text-amber-600 font-black uppercase tracking-widest bg-amber-50 px-3 py-2 rounded-lg border border-amber-200">
-                          <svg className="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586a1 1 0 01.293.707V19a2 2 0 01-2 2z" clipRule="evenodd"/></svg>
-                          En attente de validations
-                        </div>
-                      )}
-                      
+                      {req.validations &&
+                        req.validations.length > 0 &&
+                        !req.validations.every(v => v.status === 'validated') &&
+                        (currentUser?.role === UserRole.TECHICO_COMMERCIAL || currentUser?.role === UserRole.CHEF_CENTRE) && (
+                          <div className="text-[9px] text-amber-600 font-black uppercase tracking-widest bg-amber-50 px-3 py-2 rounded-lg border border-amber-200">
+                            <svg className="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586a1 1 0 01.293.707V19a2 2 0 01-2 2z" clipRule="evenodd" /></svg>
+                            En attente de validations
+                          </div>
+                        )}
+
                       {(currentUser?.role === UserRole.AGENT || currentUser?.role === UserRole.CHEF_AGENCE) && req.serviceType.toLowerCase().includes("branchement") && (
-                        <button 
-                          onClick={() => onEdit(req)} 
+                        <button
+                          onClick={() => onEdit(req)}
                           className="text-blue-400 hover:text-blue-600 transition-colors p-1.5 hover:bg-blue-50 rounded-lg"
                           title="Modifier la demande"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                         </button>
                       )}
-                      
+
                       {req.serviceType.toLowerCase().includes("branchement") === false && (
-                        <button 
-                          onClick={() => onEdit(req)} 
+                        <button
+                          onClick={() => onEdit(req)}
                           className="text-blue-400 hover:text-blue-600 transition-colors p-1.5 hover:bg-blue-50 rounded-lg"
                           title="Modifier la demande"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                         </button>
                       )}
-                      
+
                       {(currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.CHEF_CENTRE) && (
                         <select
                           className="text-[10px] font-black uppercase bg-gray-50 border border-gray-100 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500/20 outline-none"
@@ -773,28 +762,27 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                           {Object.values(RequestStatus).map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
                       )}
-                      
+
                       {/* Suppression autorisée pour AGENT, CHEF_AGENCE et CHEF_CENTRE */}
-                      {currentUser && (currentUser.role === UserRole.AGENT || 
-                        currentUser.role === UserRole.CHEF_AGENCE || 
+                      {currentUser && (currentUser.role === UserRole.AGENT ||
+                        currentUser.role === UserRole.CHEF_AGENCE ||
                         currentUser.role === UserRole.CHEF_CENTRE) && (
-                        <button 
-                          onClick={() => handleDeleteClick(req)} 
-                          className="text-gray-200 hover:text-rose-600 transition-colors p-1.5 hover:bg-rose-50 rounded-lg"
-                          title="Supprimer la demande"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                        </button>
-                      )}
+                          <button
+                            onClick={() => handleDeleteClick(req)}
+                            className="text-gray-200 hover:text-rose-600 transition-colors p-1.5 hover:bg-rose-50 rounded-lg"
+                            title="Supprimer la demande"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                          </button>
+                        )}
 
                       {/* Bouton Voir Workflow */}
-                      <button 
-                        onClick={() => setSelectedRequestForWorkflow(req === selectedRequestForWorkflow ? null : req)} 
-                        className={`transition-colors p-1.5 rounded-lg ${
-                          req === selectedRequestForWorkflow 
-                            ? 'text-blue-600 bg-blue-100' 
-                            : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'
-                        }`}
+                      <button
+                        onClick={() => setSelectedRequestForWorkflow(req === selectedRequestForWorkflow ? null : req)}
+                        className={`transition-colors p-1.5 rounded-lg ${req === selectedRequestForWorkflow
+                          ? 'text-blue-600 bg-blue-100'
+                          : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'
+                          }`}
                         title="Voir le workflow"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -806,16 +794,16 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                       {(() => {
                         // Vérifier si l'utilisateur actuel est autorisé pour ce type de travail spécifique
                         const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
-                        const isAllowedForWorkType = workType?.allowedRoles && workType.allowedRoles.length > 0 
+                        const isAllowedForWorkType = workType?.allowedRoles && workType.allowedRoles.length > 0
                           ? workType.allowedRoles.includes(currentUser?.role)
                           : false;
-                        
+
                         return isAllowedForWorkType ? (
-                          <button 
+                          <button
                             onClick={() => {
                               setPrintMode('standard');
                               setActivePrintRequest(req);
-                            }} 
+                            }}
                             className="text-gray-400 hover:text-blue-600 transition-colors p-1.5 hover:bg-blue-50 rounded-lg"
                             title="Imprimer la demande"
                           >
@@ -828,12 +816,12 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                       {(() => {
                         // Vérifier si l'utilisateur actuel est autorisé pour ce type de travail spécifique
                         const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
-                        const isAllowedForWorkType = workType?.allowedRoles && workType.allowedRoles.length > 0 
+                        const isAllowedForWorkType = workType?.allowedRoles && workType.allowedRoles.length > 0
                           ? workType.allowedRoles.includes(currentUser?.role)
                           : false;
-                        
+
                         return req.status === RequestStatus.VALIDATED && isAllowedForWorkType ? (
-                          <button 
+                          <button
                             onClick={() => {
                               Swal.fire({
                                 title: 'Générer la Demande d\'Établissement de Devis',
@@ -850,7 +838,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                                   setActivePrintRequest(req);
                                 }
                               });
-                            }} 
+                            }}
                             className="text-emerald-600 hover:text-emerald-700 transition-colors p-1.5 hover:bg-emerald-50 rounded-lg border-2 border-emerald-200 shadow-sm"
                             title="Générer la demande d'établissement de devis quantitatif et estimatif"
                           >
@@ -882,9 +870,9 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
           </table>
         </div>
       </div>
-      
+
       {activePrintRequest && printMode === 'standard' && (
-        <WorkRequestPrint 
+        <WorkRequestPrint
           request={activePrintRequest}
           agency={agencies.find(a => a.id === activePrintRequest.agencyId)}
           centre={centres.find(c => c.id === (agencies.find(a => a.id === activePrintRequest.agencyId)?.centreId || activePrintRequest.centreId))}
@@ -892,9 +880,9 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
           onClose={() => setActivePrintRequest(null)}
         />
       )}
-      
+
       {activePrintRequest && printMode === 'quote-request' && (
-        <QuoteEstablishmentRequestPrint 
+        <QuoteEstablishmentRequestPrint
           request={activePrintRequest}
           agency={agencies.find(a => a.id === activePrintRequest.agencyId)}
           centre={centres.find(c => c.id === (agencies.find(a => a.id === activePrintRequest.agencyId)?.centreId || activePrintRequest.centreId))}
