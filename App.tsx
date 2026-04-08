@@ -353,19 +353,76 @@ const App: React.FC = () => {
 
   const handleUpdateStatus = async (id: string, status: QuoteStatus) => {
     try {
-      await DbService.updateQuoteStatus(id, status);
+      if (status === QuoteStatus.APPROVED && currentUser) {
+        // Logique de multi-validation
+        const quotes = await DbService.getQuotes();
+        const quote = quotes.find(q => q.id === id);
+        if (!quote) throw new Error('Devis non trouvé');
+
+        const workTypes = await DbService.getWorkTypes();
+        const matchedWorkType = workTypes.find(wt => wt.label === quote.serviceType);
+        const quoteValidationRoles = matchedWorkType?.quoteValidationRoles || [UserRole.ADMIN, UserRole.CHEF_CENTRE];
+
+        if (!quoteValidationRoles.includes(currentUser.role)) {
+          Swal.fire({ title: 'Non autorisé', text: 'Votre rôle ne vous permet pas de valider ce devis.', icon: 'error' });
+          return;
+        }
+
+        const currentValidations = quote.validations || [];
+        if (currentValidations.some(v => v.userId === currentUser.id && v.status === 'validated')) {
+          Swal.fire({ title: 'Déjà validé', text: 'Vous avez déjà validé ce devis.', icon: 'info' });
+          return;
+        }
+
+        const newValidation: any = {
+          userId: currentUser.id,
+          userName: currentUser.fullName,
+          role: currentUser.role,
+          status: 'validated',
+          date: new Date().toISOString()
+        };
+
+        const updatedValidations = [...currentValidations, newValidation];
+        
+        // Vérifier si tout le monde a validé
+        const allUsers = await DbService.getUsers();
+        const requiredUsers = allUsers.filter(u => quoteValidationRoles.includes(u.role));
+        const validatedUserIds = updatedValidations.filter(v => v.status === 'validated').map(v => v.userId);
+        const isComplete = requiredUsers.every(u => validatedUserIds.includes(u.id));
+
+        const updatedQuote = {
+          ...quote,
+          validations: updatedValidations,
+          status: isComplete ? QuoteStatus.APPROVED : QuoteStatus.PENDING
+        };
+
+        await DbService.saveQuote(updatedQuote);
+        
+        if (isComplete) {
+          Swal.fire({ title: 'Devis Approuvé', text: 'Toutes les validations ont été effectuées. Le devis peut maintenant être imprimé.', icon: 'success' });
+        } else {
+          Swal.fire({ 
+            title: 'Validation Enregistrée', 
+            text: `Votre validation a été prise en compte. (${validatedUserIds.length}/${requiredUsers.length} validations)`, 
+            icon: 'info',
+            toast: true,
+            position: 'top-end',
+            timer: 3000
+          });
+        }
+      } else {
+        // Comportement standard pour REJECTED ou autres
+        await DbService.updateQuoteStatus(id, status);
+        Swal.fire({ title: 'Statut Mis à jour', icon: 'success', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
+      }
       await loadData();
-      Swal.fire({ title: 'Statut Mis à jour', icon: 'success', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
     } catch (error) {
       console.error('Erreur lors de la mise à jour du statut:', error);
       Swal.fire({
         title: 'Erreur',
         text: 'Impossible de mettre à jour le statut.',
         icon: 'error',
-        toast: true,
-        position: 'top-end',
-        timer: 3000,
-        showConfirmButton: false
+        confirmButtonColor: '#dc2626'
       });
     }
   };
@@ -755,6 +812,7 @@ const App: React.FC = () => {
             onUpdateStatus={handleUpdateStatus} 
             onEdit={(q) => { setEditingQuote(q); setView('edit-quote'); }}
             currentUser={currentUser}
+            users={users}
           />
         )}
         {view === 'request-success' && lastSavedRequest && (

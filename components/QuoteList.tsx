@@ -13,11 +13,12 @@ interface QuoteListProps {
   onUpdateStatus: (id: string, status: QuoteStatus) => void;
   onEdit: (quote: Quote) => void;
   currentUser?: User;
+  users?: User[];
 }
 
 type SortDirection = 'asc' | 'desc' | 'none';
 
-export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies, workTypes, requests, onDelete, onUpdateStatus, onEdit, currentUser }) => {
+export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies, workTypes, requests, onDelete, onUpdateStatus, onEdit, currentUser, users = [] }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -168,6 +169,15 @@ export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies,
                 ? matchedWorkType.quoteValidationRoles
                 : [UserRole.ADMIN, UserRole.CHEF_CENTRE];
               const canValidateQuote = currentUser?.role ? quoteValidationRoles.includes(currentUser.role) : false;
+              
+              // Vérifier si toutes les validations multi-utilisateurs sont complètes
+              const requiredUsers = users.filter(u => quoteValidationRoles.includes(u.role));
+              const currentValidations = quote.validations || [];
+              const validatedUserIds = currentValidations.filter(v => v.status === 'validated').map(v => v.userId);
+              const allUsersValidated = requiredUsers.every(u => validatedUserIds.includes(u.id));
+              
+              const isFullyApproved = quote.status === QuoteStatus.APPROVED && allUsersValidated;
+              const hasUserValidated = currentUser ? validatedUserIds.includes(currentUser.id) : false;
 
               return (
                 <tr key={quote.id} className={`hover:bg-blue-50/30 transition-colors group ${expired ? 'bg-rose-50/10' : ''}`}>
@@ -208,21 +218,30 @@ export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies,
                         <button 
                           onClick={() => { onEdit(quote); }} 
                           className={`p-2 rounded-xl transition-all ${
-                            quote.status === QuoteStatus.APPROVED
+                            isFullyApproved
                               ? 'text-blue-500 hover:text-blue-700 hover:bg-blue-50'
                               : 'text-amber-500 hover:text-amber-700 hover:bg-amber-50'
                           }`}
-                          title={quote.status === QuoteStatus.APPROVED ? 'Imprimer le devis' : 'Visualiser uniquement (devis non validé — impression bloquée)'}
+                          title={isFullyApproved ? 'Imprimer le devis' : 
+                                 !allUsersValidated ? `Impression bloquée (En attente de ${requiredUsers.length - validatedUserIds.length} validations)` :
+                                 'Visualisation uniquement (devis non approuvé — impression bloquée)'}
                         >
-                          {quote.status === QuoteStatus.APPROVED ? (
+                          {isFullyApproved ? (
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                             </svg>
                           ) : (
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
+                            <div className="relative">
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                              {!isFullyApproved && requiredUsers.length > 0 && (
+                                <span className="absolute -top-2 -right-2 bg-amber-500 text-white text-[8px] font-black px-1 rounded-full min-w-[14px] h-[14px] flex items-center justify-center border border-white">
+                                  {validatedUserIds.length}
+                                </span>
+                              )}
+                            </div>
                           )}
                         </button>
                       )}
@@ -241,12 +260,22 @@ export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies,
                           {quote.status === QuoteStatus.PENDING && (
                             <>
                               <button 
-                                onClick={() => onUpdateStatus(quote.id, QuoteStatus.APPROVED)} 
-                                className="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100/50 flex items-center gap-1" 
-                                title={`Valider le devis (autorisé : ${quoteValidationRoles.join(', ')})`}
+                                onClick={() => {
+                                  if (hasUserValidated) {
+                                    Swal.fire({ title: 'Déjà validé', text: 'Vous avez déjà validé ce devis.', icon: 'info', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
+                                    return;
+                                  }
+                                  onUpdateStatus(quote.id, QuoteStatus.APPROVED);
+                                }} 
+                                className={`${hasUserValidated ? 'bg-emerald-100 text-emerald-600' : 'bg-emerald-600 text-white hover:bg-emerald-700'} px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-100/50 flex items-center gap-1`} 
+                                title={hasUserValidated ? 'Vous avez déjà validé' : `Valider le devis (autorisé : ${quoteValidationRoles.join(', ')})`}
                               >
-                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
-                                Valider
+                                {hasUserValidated ? (
+                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                                ) : (
+                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                )}
+                                {hasUserValidated ? 'Validé par vous' : 'Valider'}
                               </button>
                               <button 
                                 onClick={() => onUpdateStatus(quote.id, QuoteStatus.REJECTED)} 

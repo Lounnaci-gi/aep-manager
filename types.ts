@@ -262,6 +262,7 @@ export interface Quote {
   bic?: string;
   wasteManagement?: string;
   clientFax?: string;
+  validations?: ValidationRecord[];
 }
 
 export interface WorkType {

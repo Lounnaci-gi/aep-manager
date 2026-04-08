@@ -70,7 +70,9 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
   const [filteredArticles, setFilteredArticles] = useState<Article[]>([]);
   const [showArticleDropdown, setShowArticleDropdown] = useState<{[key: number]: boolean}>({});
   const [searchTerms, setSearchTerms] = useState<{[key: number]: string}>({});
-  const [activeTab, setActiveTab] = useState<'form' | 'preview'>('form');
+  const [activeTab, setActiveTab] = useState<'form' | 'preview'>(
+    existingQuote ? 'preview' : 'form'
+  );
   
   const [taxRate, setTaxRate] = useState(19); // 19% TVA
 
@@ -871,28 +873,33 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
             position: absolute;
             left: 0;
             top: 0;
-            visibility: visible !important;
+            visibility: ${existingQuote?.status === QuoteStatus.APPROVED ? 'visible' : 'hidden'} !important;
             overflow: hidden; /* Ensure content follows rounding */
           }
         }
       `}</style>
-      <div className="quote-print-doc bg-white w-full max-w-[210mm] mx-auto p-[15mm] text-slate-900" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
+      <div className={`quote-print-doc bg-white w-full max-w-[210mm] mx-auto p-[15mm] text-slate-900 ${existingQuote?.status !== QuoteStatus.APPROVED ? 'print:hidden' : ''}`} style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
         <div className="text-center font-bold text-[11px] mb-2 uppercase">
           الجمهورية الجزائرية الديمقراطية الشعبية
         </div>
 
-        <div className="flex flex-col items-center mb-6">
-          <img src="/ade.png" alt="ADE" className="h-[84px] w-auto object-contain mb-2" />
-          <div className="w-full flex justify-between items-center text-[11px]">
-            <div className="font-bold text-left leading-tight w-1/3">
-              Ministère des ressources en eau<br />
-              E.P ALGERIENNE DES EAUX
-            </div>
-            <div className="w-1/3"></div>
-            <div className="font-bold text-right leading-tight w-1/3" dir="rtl">
-              وزارة المــــوارد المائيــــــة<br />
-              الجزائريــــــة للميــــــــــاه
-            </div>
+        {/* Republic Text */}
+        <div className="text-center font-bold text-[13px] mb-2 uppercase">
+          الجمهورية الجزائرية الديمقراطية الشعبية
+        </div>
+
+        {/* === HEADER (3 colonnes) === */}
+        <div className="flex justify-between items-center mb-6">
+          <div className="text-[10px] font-bold text-left leading-tight w-1/3">
+            Ministère des ressources en eau<br />
+            E.P ALGERIENNE DES EAUX
+          </div>
+          <div className="flex flex-col items-center w-1/3">
+            <img src="/ade.png" alt="ADE" className="h-16 w-auto object-contain mb-1" />
+          </div>
+          <div className="text-[10px] font-bold text-right leading-tight w-1/3" dir="rtl">
+            وزارة المــــوارد المائيــــــة<br />
+            الجزائريــــــة للميــــــــــاه
           </div>
         </div>
 
@@ -913,7 +920,9 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
               <span className="font-bold text-[11px] border-b border-black inline-block pb-0.5">Centre de {activeCentre?.name}</span>
             </div>
             <div>
-              <h1 className="font-black text-[11px] border-b border-black inline-block pb-0.5">DEVIS QUANTITATIF ET ESTIMATIF</h1>
+              <h1 className="font-black text-[13px] border-b-[2px] border-black inline-block pb-1 uppercase tracking-tight leading-tight">
+                DEVIS QUANTITATIF ET ESTIMATIF
+              </h1>
               <div className="text-[11px] font-bold mt-1">
                 N°: {getQuoteNumber()} du: {new Date().toLocaleDateString('fr-DZ')}
               </div>
@@ -1066,6 +1075,20 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
       </div>
 
       <div className="px-8 py-6 max-w-full mx-auto print:hidden">
+        {/* ⚠️ Bannière d'avertissement si devis non validé */}
+        {existingQuote?.status && existingQuote.status !== QuoteStatus.APPROVED && (
+          <div className="mb-5 flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-2xl">
+            <div className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-amber-100">
+              <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            </div>
+            <div>
+              <p className="text-xs font-black text-amber-800 uppercase tracking-widest">Impression bloquée</p>
+              <p className="text-[11px] text-amber-600 font-medium mt-0.5">
+                Ce devis est en statut <strong className="font-black">{existingQuote.status}</strong>. L'impression est réservée aux devis <strong className="font-black text-emerald-700">Approuvés</strong> uniquement.
+              </p>
+            </div>
+          </div>
+        )}
         <div className="flex justify-end gap-3">
           <button type="button" onClick={() => setActiveTab('form')} className="px-6 py-2.5 text-xs font-bold text-slate-600 bg-white border border-slate-300 rounded-xl hover:bg-slate-100">Retour à l'édition</button>
           <button 
@@ -1076,8 +1099,12 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
             Enregistrer le Devis
           </button>
-          <button type="button" onClick={() => window.print()} className="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-md" style={{ display: currentUser.role === UserRole.JURISTE ? 'none' : 'block' }}>Imprimer</button>
-
+          {/* Bouton Imprimer — uniquement si devis APPROUVÉ et pas Juriste */}
+          {currentUser.role !== UserRole.JURISTE && existingQuote?.status === QuoteStatus.APPROVED && (
+            <button type="button" onClick={() => window.print()} className="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-md">
+              Imprimer le Devis
+            </button>
+          )}
         </div>
       </div>
     </div>

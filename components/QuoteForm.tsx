@@ -84,7 +84,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
   const [loadingAI, setLoadingAI] = useState(false);
   const [aiRec, setAiRec] = useState(initialData?.aiNotes || '');
   const [activeTab, setActiveTab] = useState<'form' | 'preview'>(
-    currentUser?.role === UserRole.AGENT || currentUser?.role === UserRole.CHEF_AGENCE ? 'preview' : 'form'
+    initialData ? 'preview' : 'form'
   );
   const [articles, setArticles] = useState<any[]>([]);
   const [filteredArticles, setFilteredArticles] = useState<any[]>([]);
@@ -805,7 +805,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
             position: absolute;
             left: 0;
             top: 0;
-            visibility: visible !important;
+            visibility: ${initialData?.status === QuoteStatus.APPROVED ? 'visible' : 'hidden'} !important;
             overflow: hidden; /* Ensure content follows rounding */
           }
           /* Ensure backgrounds are printed */
@@ -815,7 +815,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
         }
       `}</style>
 
-        <div className="quote-print-doc bg-white w-full max-w-[210mm] mx-auto p-[15mm] text-slate-900" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
+        <div className={`quote-print-doc bg-white w-full max-w-[210mm] mx-auto p-[15mm] text-slate-900 ${initialData?.status !== QuoteStatus.APPROVED ? 'print:hidden' : ''}`} style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
           {/* Republic Text */}
           <div className="text-center font-bold text-[13px] mb-2 uppercase">
             الجمهورية الجزائرية الديمقراطية الشعبية
