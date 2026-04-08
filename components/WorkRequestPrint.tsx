@@ -17,25 +17,14 @@ export const WorkRequestPrint: React.FC<WorkRequestPrintProps> = ({ request, age
 
   return (
     <div className="fixed inset-0 z-[100] bg-white overflow-y-auto print:static print:bg-white">
-      {/* Controls - Hidden during print */}
-      <div className="sticky top-0 bg-gray-900 text-white p-4 flex justify-between items-center print:hidden shadow-xl">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-800 rounded-full transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-          </button>
-          <h2 className="font-black uppercase tracking-widest text-sm">Aperçu de la Demande - {request.id}</h2>
-        </div>
-        <button
-          onClick={handlePrint}
-          className="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-xl font-black uppercase text-xs tracking-widest transition-all shadow-lg shadow-blue-900/20 flex items-center gap-2"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-          Imprimer
-        </button>
-      </div>
+      {/* Subtle Close Button - Hidden during print */}
+      <button
+        onClick={onClose}
+        className="fixed top-6 right-6 z-[110] text-gray-400 hover:text-gray-900 p-2 transition-all print:hidden"
+        title="Fermer l'aperçu"
+      >
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
 
       {/* Print-specific styles */}
       <style>{`

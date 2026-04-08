@@ -831,6 +831,8 @@ const App: React.FC = () => {
             centres={centres}
             units={units}
             quotes={quotes}
+            users={users}
+            workTypes={workTypes}
             currentUser={currentUser}
             existingQuote={existingQuoteForBranchement}
             onSave={handleSaveQuote}
@@ -874,6 +876,7 @@ const App: React.FC = () => {
               agencies={agencies}
               centres={centres}
               units={units}
+              users={users}
               initialData={editingQuote}
               currentUserAgencyId={currentUser.agencyId}
               currentUser={currentUser}

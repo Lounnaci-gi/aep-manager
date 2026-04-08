@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Swal from 'sweetalert2';
-import { Quote, QuoteItem, WorkRequest, Client, CommercialAgency, Centre, UserRole, QuoteStatus, Article, Unit } from '../types';
+import { Quote, QuoteItem, WorkRequest, Client, CommercialAgency, Centre, UserRole, QuoteStatus, Article, Unit, User, WorkType } from '../types';
 import { numberToFrenchLetters } from '../utils/numberToLetters';
 import { ArticleService } from '../services/articleService';
 
@@ -11,7 +11,9 @@ interface BranchementQuoteFormProps {
   centres: Centre[];
   units: Unit[];
   quotes: Quote[];
-  currentUser: { role: UserRole; agencyId?: string };
+  currentUser: { role: UserRole; agencyId?: string; id: string };
+  users: User[];
+  workTypes: WorkType[];
   onSave: (quote: Quote) => void;
   onCancel: () => void;
   existingQuote?: Quote;
@@ -24,6 +26,8 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
   centres,
   units,
   quotes,
+  users,
+  workTypes,
   currentUser,
   onSave,
   onCancel,
@@ -75,6 +79,42 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
   );
   
   const [taxRate, setTaxRate] = useState(19); // 19% TVA
+
+  // --- NOUVEAU: LOGIQUE DE VALIDATION MULTI-UTILISATEUR ---
+  const isFullyApproved = useMemo(() => {
+    if (!existingQuote) return false;
+    
+    // 1. Trouver le type de travaux et ses rôles de validation
+    const matchedWorkType = workTypes.find(wt => wt.label === existingQuote.serviceType);
+    const quoteValidationRoles = (matchedWorkType?.quoteValidationRoles && matchedWorkType.quoteValidationRoles.length > 0)
+      ? matchedWorkType.quoteValidationRoles
+      : [UserRole.ADMIN, UserRole.CHEF_CENTRE];
+    
+    // 2. Identifier tous les utilisateurs ayant ces rôles
+    const requiredUsers = users.filter(u => quoteValidationRoles.includes(u.role));
+    
+    // 3. Vérifier les validations actuelles
+    const currentValidations = existingQuote.validations || [];
+    const validatedUserIds = currentValidations.filter(v => v.status === 'validated').map(v => v.userId);
+    
+    // 4. Est-ce que TOUS les utilisateurs requis ont validé ?
+    const allUsersValidated = requiredUsers.every(u => validatedUserIds.includes(u.id));
+    
+    // Le devis est "Pleinement Approuvé" SSI statut APPROVED ET toutes les signatures ok
+    return existingQuote.status === QuoteStatus.APPROVED && allUsersValidated;
+  }, [existingQuote, users, workTypes]);
+
+  // Nombre de validations manquantes
+  const missingValidationsCount = useMemo(() => {
+    if (!existingQuote) return 0;
+    const matchedWorkType = workTypes.find(wt => wt.label === existingQuote.serviceType);
+    const quoteValidationRoles = (matchedWorkType?.quoteValidationRoles && matchedWorkType.quoteValidationRoles.length > 0)
+      ? matchedWorkType.quoteValidationRoles
+      : [UserRole.ADMIN, UserRole.CHEF_CENTRE];
+    const requiredUsers = users.filter(u => quoteValidationRoles.includes(u.role));
+    const validatedUserIds = (existingQuote.validations || []).filter(v => v.status === 'validated').map(v => v.userId);
+    return requiredUsers.length - validatedUserIds.filter(id => requiredUsers.some(u => u.id === id)).length;
+  }, [existingQuote, users, workTypes]);
 
   // Générer ou récupérer le numéro de devis
   const getQuoteNumber = (): string => {
@@ -506,9 +546,71 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
 
   return (
     <div className="max-w-full mx-auto mb-10 w-full animate-in fade-in duration-300">
+      {/* Printing Style Orchestration - GLOBAL PROTECTION */}
+      <style>{`
+        @media print {
+          @page {
+            size: A4 portrait;
+            margin: 0 !important;
+          }
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+          }
+          /* Isolation: Hide everything except blocked message if unapproved */
+          .print-hidden, nav, footer, .sidebar, .no-print, form, .bg-gray-50, .max-w-full, .quote-print-doc {
+            display: none !important;
+          }
+          /* If approved, show the doc */
+          ${existingQuote?.status === QuoteStatus.APPROVED ? `
+          .quote-print-doc {
+            display: block !important;
+            width: 210mm !important;
+            min-height: 297mm !important;
+            padding: 15mm !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            border: 1.2mm solid black !important;
+            border-radius: 10mm !important;
+            position: absolute;
+            left: 0;
+            top: 0;
+            overflow: hidden;
+            visibility: visible !important;
+          }
+          ` : ''}
+
+          .print-blocked-message {
+            display: ${existingQuote?.status !== QuoteStatus.APPROVED ? 'block' : 'none'} !important;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            font-family: sans-serif;
+            width: 100%;
+            z-index: 9999;
+          }
+        }
+        .print-blocked-message {
+          display: none;
+        }
+      `}</style>
+
+      {/* Message visible uniquement à l'impression si bloqué */}
+      <div className="print-blocked-message">
+        <h1 style={{ color: 'red', fontSize: '40pt', fontWeight: '900', textTransform: 'uppercase' }}>Impression Interdite</h1>
+        <p style={{ fontSize: '20pt', fontWeight: 'bold' }}>Ce devis n'est pas encore approuvé par les responsables.</p>
+      </div>
 
       <div className={activeTab === 'form' ? 'block' : 'hidden'}>
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 max-w-full mx-auto">
+        <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 max-w-full mx-auto">
+          {/* ... Contenu du formulaire resté inchangé ... */}
+          {/* (Note: Code truncated for replace_file_content tool, but I will make sure the replacement is complete) */}
       <div className="mb-8 border-b border-gray-200 pb-6">
         <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">
           Établissement de Devis - Branchement d'Eau
@@ -844,52 +946,86 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
     </form>
     </div>
 
-    <div className={activeTab === 'preview' ? 'block animate-in fade-in duration-500' : 'hidden'}>
-      <style>{`
-        @media print {
-          @page {
-            size: A4 portrait;
-            margin: 0 !important;
-          }
-          html, body {
-            margin: 0 !important;
-            padding: 0 !important;
-            background: white !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-            color-adjust: exact !important;
-          }
-          .print-hidden, nav, footer, .sidebar, .no-print {
-            display: none !important;
-          }
-          .quote-print-doc {
-            width: 210mm !important;
-            min-height: 297mm !important;
-            padding: 15mm !important;
-            margin: 0 !important;
-            box-shadow: none !important;
-            border: 1.2mm solid black !important; /* Added border */
-            border-radius: 10mm !important; /* Subtle circular rounding on document corners */
-            position: absolute;
-            left: 0;
-            top: 0;
-            visibility: ${existingQuote?.status === QuoteStatus.APPROVED ? 'visible' : 'hidden'} !important;
-            overflow: hidden; /* Ensure content follows rounding */
-          }
+    {/* Printing Style Orchestration - GLOBAL PROTECTION */}
+    <style>{`
+      @media print {
+        @page {
+          size: A4 portrait;
+          margin: 0 !important;
         }
-      `}</style>
-      <div className={`quote-print-doc bg-white w-full max-w-[210mm] mx-auto p-[15mm] text-slate-900 ${existingQuote?.status !== QuoteStatus.APPROVED ? 'print:hidden' : ''}`} style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
-        <div className="text-center font-bold text-[11px] mb-2 uppercase">
-          الجمهورية الجزائرية الديمقراطية الشعبية
-        </div>
+        html, body {
+          margin: 0 !important;
+          padding: 0 !important;
+          background: white !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+          color-adjust: exact !important;
+        }
+        /* Isolation: Hide everything except blocked message if unapproved */
+        .print-hidden, nav, footer, .sidebar, .no-print, form, .bg-gray-50, .max-w-full, .quote-print-doc {
+          display: none !important;
+        }
+        /* If approved, show the doc */
+        ${isFullyApproved ? `
+        .quote-print-doc {
+          display: block !important;
+          width: 210mm !important;
+          min-height: 297mm !important;
+          padding: 15mm !important;
+          margin: 0 !important;
+          box-shadow: none !important;
+          border: 1.2mm solid black !important;
+          border-radius: 10mm !important;
+          position: absolute;
+          left: 0;
+          top: 0;
+          overflow: hidden;
+          visibility: visible !important;
+        }
+        ` : ''}
+
+        .print-blocked-message {
+          display: ${!isFullyApproved ? 'block' : 'none'} !important;
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          text-align: center;
+          font-family: sans-serif;
+          width: 100%;
+          z-index: 9999;
+        }
+      }
+      .print-blocked-message {
+        display: none;
+      }
+    `}</style>
+
+    {/* Message visible uniquement à l'impression si bloqué */}
+    <div className="print-blocked-message">
+      <h1 style={{ color: 'red', fontSize: '40pt', fontWeight: '900', textTransform: 'uppercase' }}>Impression Interdite</h1>
+      <p style={{ fontSize: '20pt', fontWeight: 'bold' }}>Ce devis n'est pas encore validé par TOUS les responsables requis ({missingValidationsCount} manquantes).</p>
+    </div>
+
+    <div className={activeTab === 'preview' ? 'block animate-in fade-in duration-500' : 'hidden'}>
+      <div className={`quote-print-doc bg-white w-full max-w-[210mm] mx-auto p-[15mm] text-slate-900 block-print-unapproved relative overflow-hidden`} style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
+        
+        {/* Watermark for non-approved quotes */}
+        {existingQuote?.status !== QuoteStatus.APPROVED && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 select-none overflow-hidden">
+            <div className="text-gray-200 text-[120px] font-black uppercase tracking-[0.2em] -rotate-45 whitespace-nowrap opacity-40">
+              NON VALIDÉ
+            </div>
+          </div>
+        )}
 
         {/* Republic Text */}
-        <div className="text-center font-bold text-[13px] mb-2 uppercase">
+        <div className="text-center font-bold text-[13px] mb-2 uppercase relative z-10">
           الجمهورية الجزائرية الديمقراطية الشعبية
         </div>
 
         {/* === HEADER (3 colonnes) === */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-6 relative z-10">
           <div className="text-[10px] font-bold text-left leading-tight w-1/3">
             Ministère des ressources en eau<br />
             E.P ALGERIENNE DES EAUX
@@ -1035,26 +1171,26 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
                 );
               })()}
               
-              <tr>
-                <td rowSpan={3} className="border-r border-gray-400 p-1.5 text-left align-top leading-tight space-y-0.5">
+              <tr className="hover:bg-gray-50/20">
+                <td rowSpan={3} colSpan={1} className="border-r border-gray-400 p-1.5 text-left align-top leading-tight space-y-0.5">
                   <p>Compte CCP N°: <span className="font-bold">{activeCentre?.comptePostale || activeUnit?.comptePostale || '...........................'}</span></p>
                   <p>Compte <span className="font-bold">{activeCentre?.bankName || activeUnit?.bankName || '..........'}</span> N°: <span className="font-bold">{activeCentre?.bankAccount || activeUnit?.bankAccount || '...........................'}</span></p>
-                  <p>mode de paiement : versement bancaire</p>
+                  <p>Mode de paiement : Chèque, Espece, Versement</p>
                 </td>
-                <td colSpan={2} className="border-b border-r border-gray-400 font-bold p-1 align-middle text-left">THT</td>
-                <td colSpan={2} className="border-b border-gray-400 p-1 text-right align-middle">
+                <td colSpan={2} className="border-b border-r border-gray-400 font-bold p-1 align-middle text-left uppercase text-gray-600">Total HT</td>
+                <td colSpan={2} className="border-b border-gray-400 p-1 text-right align-middle font-bold">
                   {subtotal.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
                 </td>
               </tr>
-              <tr>
-                <td colSpan={2} className="border-b border-r border-gray-400 font-bold p-1 align-middle text-left">TVA 19%</td>
-                <td colSpan={2} className="border-b border-gray-400 p-1 text-right align-middle">
+              <tr className="hover:bg-gray-50/20">
+                <td colSpan={2} className="border-b border-r border-gray-400 font-bold p-1 align-middle text-left uppercase text-gray-600">TVA 19%</td>
+                <td colSpan={2} className="border-b border-gray-400 p-1 text-right align-middle font-bold">
                   {tax.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
                 </td>
               </tr>
-              <tr>
-                <td colSpan={2} className="border-r border-gray-400 font-black p-1 align-middle text-left">TTC</td>
-                <td colSpan={2} className="font-black p-1 text-right align-middle bg-gray-50 uppercase">
+              <tr className="bg-gray-50/50">
+                <td colSpan={2} className="border-r border-gray-400 font-black p-1 align-middle text-left uppercase">Total TTC</td>
+                <td colSpan={2} className="font-black p-1 text-right align-middle text-[12px] text-blue-800">
                   {total.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
                 </td>
               </tr>
@@ -1076,7 +1212,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
 
       <div className="px-8 py-6 max-w-full mx-auto print:hidden">
         {/* ⚠️ Bannière d'avertissement si devis non validé */}
-        {existingQuote?.status && existingQuote.status !== QuoteStatus.APPROVED && (
+        {!isFullyApproved && (
           <div className="mb-5 flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-2xl">
             <div className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-amber-100">
               <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
@@ -1084,28 +1220,20 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
             <div>
               <p className="text-xs font-black text-amber-800 uppercase tracking-widest">Impression bloquée</p>
               <p className="text-[11px] text-amber-600 font-medium mt-0.5">
-                Ce devis est en statut <strong className="font-black">{existingQuote.status}</strong>. L'impression est réservée aux devis <strong className="font-black text-emerald-700">Approuvés</strong> uniquement.
+                Ce devis nécessite encore <strong className="font-black h-[18px] inline-flex items-center px-2 bg-amber-200 rounded text-amber-900 mx-1">{missingValidationsCount}</strong> validation(s) pour être imprimable.
               </p>
             </div>
           </div>
         )}
-        <div className="flex justify-end gap-3">
-          <button type="button" onClick={() => setActiveTab('form')} className="px-6 py-2.5 text-xs font-bold text-slate-600 bg-white border border-slate-300 rounded-xl hover:bg-slate-100">Retour à l'édition</button>
-          <button 
-            type="button" 
-            onClick={() => handleSubmit()} 
-            className="px-6 py-2.5 text-xs font-bold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition-all shadow-md active:scale-95 flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
-            Enregistrer le Devis
-          </button>
-          {/* Bouton Imprimer — uniquement si devis APPROUVÉ et pas Juriste */}
-          {currentUser.role !== UserRole.JURISTE && existingQuote?.status === QuoteStatus.APPROVED && (
-            <button type="button" onClick={() => window.print()} className="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-md">
-              Imprimer le Devis
-            </button>
-          )}
-        </div>
+
+        {/* Floating return button to keep preview clean */}
+        <button 
+          onClick={() => setActiveTab('form')}
+          className="fixed bottom-8 right-8 z-[110] bg-white border border-slate-200 text-slate-600 px-6 py-3 rounded-full font-black uppercase text-[10px] tracking-widest shadow-2xl hover:bg-slate-50 transition-all flex items-center gap-2"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5L6 10L11 15M6 10H18" /></svg>
+          Retour à l'édition
+        </button>
       </div>
     </div>
     </div>

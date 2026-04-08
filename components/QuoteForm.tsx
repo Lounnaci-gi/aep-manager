@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Quote, QuoteItem, QuoteStatus, WorkType, Client, CommercialAgency, Centre, ClientCategory, Unit, WorkRequest, UserRole } from '../types';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Quote, QuoteItem, QuoteStatus, WorkType, Client, CommercialAgency, Centre, ClientCategory, Unit, WorkRequest, UserRole, User } from '../types';
 import { getAIRecommendation } from '../services/geminiService';
 import { numberToFrenchLetters } from '../utils/numberToLetters';
 import { ArticleService } from '../services/articleService';
@@ -17,9 +17,10 @@ interface QuoteFormProps {
   agencies: CommercialAgency[];
   centres: Centre[];
   units: Unit[];
+  users: User[];
   initialData?: Quote;
   currentUserAgencyId?: string;
-  currentUser?: { role: UserRole };
+  currentUser?: { role: UserRole, id: string };
 }
 
 export const QuoteForm: React.FC<QuoteFormProps> = ({
@@ -32,6 +33,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
   agencies,
   centres,
   units,
+  users,
   initialData,
   currentUserAgencyId,
   requests,
@@ -91,10 +93,46 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
   const [showArticleDropdown, setShowArticleDropdown] = useState<{ [key: number]: boolean }>({});
   const [searchTerm, setSearchTerm] = useState<{ [key: number]: string }>({});
 
+  const isLegal = formData.category === ClientCategory.LEGAL;
+
+  // --- NOUVEAU: LOGIQUE DE VALIDATION MULTI-UTILISATEUR ---
+  const isFullyApproved = useMemo(() => {
+    if (!initialData) return false;
+    
+    // 1. Trouver le type de travaux et ses rôles de validation
+    const matchedWorkType = workTypes.find(wt => wt.label === initialData.serviceType);
+    const quoteValidationRoles = (matchedWorkType?.quoteValidationRoles && matchedWorkType.quoteValidationRoles.length > 0)
+      ? matchedWorkType.quoteValidationRoles
+      : [UserRole.ADMIN, UserRole.CHEF_CENTRE];
+    
+    // 2. Identifier tous les utilisateurs ayant ces rôles
+    const requiredUsers = users.filter(u => quoteValidationRoles.includes(u.role));
+    
+    // 3. Vérifier les validations actuelles
+    const currentValidations = initialData.validations || [];
+    const validatedUserIds = currentValidations.filter(v => v.status === 'validated').map(v => v.userId);
+    
+    // 4. Est-ce que TOUS les utilisateurs requis ont validé ?
+    const allUsersValidated = requiredUsers.every(u => validatedUserIds.includes(u.id));
+    
+    // Le devis est "Pleinement Approuvé" SSI statut APPROVED ET toutes les signatures ok
+    return initialData.status === QuoteStatus.APPROVED && allUsersValidated;
+  }, [initialData, users, workTypes]);
+
   // Relation Clientèle et Chef d'Agence : mode lecture seule
   const isReadOnly = currentUser?.role === UserRole.AGENT || currentUser?.role === UserRole.CHEF_AGENCE;
 
-  const isLegal = formData.category === ClientCategory.LEGAL;
+  // Nombre de validations manquantes
+  const missingValidationsCount = useMemo(() => {
+    if (!initialData) return 0;
+    const matchedWorkType = workTypes.find(wt => wt.label === initialData.serviceType);
+    const quoteValidationRoles = (matchedWorkType?.quoteValidationRoles && matchedWorkType.quoteValidationRoles.length > 0)
+      ? matchedWorkType.quoteValidationRoles
+      : [UserRole.ADMIN, UserRole.CHEF_CENTRE];
+    const requiredUsers = users.filter(u => quoteValidationRoles.includes(u.role));
+    const validatedUserIds = (initialData.validations || []).filter(v => v.status === 'validated').map(v => v.userId);
+    return requiredUsers.length - validatedUserIds.filter(id => requiredUsers.some(u => u.id === id)).length;
+  }, [initialData, users, workTypes]);
 
   // Charger les articles disponibles
   useEffect(() => {
@@ -772,50 +810,76 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
         </form>
       </div>
 
-      <div className={activeTab === 'preview' ? 'block animate-in fade-in duration-500' : 'hidden'}>
-        <style>{`
+      {/* Printing Style Orchestration - MOVED OUTSIDE FOR ABSOLUTE PROTECTION */}
+      <style>{`
         @media print {
           @page {
             size: A4 portrait;
-            margin: 0 !important; /* Force removal of browser headers/footers */
+            margin: 0 !important;
           }
           html, body {
             margin: 0 !important;
             padding: 0 !important;
             background: white !important;
-            /* Force background graphics automatically */
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
             color-adjust: exact !important;
           }
           /* Isolation: Hide all non-print elements */
-          .print-hidden, nav, footer, .sidebar, .no-print {
+          .print-hidden, nav, footer, .sidebar, .no-print, form, .bg-gray-50 {
             display: none !important;
           }
-          /* Document container: Full page simulation with internal margins */
+          /* Document container */
           .quote-print-doc {
             width: 210mm !important;
             min-height: 297mm !important;
-            padding: 15mm !important; /* Managed internally to look like standard margins */
+            padding: 15mm !important;
             margin: 0 !important;
             background: white !important;
             box-shadow: none !important;
-            border: 1.2mm solid black !important; /* Added border */
-            border-radius: 10mm !important; /* Subtle circular rounding on document corners */
+            border: 1.2mm solid black !important;
+            border-radius: 10mm !important;
             position: absolute;
             left: 0;
             top: 0;
-            visibility: ${initialData?.status === QuoteStatus.APPROVED ? 'visible' : 'hidden'} !important;
-            overflow: hidden; /* Ensure content follows rounding */
+            overflow: hidden;
+            display: ${isFullyApproved ? 'block' : 'none'} !important;
           }
-          /* Ensure backgrounds are printed */
-          .bg-gray-100 { background-color: #f3f4f6 !important; }
-          .bg-gray-900 { background-color: #111827 !important; }
-          .text-white { color: white !important; }
+          
+          .print-blocked-message {
+            display: ${!isFullyApproved ? 'block' : 'none'} !important;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            font-family: sans-serif;
+            width: 100%;
+            z-index: 9999;
+          }
+        }
+        .print-blocked-message {
+          display: none;
         }
       `}</style>
 
-        <div className={`quote-print-doc bg-white w-full max-w-[210mm] mx-auto p-[15mm] text-slate-900 ${initialData?.status !== QuoteStatus.APPROVED ? 'print:hidden' : ''}`} style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
+      {/* Message visible uniquement à l'impression si bloqué */}
+      <div className="print-blocked-message">
+        <h1 style={{ color: 'red', fontSize: '40pt', fontWeight: '900', textTransform: 'uppercase' }}>Impression Interdite</h1>
+        <p style={{ fontSize: '20pt', fontWeight: 'bold' }}>Ce devis n'est pas encore validé par TOUS les responsables requis ({missingValidationsCount} manquantes).</p>
+      </div>
+
+      <div className={activeTab === 'preview' ? 'block animate-in fade-in duration-500' : 'hidden'}>
+        <div className={`quote-print-doc bg-white w-full max-w-[210mm] mx-auto p-[15mm] text-slate-900 block-print-unapproved`} style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
+          {/* Watermark for non-approved quotes */}
+          {initialData?.status !== QuoteStatus.APPROVED && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 select-none overflow-hidden">
+              <div className="text-gray-200 text-[120px] font-black uppercase tracking-[0.2em] -rotate-45 whitespace-nowrap opacity-40">
+                NON VALIDÉ
+              </div>
+            </div>
+          )}
+
           {/* Republic Text */}
           <div className="text-center font-bold text-[13px] mb-2 uppercase">
             الجمهورية الجزائرية الديمقراطية الشعبية
@@ -980,38 +1044,28 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
 
       <div className="px-8 py-6 mb-10 max-w-4xl mx-auto print:hidden">
         {/* ⚠️ Bannière d'avertissement si devis non validé */}
-        {initialData?.status && initialData.status !== QuoteStatus.APPROVED && (
+        {!isFullyApproved && (
           <div className="mb-5 flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-2xl">
             <div className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-amber-100">
               <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
             </div>
             <div>
-              <p className="text-xs font-black text-amber-800 uppercase tracking-widest">Impression impossible</p>
+              <p className="text-xs font-black text-amber-800 uppercase tracking-widest">Impression bloquée</p>
               <p className="text-[11px] text-amber-600 font-medium mt-0.5">
-                Ce devis est en statut <strong className="font-black">{initialData.status}</strong>. L'impression est réservée aux devis <strong className="font-black text-emerald-700">Approuvés</strong> uniquement.
+                Ce devis nécessite encore <strong className="font-black h-[18px] inline-flex items-center px-2 bg-amber-200 rounded text-amber-900 mx-1">{missingValidationsCount}</strong> validation(s) pour être imprimable.
               </p>
             </div>
           </div>
         )}
-        <div className="flex justify-end gap-4">
-          <button type="button" onClick={() => setActiveTab('form')} className="px-8 py-3 text-[10px] font-black uppercase tracking-widest text-slate-500 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all" style={{ display: isReadOnly ? 'none' : 'block' }}>Retour à l'édition</button>
-          <button 
-            type="button" 
-            onClick={() => handleSubmit()} 
-            className="px-8 py-3 text-[10px] font-black uppercase tracking-widest text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 active:scale-95 flex items-center gap-2"
-            style={{ display: isReadOnly ? 'none' : 'flex' }}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
-            Enregistrer & Valider
-          </button>
-          {/* Bouton Imprimer — uniquement si devis APPROUVÉ et pas Juriste */}
-          {currentUser?.role !== UserRole.JURISTE && initialData?.status === QuoteStatus.APPROVED && (
-            <button type="button" onClick={() => window.print()} className="px-8 py-3 text-[10px] font-black uppercase tracking-widest text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-              Imprimer le Devis
-            </button>
-          )}
-        </div>
+        
+        {/* Floating return button to keep preview clean */}
+        <button 
+          onClick={() => setActiveTab('form')}
+          className="fixed bottom-8 right-8 z-[110] bg-white border border-slate-200 text-slate-600 px-6 py-3 rounded-full font-black uppercase text-[10px] tracking-widest shadow-2xl hover:bg-slate-50 transition-all flex items-center gap-2"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5L6 10L11 15M6 10H18" /></svg>
+          Retour à l'édition
+        </button>
       </div>
     </div>
   );
