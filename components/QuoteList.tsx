@@ -203,18 +203,27 @@ export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies,
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right">
                     <div className="flex justify-end items-center gap-3">
-                      {/* Bouton Imprimer - Tous les rôles sauf Juriste */}
+                      {/* Bouton Imprimer/Visualiser - selon le statut du devis */}
                       {currentUser?.role !== UserRole.JURISTE && (
                         <button 
-                          onClick={() => {
-                            onEdit(quote);
-                          }} 
-                          className="text-blue-500 hover:text-blue-700 p-2 hover:bg-blue-50 rounded-xl transition-all" 
-                          title="Imprimer le devis"
+                          onClick={() => { onEdit(quote); }} 
+                          className={`p-2 rounded-xl transition-all ${
+                            quote.status === QuoteStatus.APPROVED
+                              ? 'text-blue-500 hover:text-blue-700 hover:bg-blue-50'
+                              : 'text-amber-500 hover:text-amber-700 hover:bg-amber-50'
+                          }`}
+                          title={quote.status === QuoteStatus.APPROVED ? 'Imprimer le devis' : 'Visualiser uniquement (devis non validé — impression bloquée)'}
                         >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                          </svg>
+                          {quote.status === QuoteStatus.APPROVED ? (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                            </svg>
+                          ) : (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          )}
                         </button>
                       )}
                       

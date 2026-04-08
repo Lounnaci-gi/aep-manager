@@ -979,6 +979,20 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
       </div>
 
       <div className="px-8 py-6 mb-10 max-w-4xl mx-auto print:hidden">
+        {/* ⚠️ Bannière d'avertissement si devis non validé */}
+        {initialData?.status && initialData.status !== QuoteStatus.APPROVED && (
+          <div className="mb-5 flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-2xl">
+            <div className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-amber-100">
+              <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            </div>
+            <div>
+              <p className="text-xs font-black text-amber-800 uppercase tracking-widest">Impression impossible</p>
+              <p className="text-[11px] text-amber-600 font-medium mt-0.5">
+                Ce devis est en statut <strong className="font-black">{initialData.status}</strong>. L'impression est réservée aux devis <strong className="font-black text-emerald-700">Approuvés</strong> uniquement.
+              </p>
+            </div>
+          </div>
+        )}
         <div className="flex justify-end gap-4">
           <button type="button" onClick={() => setActiveTab('form')} className="px-8 py-3 text-[10px] font-black uppercase tracking-widest text-slate-500 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all" style={{ display: isReadOnly ? 'none' : 'block' }}>Retour à l'édition</button>
           <button 
@@ -990,11 +1004,13 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
             Enregistrer & Valider
           </button>
-          <button type="button" onClick={() => window.print()} className="px-8 py-3 text-[10px] font-black uppercase tracking-widest text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center gap-2" style={{ display: currentUser?.role === UserRole.JURISTE ? 'none' : 'flex' }}>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-            Imprimer le Devis
-          </button>
-      
+          {/* Bouton Imprimer — uniquement si devis APPROUVÉ et pas Juriste */}
+          {currentUser?.role !== UserRole.JURISTE && initialData?.status === QuoteStatus.APPROVED && (
+            <button type="button" onClick={() => window.print()} className="px-8 py-3 text-[10px] font-black uppercase tracking-widest text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+              Imprimer le Devis
+            </button>
+          )}
         </div>
       </div>
     </div>
