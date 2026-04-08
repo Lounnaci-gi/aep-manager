@@ -27,6 +27,18 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
   currentUser,
   requests
 }) => {
+  // Filtrer les types de travaux selon les permissions de l'utilisateur
+  const getFilteredWorkTypes = (): WorkType[] => {
+    if (!currentUser) return workTypes;
+    
+    return workTypes.filter(workType => {
+      const allowedRoles = (workType.allowedRoles && workType.allowedRoles.length > 0) ? workType.allowedRoles : (WORK_TYPE_PERMISSIONS[workType.label || ''] || Object.values(UserRole));
+      return allowedRoles.includes(currentUser.role);
+    });
+  };
+
+  const filteredWorkTypes = getFilteredWorkTypes();
+
   const [formData, setFormData] = useState({
     category: initialData?.category || ClientCategory.PHYSICAL,
     civility: initialData?.civility || 'M.',
@@ -42,7 +54,7 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
     commune: initialData?.commune || '',
     installationAddress: initialData?.installationAddress || '',
     installationCommune: initialData?.installationCommune || '',
-    serviceType: initialData?.serviceType || (workTypes.length > 0 ? workTypes[0].label : ''),
+    serviceType: initialData?.serviceType || (filteredWorkTypes.length > 0 ? filteredWorkTypes[0].label : ''),
     description: initialData?.description || '',
     type: initialData?.type || 'Propriétaire',
     agencyId: initialData?.agencyId || currentUserAgencyId || (agencies.length > 0 ? agencies[0].id : ''),
@@ -113,17 +125,7 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
     }
   }, [formData.clientName, formData.businessName, requests, isLegal, initialData]);
 
-  // Filtrer les types de travaux selon les permissions de l'utilisateur
-  const getFilteredWorkTypes = (): WorkType[] => {
-    if (!currentUser) return workTypes;
-    
-    return workTypes.filter(workType => {
-      const allowedRoles = (workType.allowedRoles && workType.allowedRoles.length > 0) ? workType.allowedRoles : (WORK_TYPE_PERMISSIONS[workType.label || ''] || Object.values(UserRole));
-      return allowedRoles.includes(currentUser.role);
-    });
-  };
 
-  const filteredWorkTypes = getFilteredWorkTypes();
 
   const handleSelectClient = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const clientId = e.target.value;
@@ -414,6 +416,7 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                   <input type="hidden" required value={formData.diameter || ''} />
                   <input
                     type="text"
+                    required
                     placeholder="Diamètre du branchement"
                     className={`w-full rounded-xl p-3.5 text-base font-bold border pr-10 ${
                       diameterSearch && !DIAMETER_OPTIONS.includes(diameterSearch)
@@ -475,6 +478,7 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                   <input type="hidden" required value={formData.flowRate || ''} />
                   <input
                     type="text"
+                    required
                     placeholder="Débit moyen horaire"
                     className={`w-full rounded-xl p-3.5 text-base font-bold border pr-10 ${
                       flowRateSearch && !FLOW_RATE_OPTIONS.includes(flowRateSearch)
