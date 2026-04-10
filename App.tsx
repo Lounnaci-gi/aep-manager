@@ -20,7 +20,7 @@ import { UserList } from './components/UserList';
 import { UserForm } from './components/UserForm';
 
 import { DbService } from './services/dbService';
-import { Quote, QuoteStatus, WorkType, Client, User, UserRole, WorkRequest, RequestStatus, Unit, Centre, CommercialAgency } from './types';
+import { Quote, QuoteStatus, WorkType, Client, User, UserRole, WorkRequest, RequestStatus, Unit, Centre, CommercialAgency, ValidationType } from './types';
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
@@ -133,14 +133,14 @@ const App: React.FC = () => {
       // Vérifier si l'utilisateur actuel a une validation assignée non validée
       switch (currentUser.role) {
         case UserRole.CHEF_AGENCE:
-          return req.assignedValidations.includes('agency') && 
-                 !req.validations?.find(v => v.type === 'agency' && v.status === 'validated');
+          return req.assignedValidations.includes(ValidationType.AGENCY) && 
+                 !req.validations?.find(v => v.type === ValidationType.AGENCY && v.status === 'validated');
         case UserRole.AGENT:
-          return req.assignedValidations.includes('customer_service') && 
-                 !req.validations?.find(v => v.type === 'customer_service' && v.status === 'validated');
+          return req.assignedValidations.includes(ValidationType.CUSTOMER_SERVICE) && 
+                 !req.validations?.find(v => v.type === ValidationType.CUSTOMER_SERVICE && v.status === 'validated');
         case UserRole.JURISTE:
-          return req.assignedValidations.includes('lawyer') && 
-                 !req.validations?.find(v => v.type === 'lawyer' && v.status === 'validated');
+          return req.assignedValidations.includes(ValidationType.LAWYER) && 
+                 !req.validations?.find(v => v.type === ValidationType.LAWYER && v.status === 'validated');
         default:
           return false;
       }
@@ -850,7 +850,8 @@ const App: React.FC = () => {
           const canManageQuotes = currentUser.role === UserRole.CHEF_CENTRE || 
                                   currentUser.role === UserRole.TECHICO_COMMERCIAL ||
                                   currentUser.role === UserRole.AGENT ||
-                                  currentUser.role === UserRole.CHEF_AGENCE;
+                                  currentUser.role === UserRole.CHEF_AGENCE ||
+                                  currentUser.role === UserRole.ADMIN;
           if (!canManageQuotes) {
             return (
               <div className="flex flex-col items-center justify-center py-24 text-center gap-4">

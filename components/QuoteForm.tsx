@@ -41,6 +41,8 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
 }) => {
   const [formData, setFormData] = useState({
     requestId: initialData?.requestId || '',
+    clientId: initialData?.clientId || '',
+    centreId: initialData?.centreId || '',
     category: initialData?.category || ClientCategory.PHYSICAL,
     civility: initialData?.civility || 'M.',
     businessName: initialData?.businessName || '',
@@ -86,12 +88,19 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
   const [loadingAI, setLoadingAI] = useState(false);
   const [aiRec, setAiRec] = useState(initialData?.aiNotes || '');
   const [activeTab, setActiveTab] = useState<'form' | 'preview'>(
-    initialData ? 'preview' : 'form'
+    (initialData && initialData.id && !initialData.id.startsWith('TEMP-')) ? 'preview' : 'form'
   );
   const [articles, setArticles] = useState<any[]>([]);
   const [filteredArticles, setFilteredArticles] = useState<any[]>([]);
   const [showArticleDropdown, setShowArticleDropdown] = useState<{ [key: number]: boolean }>({});
   const [searchTerm, setSearchTerm] = useState<{ [key: number]: string }>({});
+
+  useEffect(() => {
+    const shouldShowForm = !initialData || !initialData.id || initialData.id.startsWith('TEMP-');
+    if (shouldShowForm && activeTab !== 'form') {
+      setActiveTab('form');
+    }
+  }, [initialData]);
 
   const isLegal = formData.category === ClientCategory.LEGAL;
 
@@ -470,6 +479,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
     const quoteData: Quote = {
       id: initialData?.id || generateTempQuoteId(),
       ...formData,
+      type: formData.type as 'Proprietaire' | 'Locataire' | 'Mandataire',
       items,
       subtotal,
       tax,

@@ -75,8 +75,22 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
   const [showArticleDropdown, setShowArticleDropdown] = useState<{[key: number]: boolean}>({});
   const [searchTerms, setSearchTerms] = useState<{[key: number]: string}>({});
   const [activeTab, setActiveTab] = useState<'form' | 'preview'>(
-    existingQuote ? 'preview' : 'form'
+    existingQuote && existingQuote.id && !existingQuote.id.startsWith('TEMP-') ? 'preview' : 'form'
   );
+  
+  // FORCER le mode formulaire au chargement si pas de devis existant valide
+  useEffect(() => {
+    const shouldShowForm = !existingQuote || !existingQuote.id || existingQuote.id.startsWith('TEMP-');
+    if (shouldShowForm && activeTab !== 'form') {
+      console.log('[BranchementQuoteForm] Forçage du mode formulaire');
+      setActiveTab('form');
+    }
+    console.log('[BranchementQuoteForm] Initialisation:', {
+      existingQuoteId: existingQuote?.id,
+      activeTab,
+      shouldShowForm
+    });
+  }, []);
   
   const [taxRate, setTaxRate] = useState(19); // 19% TVA
 
@@ -607,7 +621,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
         <p style={{ fontSize: '20pt', fontWeight: 'bold' }}>Ce devis n'est pas encore approuvé par les responsables.</p>
       </div>
 
-      <div className={activeTab === 'form' ? 'block' : 'hidden'}>
+      <div className={activeTab === 'form' ? 'block' : 'hidden'} style={{ display: activeTab === 'form' ? 'block' : 'none' }}>
         <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 max-w-full mx-auto">
           {/* ... Contenu du formulaire resté inchangé ... */}
           {/* (Note: Code truncated for replace_file_content tool, but I will make sure the replacement is complete) */}
@@ -1007,7 +1021,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
       <p style={{ fontSize: '20pt', fontWeight: 'bold' }}>Ce devis n'est pas encore validé par TOUS les responsables requis ({missingValidationsCount} manquantes).</p>
     </div>
 
-    <div className={activeTab === 'preview' ? 'block animate-in fade-in duration-500' : 'hidden'}>
+    <div className={activeTab === 'preview' ? 'block animate-in fade-in duration-500' : 'hidden'} style={{ display: activeTab === 'preview' ? 'block' : 'none' }}>
       <div className={`quote-print-doc bg-white w-full max-w-[210mm] mx-auto p-[15mm] text-slate-900 block-print-unapproved relative overflow-hidden`} style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
         
         {/* Watermark for non-approved quotes */}

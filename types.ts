@@ -126,6 +126,7 @@ export interface Client {
   idDocumentNumber?: string;
   idDocumentIssueDate?: string;
   idDocumentIssuer?: string;
+  address?: string;
   fax?: string;
   createdAt: string;
 }
@@ -263,6 +264,7 @@ export interface Quote {
   wasteManagement?: string;
   clientFax?: string;
   validations?: ValidationRecord[];
+  aiNotes?: string;
 }
 
 export interface WorkType {
