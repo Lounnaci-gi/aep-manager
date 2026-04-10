@@ -578,7 +578,7 @@ export const WorkTypeManager: React.FC<WorkTypeManagerProps> = ({ workTypes, use
                           <div className="flex-grow">
                             <span className="text-gray-900 font-bold text-sm italic">{type.label}</span>
                             
-                            <div className="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div className="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                               {/* Demandes */}
                               <div className="bg-blue-50/50 p-3 rounded-lg border border-blue-100">
                                 <div className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2 flex items-center gap-1">
@@ -691,6 +691,38 @@ export const WorkTypeManager: React.FC<WorkTypeManagerProps> = ({ workTypes, use
                                             <div className="flex flex-wrap gap-1.5">
                                               {roleUsers.map(u => (
                                                 <span key={u.id} className="inline-flex items-center bg-white text-purple-700 px-2 py-0.5 rounded shadow-sm text-[10px] border border-purple-100 font-medium">
+                                                  {u.fullName}
+                                                </span>
+                                              ))}
+                                            </div>
+                                          ) : (
+                                            <span className="text-[10px] text-gray-400 italic block mt-1">Aucun utilisateur</span>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                ) : (
+                                  <span className="text-[10px] text-gray-400 italic">Aucun rôle assigné</span>
+                                )}
+                              </div>
+
+                              {/* Suppression */}
+                              <div className="bg-rose-50/50 p-3 rounded-lg border border-rose-100">
+                                <div className="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-2 flex items-center gap-1">
+                                  <span>🗑️ Suppression</span>
+                                </div>
+                                {type.deleteAllowedRoles && type.deleteAllowedRoles.length > 0 ? (
+                                  <div className="space-y-3">
+                                    {type.deleteAllowedRoles.map((role, i) => {
+                                      const roleUsers = users.filter(u => u.role === role);
+                                      return (
+                                        <div key={i} className="text-xs">
+                                          <div className="font-bold text-rose-800/80 mb-1.5 border-b border-rose-100/50 pb-1">{role}</div>
+                                          {roleUsers.length > 0 ? (
+                                            <div className="flex flex-wrap gap-1.5">
+                                              {roleUsers.map(u => (
+                                                <span key={u.id} className="inline-flex items-center bg-white text-rose-700 px-2 py-0.5 rounded shadow-sm text-[10px] border border-rose-100 font-medium">
                                                   {u.fullName}
                                                 </span>
                                               ))}
