@@ -246,13 +246,23 @@ export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies,
                         </button>
                       )}
                       
-                      {/* Bouton Modifier - uniquement pour les créateurs de devis */}
-                      {(currentUser?.role === UserRole.CHEF_CENTRE || 
-                        currentUser?.role === UserRole.TECHICO_COMMERCIAL) && (
-                        <button onClick={() => onEdit(quote)} className="text-blue-500 hover:text-blue-700 p-2 hover:bg-blue-50 rounded-xl transition-all" title="Modifier le devis">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                        </button>
-                      )}
+                      {/* Bouton Modifier selon quoteAllowedRoles du type de travail */}
+                      {(() => {
+                        const matchedWorkType = workTypes.find(wt => wt.label === quote.serviceType);
+                        const canEdit = !matchedWorkType?.quoteAllowedRoles || 
+                                        matchedWorkType.quoteAllowedRoles.length === 0 || 
+                                        matchedWorkType.quoteAllowedRoles.includes(currentUser?.role);
+                        
+                        return canEdit ? (
+                          <button onClick={() => onEdit(quote)} className="text-blue-500 hover:text-blue-700 p-2 hover:bg-blue-50 rounded-xl transition-all" title="Modifier le devis">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                          </button>
+                        ) : (
+                          <button disabled className="text-gray-300 cursor-not-allowed p-2" title="Vous n'avez pas l'autorisation de modifier">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                          </button>
+                        );
+                      })()}
 
                       {/* Boutons Valider/Rejeter + Sélecteur statut - basés sur quoteValidationRoles du type de travaux */}
                       {canValidateQuote && (
@@ -297,14 +307,23 @@ export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies,
                         </>
                       )}
 
-                      {/* Bouton Supprimer */}
-                      {(currentUser?.role === UserRole.ADMIN || 
-                        currentUser?.role === UserRole.CHEF_CENTRE || 
-                        currentUser?.role === UserRole.TECHICO_COMMERCIAL) && (
-                        <button onClick={() => onDelete(quote.id)} className="text-gray-200 hover:text-rose-500 p-2 hover:bg-rose-50 rounded-xl transition-all" title="Supprimer le devis">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                        </button>
-                      )}
+                      {/* Bouton Supprimer selon deleteAllowedRoles du type de travail */}
+                      {(() => {
+                        const matchedWorkType = workTypes.find(wt => wt.label === quote.serviceType);
+                        const canDelete = !matchedWorkType?.deleteAllowedRoles || 
+                                          matchedWorkType.deleteAllowedRoles.length === 0 || 
+                                          matchedWorkType.deleteAllowedRoles.includes(currentUser?.role);
+                        
+                        return canDelete ? (
+                          <button onClick={() => onDelete(quote.id)} className="text-gray-200 hover:text-rose-500 p-2 hover:bg-rose-50 rounded-xl transition-all" title="Supprimer le devis">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                          </button>
+                        ) : (
+                          <button disabled className="text-gray-300 cursor-not-allowed p-2" title="Vous n'avez pas l'autorisation de supprimer">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                          </button>
+                        );
+                      })()}
                     </div>
                   </td>
                 </tr>

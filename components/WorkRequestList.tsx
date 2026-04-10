@@ -306,7 +306,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
     });
   };
 
-  const handleDeleteClick = (req: WorkRequest) => {
+  const handleDeleteClick = async (req: WorkRequest) => {
     if (req.status === RequestStatus.QUOTED) {
       Swal.fire({
         title: 'Action Impossible',
@@ -317,6 +317,25 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
       });
       return;
     }
+
+    // Vérifier les permissions de suppression selon le type de travail
+    const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
+    const canDelete = !workType?.deleteAllowedRoles || 
+                      workType.deleteAllowedRoles.length === 0 || 
+                      workType.deleteAllowedRoles.includes(currentUser?.role);
+    
+    if (!canDelete) {
+      Swal.fire({
+        title: 'Accès Refusé',
+        text: 'Vous n\'avez pas l\'autorisation de supprimer ce type de demande.',
+        icon: 'error',
+        confirmButtonColor: '#2563eb',
+        timer: 3000,
+        showConfirmButton: true
+      });
+      return;
+    }
+
     onDelete(req.id);
   };
 
@@ -613,94 +632,118 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                       {req.assignedValidations && req.assignedValidations.length > 0 && (
                         <>
                           {req.assignedValidations.includes(ValidationType.AGENCY) &&
-                            currentUser?.role === UserRole.CHEF_AGENCE && (
-                              <div className="flex gap-2">
-                                {!req.validations?.find(v => v.type === ValidationType.AGENCY && v.status === 'validated') ? (
-                                  <>
+                            (() => {
+                              const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
+                              const validationRoles = workType?.requestValidationRoles && workType.requestValidationRoles.length > 0
+                                ? workType.requestValidationRoles
+                                : [UserRole.CHEF_AGENCE]; // Fallback par défaut
+                              const canValidate = validationRoles.includes(currentUser?.role);
+                                                        
+                              return canValidate ? (
+                                <div className="flex gap-2">
+                                  {!req.validations?.find(v => v.type === ValidationType.AGENCY && v.status === 'validated') ? (
+                                    <>
+                                      <button
+                                        onClick={() => handleValidation(req, ValidationType.AGENCY, 'validated')}
+                                        className="bg-green-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg shadow-green-100/50"
+                                      >
+                                        Valider Chef Agence
+                                      </button>
+                                      <button
+                                        onClick={() => handleValidation(req, ValidationType.AGENCY, 'rejected')}
+                                        className="bg-rose-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100/50"
+                                      >
+                                        Rejeter
+                                      </button>
+                                    </>
+                                  ) : !quotes.some(q => q.requestId === req.id) && (
                                     <button
-                                      onClick={() => handleValidation(req, ValidationType.AGENCY, 'validated')}
-                                      className="bg-green-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg shadow-green-100/50"
+                                      onClick={() => handleCancelValidation(req, ValidationType.AGENCY)}
+                                      className="bg-amber-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-100/50 flex items-center gap-1.5"
                                     >
-                                      Valider Chef Agence
+                                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                      Annuler validation
                                     </button>
-                                    <button
-                                      onClick={() => handleValidation(req, ValidationType.AGENCY, 'rejected')}
-                                      className="bg-rose-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100/50"
-                                    >
-                                      Rejeter
-                                    </button>
-                                  </>
-                                ) : !quotes.some(q => q.requestId === req.id) && (
-                                  <button
-                                    onClick={() => handleCancelValidation(req, ValidationType.AGENCY)}
-                                    className="bg-amber-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-100/50 flex items-center gap-1.5"
-                                  >
-                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                                    Annuler Validation
-                                  </button>
-                                )}
-                              </div>
-                            )}
+                                  )}
+                                </div>
+                              ) : null;
+                            })()}
 
                           {req.assignedValidations.includes(ValidationType.CUSTOMER_SERVICE) &&
-                            currentUser?.role === UserRole.AGENT && (
-                              <div className="flex gap-2">
-                                {!req.validations?.find(v => v.type === ValidationType.CUSTOMER_SERVICE && v.status === 'validated') ? (
-                                  <>
+                            (() => {
+                              const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
+                              const validationRoles = workType?.requestValidationRoles && workType.requestValidationRoles.length > 0
+                                ? workType.requestValidationRoles
+                                : [UserRole.AGENT]; // Fallback par défaut
+                              const canValidate = validationRoles.includes(currentUser?.role);
+                                                        
+                              return canValidate ? (
+                                <div className="flex gap-2">
+                                  {!req.validations?.find(v => v.type === ValidationType.CUSTOMER_SERVICE && v.status === 'validated') ? (
+                                    <>
+                                      <button
+                                        onClick={() => handleValidation(req, ValidationType.CUSTOMER_SERVICE, 'validated')}
+                                        className="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100/50"
+                                      >
+                                        Valider Relation Clientèle
+                                      </button>
+                                      <button
+                                        onClick={() => handleValidation(req, ValidationType.CUSTOMER_SERVICE, 'rejected')}
+                                        className="bg-rose-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100/50"
+                                      >
+                                        Rejeter
+                                      </button>
+                                    </>
+                                  ) : !quotes.some(q => q.requestId === req.id) && (
                                     <button
-                                      onClick={() => handleValidation(req, ValidationType.CUSTOMER_SERVICE, 'validated')}
-                                      className="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100/50"
+                                      onClick={() => handleCancelValidation(req, ValidationType.CUSTOMER_SERVICE)}
+                                      className="bg-amber-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-100/50 flex items-center gap-1.5"
                                     >
-                                      Valider Relation Clientèle
+                                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                      Annuler validation
                                     </button>
-                                    <button
-                                      onClick={() => handleValidation(req, ValidationType.CUSTOMER_SERVICE, 'rejected')}
-                                      className="bg-rose-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100/50"
-                                    >
-                                      Rejeter
-                                    </button>
-                                  </>
-                                ) : !quotes.some(q => q.requestId === req.id) && (
-                                  <button
-                                    onClick={() => handleCancelValidation(req, ValidationType.CUSTOMER_SERVICE)}
-                                    className="bg-amber-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-100/50 flex items-center gap-1.5"
-                                  >
-                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                                    Annuler Validation
-                                  </button>
-                                )}
-                              </div>
-                            )}
+                                  )}
+                                </div>
+                              ) : null;
+                            })()}
 
                           {req.assignedValidations.includes(ValidationType.LAWYER) &&
-                            currentUser?.role === UserRole.JURISTE && (
-                              <div className="flex gap-2">
-                                {!req.validations?.find(v => v.type === ValidationType.LAWYER && v.status === 'validated') ? (
-                                  <>
+                            (() => {
+                              const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
+                              const validationRoles = workType?.requestValidationRoles && workType.requestValidationRoles.length > 0
+                                ? workType.requestValidationRoles
+                                : [UserRole.JURISTE]; // Fallback par défaut
+                              const canValidate = validationRoles.includes(currentUser?.role);
+                                                        
+                              return canValidate ? (
+                                <div className="flex gap-2">
+                                  {!req.validations?.find(v => v.type === ValidationType.LAWYER && v.status === 'validated') ? (
+                                    <>
+                                      <button
+                                        onClick={() => handleValidation(req, ValidationType.LAWYER, 'validated')}
+                                        className="bg-purple-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-purple-700 transition-all shadow-lg shadow-purple-100/50"
+                                      >
+                                        Valider Juriste
+                                      </button>
+                                      <button
+                                        onClick={() => handleValidation(req, ValidationType.LAWYER, 'rejected')}
+                                        className="bg-rose-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100/50"
+                                      >
+                                        Rejeter
+                                      </button>
+                                    </>
+                                  ) : !quotes.some(q => q.requestId === req.id) && (
                                     <button
-                                      onClick={() => handleValidation(req, ValidationType.LAWYER, 'validated')}
-                                      className="bg-purple-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-purple-700 transition-all shadow-lg shadow-purple-100/50"
+                                      onClick={() => handleCancelValidation(req, ValidationType.LAWYER)}
+                                      className="bg-amber-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-100/50 flex items-center gap-1.5"
                                     >
-                                      Valider Juriste
+                                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                      Annuler validation
                                     </button>
-                                    <button
-                                      onClick={() => handleValidation(req, ValidationType.LAWYER, 'rejected')}
-                                      className="bg-rose-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100/50"
-                                    >
-                                      Rejeter
-                                    </button>
-                                  </>
-                                ) : !quotes.some(q => q.requestId === req.id) && (
-                                  <button
-                                    onClick={() => handleCancelValidation(req, ValidationType.LAWYER)}
-                                    className="bg-amber-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-100/50 flex items-center gap-1.5"
-                                  >
-                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                                    Annuler Validation
-                                  </button>
-                                )}
-                              </div>
-                            )}
+                                  )}
+                                </div>
+                              ) : null;
+                            })()}
                         </>
                       )}
 
@@ -733,25 +776,31 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                           </div>
                         )}
 
-                      {(currentUser?.role === UserRole.AGENT || currentUser?.role === UserRole.CHEF_AGENCE) && req.serviceType.toLowerCase().includes("branchement") && (
-                        <button
-                          onClick={() => onEdit(req)}
-                          className="text-blue-400 hover:text-blue-600 transition-colors p-1.5 hover:bg-blue-50 rounded-lg"
-                          title="Modifier la demande"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                        </button>
-                      )}
-
-                      {req.serviceType.toLowerCase().includes("branchement") === false && (
-                        <button
-                          onClick={() => onEdit(req)}
-                          className="text-blue-400 hover:text-blue-600 transition-colors p-1.5 hover:bg-blue-50 rounded-lg"
-                          title="Modifier la demande"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                        </button>
-                      )}
+                      {/* Bouton Modifier selon allowedRoles du type de travail */}
+                      {currentUser && (() => {
+                        const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
+                        const canEdit = !workType?.allowedRoles || 
+                                        workType.allowedRoles.length === 0 || 
+                                        workType.allowedRoles.includes(currentUser.role);
+                        
+                        return canEdit ? (
+                          <button
+                            onClick={() => onEdit(req)}
+                            className="text-blue-400 hover:text-blue-600 transition-colors p-1.5 hover:bg-blue-50 rounded-lg"
+                            title="Modifier la demande"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                          </button>
+                        ) : (
+                          <button
+                            disabled
+                            className="text-gray-300 cursor-not-allowed p-1.5"
+                            title="Vous n'avez pas l'autorisation de modifier"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                          </button>
+                        );
+                      })()}
 
                       {(currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.CHEF_CENTRE) && (
                         <select
@@ -763,18 +812,28 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                         </select>
                       )}
 
-                      {/* Suppression autorisée pour AGENT, CHEF_AGENCE et CHEF_CENTRE */}
-                      {currentUser && (currentUser.role === UserRole.AGENT ||
-                        currentUser.role === UserRole.CHEF_AGENCE ||
-                        currentUser.role === UserRole.CHEF_CENTRE) && (
+                      {/* Suppression autorisée selon deleteAllowedRoles du type de travail */}
+                      {currentUser && (() => {
+                        const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
+                        const canDelete = !workType?.deleteAllowedRoles || 
+                                          workType.deleteAllowedRoles.length === 0 || 
+                                          workType.deleteAllowedRoles.includes(currentUser.role);
+                        
+                        return (
                           <button
-                            onClick={() => handleDeleteClick(req)}
-                            className="text-gray-200 hover:text-rose-600 transition-colors p-1.5 hover:bg-rose-50 rounded-lg"
-                            title="Supprimer la demande"
+                            onClick={() => canDelete && handleDeleteClick(req)}
+                            className={`${
+                              canDelete 
+                                ? 'text-gray-200 hover:text-rose-600 transition-colors p-1.5 hover:bg-rose-50 rounded-lg' 
+                                : 'text-gray-300 cursor-not-allowed p-1.5'
+                            }`}
+                            title={canDelete ? 'Supprimer la demande' : 'Vous n\'avez pas l\'autorisation de supprimer'}
+                            disabled={!canDelete}
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                           </button>
-                        )}
+                        );
+                      })()}
 
                       {/* Bouton Voir Workflow */}
                       <button
