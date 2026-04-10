@@ -13,6 +13,9 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingArticle, setEditingArticle] = useState<Article | undefined>(undefined);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
+  const [filterUnit, setFilterUnit] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -629,32 +632,32 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-      <div className="mb-6 flex justify-between items-center">
+    <div className="w-full mx-auto py-4 px-3 sm:px-4 lg:px-6">
+      <div className="mb-4 flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">
+          <h1 className="text-xl font-black text-gray-900 uppercase tracking-tighter">
             Gestion des Articles
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-xs text-gray-500 mt-1">
             Gérez les articles utilisables dans les devis
           </p>
         </div>
         <div className="flex gap-3">
           <button
             onClick={loadDefaultArticles}
-            className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all"
+            className="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all"
           >
             Charger Articles Défaut
           </button>
           <button
             onClick={() => setShowForm(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all"
+            className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all"
           >
             Nouvel Article
           </button>
           <button
             onClick={onBack}
-            className="bg-gray-200 text-gray-700 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-300 transition-all"
+            className="bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-gray-300 transition-all"
           >
             Retour
           </button>
@@ -662,21 +665,21 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
       </div>
 
       {showForm && (
-        <div id="article-form" className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 mb-6">
-          <h2 className="text-lg font-black text-gray-900 uppercase tracking-tight mb-4">
+        <div id="article-form" className="bg-white rounded-xl shadow-lg border border-gray-100 p-4 mb-4">
+          <h2 className="text-base font-black text-gray-900 uppercase tracking-tight mb-3">
             {editingArticle ? 'Modifier Article' : 'Nouvel Article'}
           </h2>
           
-          <form onSubmit={handleSave} className="space-y-4">
+          <form onSubmit={handleSave} className="space-y-3">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">
                   Catégorie
                 </label>
                 <select
                   value={formData.category}
                   onChange={(e) => setFormData({...formData, category: e.target.value})}
-                  className="w-full rounded-xl border-gray-200 p-3 text-sm font-black uppercase border focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full rounded-lg border-gray-200 p-2 text-xs font-black uppercase border focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 >
                   {categories.map(cat => (
                     <option key={cat} value={cat}>{cat}</option>
@@ -685,7 +688,7 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
               </div>
               
               <div>
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">
                   Nom de l'article *
                 </label>
                 <input
@@ -693,7 +696,7 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  className="w-full rounded-xl border-gray-200 p-3 text-sm font-bold border focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full rounded-lg border-gray-200 p-2 text-xs font-bold border focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   placeholder="Ex: Compteur eau standard"
                 />
               </div>
@@ -716,14 +719,14 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
               </div>
               
               <div>
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">
                   Matière
                 </label>
                 <input
                   type="text"
                   value={formData.material || ''}
                   onChange={(e) => setFormData({...formData, material: e.target.value})}
-                  className="w-full rounded-xl border-gray-200 p-3 text-sm font-medium border focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full rounded-lg border-gray-200 p-2 text-xs font-medium border focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   placeholder="Ex: Acier, PEHD, Tigre, PVC..."
                   list="materials"
                 />
@@ -783,14 +786,14 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
               </div>
               
               <div>
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">
                   Couleur
                 </label>
                 <input
                   type="text"
                   value={formData.color || ''}
                   onChange={(e) => setFormData({...formData, color: e.target.value})}
-                  className="w-full rounded-xl border-gray-200 p-3 text-sm font-medium border focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full rounded-lg border-gray-200 p-2 text-xs font-medium border focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   placeholder="Ex: Noire, Bleue, Rouge..."
                   list="colors"
                 />
@@ -810,13 +813,13 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
 
             
             <div>
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+              <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">
                 Description
               </label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
-                className="w-full rounded-xl border-gray-200 p-3 text-sm font-medium border focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full rounded-lg border-gray-200 p-2 text-xs font-medium border focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 placeholder="Description détaillée de l'article"
                 rows={3}
               />
@@ -825,22 +828,22 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
 
             
             <div>
-              <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight mb-4">
+              <h3 className="text-base font-black text-gray-900 uppercase tracking-tight mb-3">
                 Tarifs *
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {priceTypes.map((priceType, index) => (
-                  <div key={priceType.type} className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                  <div key={priceType.type} className="bg-gray-50 p-3 rounded-lg border border-gray-200">
                     <div className="flex items-center gap-2 mb-3">
-                      <div className={`w-3 h-3 rounded-full bg-${priceType.color}-500`}></div>
-                      <span className="font-black text-gray-900 text-sm uppercase tracking-widest">
+                      <div className={`w-2.5 h-2.5 rounded-full bg-${priceType.color}-500`}></div>
+                      <span className="font-black text-gray-900 text-xs uppercase tracking-widest">
                         {priceType.label}
                       </span>
                     </div>
                     
                     <div className="space-y-3">
                       <div>
-                        <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">
+                        <label className="block text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">
                           Prix (DZD)
                         </label>
                         <input
@@ -849,7 +852,7 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
                           step="0.01"
                           value={articlePrices[index].price}
                           onChange={(e) => handlePriceChange(index, e.target.value)}
-                          className="w-full rounded-lg border-gray-200 p-2 text-sm font-bold border bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                          className="w-full rounded-lg border-gray-200 p-1.5 text-xs font-bold border bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                           placeholder="0.00"
                         />
                       </div>
@@ -859,17 +862,17 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
               </div>
             </div>
             
-            <div className="flex gap-3 pt-4">
+            <div className="flex gap-2 pt-3">
               <button
                 type="submit"
-                className="bg-emerald-600 text-white px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all"
+                className="bg-emerald-600 text-white px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all"
               >
                 {editingArticle ? 'Mettre à jour' : 'Ajouter'}
               </button>
               <button
                 type="button"
                 onClick={resetForm}
-                className="bg-gray-200 text-gray-700 px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-300 transition-all"
+                className="bg-gray-200 text-gray-700 px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-gray-300 transition-all"
               >
                 Annuler
               </button>
@@ -878,14 +881,80 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
         </div>
       )}
 
-      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-          <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">
-            Liste des Articles
-          </h3>
-          <p className="text-sm text-gray-500 mt-1">
-            {articles.length} article{articles.length > 1 ? 's' : ''} disponible{articles.length > 1 ? 's' : ''}
-          </p>
+      <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+        {/* Barre de recherche et filtres */}
+        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+          <div className="flex flex-col gap-3">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-base font-black text-gray-900 uppercase tracking-tight">
+                  Liste des Articles
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {articles.length} article{articles.length > 1 ? 's' : ''} disponible{articles.length > 1 ? 's' : ''}
+                </p>
+              </div>
+            </div>
+            
+            {/* Filtres */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              {/* Recherche */}
+              <div className="flex-1">
+                <div className="relative">
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Rechercher un article..."
+                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 text-xs font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+              
+              {/* Filtre catégorie */}
+              <select
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                className="px-3 py-2 rounded-lg border border-gray-200 text-xs font-black uppercase focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              >
+                <option value="">Toutes catégories</option>
+                {categories.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+              
+              {/* Filtre unité */}
+              <select
+                value={filterUnit}
+                onChange={(e) => setFilterUnit(e.target.value)}
+                className="px-3 py-2 rounded-lg border border-gray-200 text-xs font-black uppercase focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              >
+                <option value="">Toutes unités</option>
+                <option value="U">Unité (U)</option>
+                <option value="M²">Mètre carré (M²)</option>
+                <option value="M3">Mètre cube (M3)</option>
+                <option value="ML">Mètre linéaire (ML)</option>
+                <option value="NULL">Aucune</option>
+              </select>
+              
+              {/* Bouton réinitialiser */}
+              {(searchTerm || filterCategory || filterUnit) && (
+                <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setFilterCategory('');
+                    setFilterUnit('');
+                  }}
+                  className="px-3 py-2 rounded-lg bg-gray-200 text-gray-700 text-[9px] font-black uppercase tracking-widest hover:bg-gray-300 transition-all"
+                >
+                  Réinitialiser
+                </button>
+              )}
+            </div>
+          </div>
         </div>
         
         {articles.length === 0 ? (
@@ -903,57 +972,72 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-black text-gray-500 uppercase tracking-widest">
+                  <th scope="col" className="px-4 py-2 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">
                     Article
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-black text-gray-500 uppercase tracking-widest">
+                  <th scope="col" className="px-4 py-2 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">
                     Catégorie
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-black text-gray-500 uppercase tracking-widest">
+                  <th scope="col" className="px-4 py-2 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">
                     Unité
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-black text-gray-500 uppercase tracking-widest">
+                  <th scope="col" className="px-4 py-2 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">
                     Propriétés
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-black text-gray-500 uppercase tracking-widest">
+                  <th scope="col" className="px-4 py-2 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">
                     Prix
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-black text-gray-500 uppercase tracking-widest">
+                  <th scope="col" className="px-4 py-2 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {articles.map((article) => (
+                {articles
+                  .filter(article => {
+                    // Filtre par recherche
+                    const matchesSearch = searchTerm === '' || 
+                      article.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      article.description.toLowerCase().includes(searchTerm.toLowerCase());
+                    
+                    // Filtre par catégorie
+                    const matchesCategory = filterCategory === '' || article.category === filterCategory;
+                    
+                    // Filtre par unité
+                    const matchesUnit = filterUnit === '' || article.unit === filterUnit;
+                    
+                    return matchesSearch && matchesCategory && matchesUnit;
+                  })
+                  .map((article) => (
                   <tr key={article.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-black text-gray-900">{article.name}</div>
-                      <div className="text-sm text-gray-600 mt-1">{article.description}</div>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <div className="text-xs font-black text-gray-900">{article.name}</div>
+                      <div className="text-xs text-gray-600 mt-0.5">{article.description}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-xs font-black px-2 py-1 bg-blue-100 text-blue-800 rounded-full uppercase tracking-widest">
+                      <span className="text-[10px] font-black px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded-full uppercase tracking-widest">
                         {article.category}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-xs font-black px-2 py-1 bg-amber-100 text-amber-800 rounded-full uppercase tracking-widest">
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span className="text-[10px] font-black px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded-full uppercase tracking-widest">
                         {article.unit && article.unit !== 'NULL' ? article.unit : 'N/A'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col space-y-1">
                         {article.class && (
-                          <span className="text-xs font-black px-2 py-1 bg-amber-100 text-amber-800 rounded-full uppercase tracking-widest">
+                          <span className="text-[10px] font-black px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded-full uppercase tracking-widest">
                             {article.class}
                           </span>
                         )}
                         {article.nominalPressure && (
-                          <span className="text-xs font-black px-2 py-1 bg-green-100 text-green-800 rounded-full uppercase tracking-widest">
+                          <span className="text-[10px] font-black px-1.5 py-0.5 bg-green-100 text-green-800 rounded-full uppercase tracking-widest">
                             {article.nominalPressure}
                           </span>
                         )}
                         {article.color && (
-                          <span className="text-xs font-black px-2 py-1 bg-red-100 text-red-800 rounded-full uppercase tracking-widest">
+                          <span className="text-[10px] font-black px-1.5 py-0.5 bg-red-100 text-red-800 rounded-full uppercase tracking-widest">
                             {article.color}
                           </span>
                         )}
@@ -964,35 +1048,35 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
                         {article.prices.filter(price => price.price > 0).length > 0 ? (
                           article.prices.filter(price => price.price > 0).map((price, index) => (
                             <div key={index} className="flex items-center gap-2 text-sm">
-                              <span className="text-xs font-black px-2 py-1 bg-gray-100 text-gray-700 rounded-full">
+                              <span className="text-[10px] font-black px-1.5 py-0.5 bg-gray-100 text-gray-700 rounded-full">
                                 {price.type === 'fourniture' ? 'F' : 
                                  price.type === 'pose' ? 'P' : 'PS'}
                               </span>
-                              <span className="font-bold text-gray-900">{price.price.toLocaleString()} DZD</span>
+                              <span className="font-bold text-gray-900 text-xs">{price.price.toLocaleString()} DZD</span>
                             </div>
                           ))
                         ) : (
-                          <span className="text-xs font-black text-gray-400 italic">Aucun prix défini</span>
+                          <span className="text-[10px] font-black text-gray-400 italic">Aucun prix défini</span>
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <td className="px-4 py-3 whitespace-nowrap text-xs font-medium">
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleEdit(article)}
-                          className="text-blue-600 hover:text-blue-800 p-2 rounded-lg hover:bg-blue-50 transition-colors"
+                          className="text-blue-600 hover:text-blue-800 p-1.5 rounded-md hover:bg-blue-50 transition-colors"
                           title="Modifier"
                         >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
                         </button>
                         <button
                           onClick={() => handleDelete(article.id)}
-                          className="text-rose-600 hover:text-rose-800 p-2 rounded-lg hover:bg-rose-50 transition-colors"
+                          className="text-rose-600 hover:text-rose-800 p-1.5 rounded-md hover:bg-rose-50 transition-colors"
                           title="Supprimer"
                         >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>
                         </button>

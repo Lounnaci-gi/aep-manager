@@ -287,7 +287,7 @@ export const Layout: React.FC<LayoutProps> = ({
           boxShadow:    scrolled ? '0 2px 16px -4px rgba(11,30,66,0.09)' : 'none',
           transition:   'box-shadow 0.3s, border-color 0.3s',
         }} className="print:hidden">
-          <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 20px' }}>
+          <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '0 20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', height: '64px', gap: '0' }}>
 
               {/* ── Hamburger (mobile / tablet only) ─── */}
