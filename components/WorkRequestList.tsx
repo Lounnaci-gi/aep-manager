@@ -634,14 +634,17 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                           {req.assignedValidations.includes(ValidationType.AGENCY) &&
                             (() => {
                               const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
-                              const validationRoles = workType?.requestValidationRoles && workType.requestValidationRoles.length > 0
-                                ? workType.requestValidationRoles
-                                : [UserRole.CHEF_AGENCE]; // Fallback par défaut
+                              // ATTENTION: Uniquement agencyValidationRoles (PAS de fallback vers l'ancien champ)
+                              const validationRoles = workType?.agencyValidationRoles && workType.agencyValidationRoles.length > 0
+                                ? workType.agencyValidationRoles
+                                : [UserRole.CHEF_AGENCE]; // Fallback par défaut STRICT
                               const canValidate = validationRoles.includes(currentUser?.role);
+                              const isAlreadyValidated = req.validations?.find(v => v.type === ValidationType.AGENCY && v.status === 'validated');
+                              const hasQuote = quotes.some(q => q.requestId === req.id);
                                                         
                               return canValidate ? (
                                 <div className="flex gap-2">
-                                  {!req.validations?.find(v => v.type === ValidationType.AGENCY && v.status === 'validated') ? (
+                                  {!isAlreadyValidated ? (
                                     <>
                                       <button
                                         onClick={() => handleValidation(req, ValidationType.AGENCY, 'validated')}
@@ -656,7 +659,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                                         Rejeter
                                       </button>
                                     </>
-                                  ) : !quotes.some(q => q.requestId === req.id) && (
+                                  ) : !hasQuote && (
                                     <button
                                       onClick={() => handleCancelValidation(req, ValidationType.AGENCY)}
                                       className="bg-amber-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-100/50 flex items-center gap-1.5"
@@ -672,14 +675,17 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                           {req.assignedValidations.includes(ValidationType.CUSTOMER_SERVICE) &&
                             (() => {
                               const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
-                              const validationRoles = workType?.requestValidationRoles && workType.requestValidationRoles.length > 0
-                                ? workType.requestValidationRoles
-                                : [UserRole.AGENT]; // Fallback par défaut
+                              // ATTENTION: Uniquement customerServiceValidationRoles (PAS de fallback vers l'ancien champ)
+                              const validationRoles = workType?.customerServiceValidationRoles && workType.customerServiceValidationRoles.length > 0
+                                ? workType.customerServiceValidationRoles
+                                : [UserRole.AGENT]; // Fallback par défaut STRICT
                               const canValidate = validationRoles.includes(currentUser?.role);
+                              const isAlreadyValidated = req.validations?.find(v => v.type === ValidationType.CUSTOMER_SERVICE && v.status === 'validated');
+                              const hasQuote = quotes.some(q => q.requestId === req.id);
                                                         
                               return canValidate ? (
                                 <div className="flex gap-2">
-                                  {!req.validations?.find(v => v.type === ValidationType.CUSTOMER_SERVICE && v.status === 'validated') ? (
+                                  {!isAlreadyValidated ? (
                                     <>
                                       <button
                                         onClick={() => handleValidation(req, ValidationType.CUSTOMER_SERVICE, 'validated')}
@@ -694,7 +700,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                                         Rejeter
                                       </button>
                                     </>
-                                  ) : !quotes.some(q => q.requestId === req.id) && (
+                                  ) : !hasQuote && (
                                     <button
                                       onClick={() => handleCancelValidation(req, ValidationType.CUSTOMER_SERVICE)}
                                       className="bg-amber-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-100/50 flex items-center gap-1.5"
@@ -710,14 +716,17 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                           {req.assignedValidations.includes(ValidationType.LAWYER) &&
                             (() => {
                               const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
-                              const validationRoles = workType?.requestValidationRoles && workType.requestValidationRoles.length > 0
-                                ? workType.requestValidationRoles
-                                : [UserRole.JURISTE]; // Fallback par défaut
+                              // ATTENTION: Uniquement lawyerValidationRoles (PAS de fallback vers l'ancien champ)
+                              const validationRoles = workType?.lawyerValidationRoles && workType.lawyerValidationRoles.length > 0
+                                ? workType.lawyerValidationRoles
+                                : [UserRole.JURISTE]; // Fallback par défaut STRICT
                               const canValidate = validationRoles.includes(currentUser?.role);
+                              const isAlreadyValidated = req.validations?.find(v => v.type === ValidationType.LAWYER && v.status === 'validated');
+                              const hasQuote = quotes.some(q => q.requestId === req.id);
                                                         
                               return canValidate ? (
                                 <div className="flex gap-2">
-                                  {!req.validations?.find(v => v.type === ValidationType.LAWYER && v.status === 'validated') ? (
+                                  {!isAlreadyValidated ? (
                                     <>
                                       <button
                                         onClick={() => handleValidation(req, ValidationType.LAWYER, 'validated')}
@@ -732,7 +741,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                                         Rejeter
                                       </button>
                                     </>
-                                  ) : !quotes.some(q => q.requestId === req.id) && (
+                                  ) : !hasQuote && (
                                     <button
                                       onClick={() => handleCancelValidation(req, ValidationType.LAWYER)}
                                       className="bg-amber-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-100/50 flex items-center gap-1.5"
@@ -754,27 +763,45 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                         req.status !== RequestStatus.QUOTED &&
                         !quotes.some(q => q.requestId === req.id) &&
                         req.status !== RequestStatus.REJECTED &&
-                        (currentUser?.role === UserRole.TECHICO_COMMERCIAL || currentUser?.role === UserRole.CHEF_CENTRE) && (
-                          <button
-                            onClick={() => onCreateQuote(req)}
-                            className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100/50 flex items-center gap-2"
-                            title="Toutes les validations sont terminées. Créer un devis."
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                            Établir Devis
-                          </button>
-                        )}
+                        (() => {
+                          // Vérifier les rôles autorisés pour créer le devis selon le type de travail
+                          const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
+                          const quoteRoles = workType?.quoteAllowedRoles && workType.quoteAllowedRoles.length > 0
+                            ? workType.quoteAllowedRoles
+                            : [UserRole.TECHICO_COMMERCIAL, UserRole.CHEF_CENTRE]; // Fallback par défaut
+                          const canCreateQuote = quoteRoles.includes(currentUser?.role);
+                          
+                          return canCreateQuote ? (
+                            <button
+                              onClick={() => onCreateQuote(req)}
+                              className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100/50 flex items-center gap-2"
+                              title="Toutes les validations sont terminées. Créer un devis."
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                              Établir Devis
+                            </button>
+                          ) : null;
+                        })()}
 
                       {/* Message si validations en cours */}
                       {req.validations &&
                         req.validations.length > 0 &&
                         !req.validations.every(v => v.status === 'validated') &&
-                        (currentUser?.role === UserRole.TECHICO_COMMERCIAL || currentUser?.role === UserRole.CHEF_CENTRE) && (
-                          <div className="text-[9px] text-amber-600 font-black uppercase tracking-widest bg-amber-50 px-3 py-2 rounded-lg border border-amber-200">
-                            <svg className="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586a1 1 0 01.293.707V19a2 2 0 01-2 2z" clipRule="evenodd" /></svg>
-                            En attente de validations
-                          </div>
-                        )}
+                        (() => {
+                          // Vérifier les rôles autorisés pour créer le devis selon le type de travail
+                          const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
+                          const quoteRoles = workType?.quoteAllowedRoles && workType.quoteAllowedRoles.length > 0
+                            ? workType.quoteAllowedRoles
+                            : [UserRole.TECHICO_COMMERCIAL, UserRole.CHEF_CENTRE]; // Fallback par défaut
+                          const canCreateQuote = quoteRoles.includes(currentUser?.role);
+                          
+                          return canCreateQuote ? (
+                            <div className="text-[9px] text-amber-600 font-black uppercase tracking-widest bg-amber-50 px-3 py-2 rounded-lg border border-amber-200">
+                              <svg className="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586a1 1 0 01.293.707V19a2 2 0 01-2 2z" clipRule="evenodd" /></svg>
+                              En attente de validations
+                            </div>
+                          ) : null;
+                        })()}
 
                       {/* Bouton Modifier selon allowedRoles du type de travail */}
                       {currentUser && (() => {

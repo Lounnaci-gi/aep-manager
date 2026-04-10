@@ -271,7 +271,10 @@ export interface WorkType {
   description?: string;
   label?: string;
   allowedRoles?: UserRole[]; // Rôles autorisés à créer ce type de travail
-  requestValidationRoles?: UserRole[]; // Rôles autorisés à valider la demande
+  agencyValidationRoles?: UserRole[]; // Rôles autorisés à valider la demande (Chef Agence)
+  customerServiceValidationRoles?: UserRole[]; // Rôles autorisés à valider la demande (Relation Clientèle)
+  lawyerValidationRoles?: UserRole[]; // Rôles autorisés à valider la demande (Juriste)
+  requestValidationRoles?: UserRole[]; // [DEPRECATED] Ancien champ - utiliser les 3 champs ci-dessus
   quoteAllowedRoles?: UserRole[]; // Rôles autorisés à créer des devis pour ce type
   quoteValidationRoles?: UserRole[]; // Rôles autorisés à valider les devis pour ce type
   deleteAllowedRoles?: UserRole[]; // Rôles autorisés à supprimer ce type de travail

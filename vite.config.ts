@@ -18,6 +18,24 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
+      },
+      build: {
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              // Séparer les bibliothèques tierces lourdes
+              'react-vendor': ['react', 'react-dom'],
+              'recharts': ['recharts'],
+              'sweetalert2': ['sweetalert2'],
+              'written-number': ['written-number'],
+              // Séparer les composants lourds
+              'components-forms': ['./components/QuoteForm', './components/BranchementQuoteForm', './components/WorkRequestForm'],
+              'components-managers': ['./components/ArticleManager', './components/WorkTypeManager', './components/StructureManager'],
+              'components-lists': ['./components/QuoteList', './components/WorkRequestList', './components/ClientList', './components/UserList']
+            }
+          }
+        },
+        chunkSizeWarningLimit: 1000 // Augmenter la limite d'avertissement à 1000 kB
       }
     };
 });
