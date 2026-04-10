@@ -151,25 +151,31 @@ const App: React.FC = () => {
   };
 
   // Calcul des demandes prêtes pour création de devis (dynamique selon les rôles du type de travail)
+  // Cette fonction compte les demandes dont le devis n'a pas encore été établi
+  // pour les types de travaux où l'utilisateur actuel a le rôle de création de devis
   const getReadyForQuoteCount = () => {
     if (!currentUser) return 0;
     
     const count = requests.filter(req => {
-      // 1. Déterminer si l'utilisateur a le rôle pour établir un devis pour ce type de demande
+      // 1. Trouver le type de travail associé à cette demande
       const workType = workTypes.find(wt => wt.label?.toLowerCase() === req.serviceType?.toLowerCase());
+      
+      // 2. Récupérer les rôles autorisés à créer un devis pour ce type de travail
+      // Si aucun rôle n'est défini, utiliser les rôles par défaut
       const quoteRoles = workType?.quoteAllowedRoles && workType.quoteAllowedRoles.length > 0
         ? workType.quoteAllowedRoles
         : [UserRole.ADMIN, UserRole.CHEF_CENTRE, UserRole.TECHICO_COMMERCIAL]; // fallback par défaut
       
+      // 3. Vérifier si l'utilisateur actuel a le rôle requis pour ce type de travail
       if (!quoteRoles.includes(currentUser.role)) return false;
       
-      // 2. Vérifier qu'il n'y a pas encore de devis créé pour cette demande
+      // 4. Vérifier qu'il n'y a pas encore de devis créé pour cette demande
       const hasQuote = quotes.some(q => q.requestId === req.id);
       if (hasQuote || req.status === RequestStatus.QUOTED || req.status === RequestStatus.REJECTED) return false;
       
-      // 3. Vérifier que toutes les validations requises sont faites
+      // 5. Vérifier que toutes les validations requises sont terminées
       if (req.assignedValidations && req.assignedValidations.length > 0) {
-        // La logique exacte du bouton: toutes les validations assignées doivent être terminées
+        // Toutes les validations assignées doivent être validées
         const allValidated = req.assignedValidations.every(type => 
           req.validations?.find(v => v.type === type && v.status === 'validated')
         );
@@ -179,10 +185,11 @@ const App: React.FC = () => {
         const allValidatedFallback = req.validations.every(v => v.status === 'validated');
         if (!allValidatedFallback) return false;
       } else {
-        // Si aucune validation requise et aucune assignée, on se base sur le statut VALIDATED (workflow sans validation ?)
+        // Si aucune validation requise, la demande doit être au statut VALIDATED
         if (req.status !== RequestStatus.VALIDATED) return false;
       }
       
+      // Cette demande est prête pour création de devis par cet utilisateur
       return true;
     }).length;
     
