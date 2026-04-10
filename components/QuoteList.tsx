@@ -307,12 +307,12 @@ export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies,
                         </>
                       )}
 
-                      {/* Bouton Supprimer selon deleteAllowedRoles du type de travail */}
+                      {/* Bouton Supprimer selon quoteDeleteAllowedRoles du type de travail */}
                       {(() => {
                         const matchedWorkType = workTypes.find(wt => wt.label === quote.serviceType);
-                        const canDelete = !matchedWorkType?.deleteAllowedRoles || 
-                                          matchedWorkType.deleteAllowedRoles.length === 0 || 
-                                          matchedWorkType.deleteAllowedRoles.includes(currentUser?.role);
+                        const canDelete = !matchedWorkType?.quoteDeleteAllowedRoles || 
+                                          matchedWorkType.quoteDeleteAllowedRoles.length === 0 || 
+                                          matchedWorkType.quoteDeleteAllowedRoles.includes(currentUser?.role);
                         
                         return canDelete ? (
                           <button onClick={() => onDelete(quote.id)} className="text-gray-200 hover:text-rose-500 p-2 hover:bg-rose-50 rounded-xl transition-all" title="Supprimer le devis">

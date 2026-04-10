@@ -283,7 +283,8 @@ export interface WorkType {
   requestValidationRoles?: UserRole[]; // [DEPRECATED] Ancien champ - utiliser les 3 champs ci-dessus
   quoteAllowedRoles?: UserRole[]; // Rôles autorisés à créer des devis pour ce type
   quoteValidationRoles?: UserRole[]; // Rôles autorisés à valider les devis pour ce type
-  deleteAllowedRoles?: UserRole[]; // Rôles autorisés à supprimer ce type de travail
+  deleteAllowedRoles?: UserRole[]; // Rôles autorisés à supprimer les demandes pour ce type
+  quoteDeleteAllowedRoles?: UserRole[]; // Rôles autorisés à supprimer les devis pour ce type
 }
 
 export interface User {
