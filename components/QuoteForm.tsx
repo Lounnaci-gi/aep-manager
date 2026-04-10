@@ -540,52 +540,95 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
       <div className={activeTab === 'form' ? 'block' : 'hidden'}>
         <form onSubmit={handleSubmit} className="bg-white p-10 rounded-[1.5rem] shadow-xl border border-gray-100 max-w-7xl mx-auto space-y-8">
 
-          {/* Header Section: Devis Info + Client Box */}
-          <div className="flex flex-col md:flex-row justify-between items-start gap-10 border-b border-gray-50 pb-10">
-            <div className="space-y-4 w-full md:w-1/2">
-              <div className="space-y-1">
-                <h2 className="text-3xl font-bold text-gray-800 tracking-tight">
-                  {initialData?.id && !initialData.id.startsWith('TEMP-') && !initialData.id.startsWith('AEP-')
-                    ? `Devis n° ${initialData.id}`
-                    : `Devis n° ${getNextQuoteNumber()}`
-                  }
-                </h2>
-                <p className="text-sm text-gray-500">En date du {new Date().toLocaleDateString('fr-FR')}</p>
+          {/* 1. RELOCATED QUOTE HEADER (Full Width Title) */}
+          <div className="mb-2 pb-6 border-b-2 border-blue-50">
+            <h2 className="text-3xl font-black text-gray-900 tracking-tighter uppercase leading-none">
+              {initialData?.id && !initialData.id.startsWith('TEMP-') && !initialData.id.startsWith('AEP-')
+                ? `Devis n° ${initialData.id}`
+                : `Devis n° ${getNextQuoteNumber()}`
+              }
+            </h2>
+            <div className="flex flex-wrap items-center gap-6 mt-4">
+              <p className="text-[11px] text-gray-400 font-extrabold uppercase tracking-[0.2em] flex items-center gap-2">
+                <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                Établi le : <span className="text-gray-900">{new Date().toLocaleDateString('fr-FR')}</span>
+              </p>
+              <p className="text-[11px] text-gray-400 font-extrabold uppercase tracking-[0.2em] flex items-center gap-2">
+                <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                État : <span className="text-emerald-600 font-black px-2 py-0.5 bg-emerald-50 rounded italic">{initialData?.status || QuoteStatus.PENDING}</span>
+              </p>
+            </div>
+          </div>
+
+          {/* 2. RESTRUCTURED FLEX ROW WITH TWO BOXES SIDE-BY-SIDE */}
+          <div className="flex flex-col md:flex-row justify-between items-stretch gap-8 border-b border-gray-50 pb-10">
+            
+            {/* COMPANY INFO BOX (LEFT) */}
+            <div className="w-full md:w-1/2 bg-gray-50/50 p-6 rounded-2xl border border-gray-100 flex flex-col space-y-4 relative overflow-hidden group hover:border-blue-200 transition-colors">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-110"></div>
+              <div className="space-y-2 relative z-10">
+                <div className="flex gap-2 text-sm">
+                  <span className="font-bold text-gray-500 whitespace-nowrap min-w-[140px] uppercase">UNITE :</span>
+                  <span className="text-blue-600 font-black uppercase tracking-tight">{activeUnit?.name || '---'}</span>
+                </div>
+                <div className="flex gap-2 text-sm">
+                  <span className="font-bold text-gray-500 whitespace-nowrap min-w-[140px] uppercase">CENTRE :</span>
+                  <span className="text-gray-900 font-black uppercase tracking-tight">{activeCentre?.name || '---'}</span>
+                </div>
+                <div className="flex gap-2 text-sm">
+                  <span className="font-bold text-gray-500 whitespace-nowrap min-w-[140px] uppercase underline decoration-gray-200 decoration-2">Adresse :</span>
+                  <span className="text-gray-700 font-medium">{activeCentre?.address || '---'}</span>
+                </div>
+                <div className="pt-2 border-t border-gray-100 mt-2 space-y-2">
+                  <div className="flex gap-2 text-sm">
+                    <span className="font-bold text-gray-400 whitespace-nowrap min-w-[140px] uppercase">Tél :</span>
+                    <span className="text-gray-700 font-bold">{activeCentre?.phone || '---'}</span>
+                  </div>
+                  <div className="flex gap-2 text-sm">
+                    <span className="font-bold text-gray-400 whitespace-nowrap min-w-[140px] uppercase">Fax :</span>
+                    <span className="text-gray-700 font-bold">{activeCentre?.fax || '---'}</span>
+                  </div>
+                  <div className="flex gap-2 text-sm">
+                    <span className="font-bold text-gray-400 whitespace-nowrap min-w-[140px] uppercase">Email :</span>
+                    <span className="text-blue-500 font-bold truncate lowercase">{activeCentre?.email || '---'}</span>
+                  </div>
+                </div>
               </div>
-              {/* Sections Début des travaux et Durée estimée supprimées */}
             </div>
 
-            <div className="w-full md:w-[450px] bg-gray-50/50 p-6 rounded-xl border border-gray-100 flex flex-col space-y-3 relative">
-              <div className="space-y-2">
+            {/* CLIENT INFO BOX (RIGHT) - Restyled to match precisely */}
+            <div className="w-full md:w-[450px] bg-gray-50/50 p-6 rounded-2xl border border-gray-100 flex flex-col space-y-4 relative overflow-hidden group hover:border-emerald-200 transition-colors">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-110"></div>
+              <div className="space-y-2 relative z-10">
                 <div className="flex gap-2 text-sm">
-                  <span className="font-bold text-gray-500 whitespace-nowrap min-w-[140px]">DOIT A :</span>
-                  <span className="text-gray-800 font-bold">{formData.civility} {formData.clientName || formData.businessName || '……………………….'}</span>
+                  <span className="font-bold text-gray-500 whitespace-nowrap min-w-[140px] uppercase">DOIT A :</span>
+                  <span className="text-gray-800 font-black uppercase tracking-tight">{formData.civility} {formData.clientName || formData.businessName || '……………………….'}</span>
                 </div>
 
                 <div className="flex gap-2 text-sm">
-                  <span className="font-bold text-gray-500 whitespace-nowrap min-w-[140px]">Adresse :</span>
-                  <span className="text-gray-700">{formData.address || '…………………………………………….'}</span>
+                  <span className="font-bold text-gray-500 whitespace-nowrap min-w-[140px] uppercase underline decoration-gray-200 decoration-2">Adresse :</span>
+                  <span className="text-gray-700 font-medium">{formData.address || '…………………………………………….'}</span>
                 </div>
 
                 <div className="flex gap-2 text-sm">
-                  <span className="font-bold text-gray-500 whitespace-nowrap min-w-[140px]">Commune :</span>
-                  <span className="text-gray-700">{formData.commune || '……………………….'}</span>
+                  <span className="font-bold text-gray-500 whitespace-nowrap min-w-[140px] uppercase">Commune :</span>
+                  <span className="text-gray-700 font-medium">{formData.commune || '……………………….'}</span>
                 </div>
 
                 <div className="pt-2 border-t border-gray-100 mt-2 space-y-2">
                   <div className="flex gap-2 text-sm">
-                    <span className="font-bold text-gray-400 whitespace-nowrap min-w-[140px]">Tél :</span>
-                    <span className="text-gray-700 font-medium">{formData.clientPhone || '……………………….'}</span>
+                    <span className="font-bold text-gray-400 whitespace-nowrap min-w-[140px] uppercase">Tél :</span>
+                    <span className="text-gray-700 font-bold">{formData.clientPhone || '……………………….'}</span>
                   </div>
 
                   <div className="flex gap-2 text-sm">
-                    <span className="font-bold text-gray-400 whitespace-nowrap min-w-[140px]">Fax :</span>
-                    <span className="text-gray-700 font-medium">{formData.clientFax || '……………………….'}</span>
+                    <span className="font-bold text-gray-400 whitespace-nowrap min-w-[140px] uppercase">Fax :</span>
+                    <span className="text-gray-700 font-bold">{formData.clientFax || '……………………….'}</span>
                   </div>
 
                   <div className="flex gap-2 text-sm">
-                    <span className="font-bold text-gray-400 whitespace-nowrap min-w-[140px]">Email :</span>
-                    <span className="text-gray-700 font-medium truncate">{formData.clientEmail || '……………………….'}</span>
+                    <span className="font-bold text-gray-400 whitespace-nowrap min-w-[140px] uppercase">Email :</span>
+                    <span className="text-gray-700 font-bold truncate lowercase">{formData.clientEmail || '……………………….'}</span>
                   </div>
                 </div>
               </div>
