@@ -147,68 +147,48 @@ const App: React.FC = () => {
     }).length;
   };
 
-  // Calcul des demandes prêtes pour création de devis (uniquement pour ADMIN, CHEF_CENTRE, TECHICO_COMMERCIAL)
+  // Calcul des demandes prêtes pour création de devis (dynamique selon les rôles du type de travail)
   const getReadyForQuoteCount = () => {
     if (!currentUser) return 0;
     
-    // Seuls ces rôles peuvent créer des devis
-    const canCreateQuotes = currentUser.role === UserRole.ADMIN || 
-                           currentUser.role === UserRole.CHEF_CENTRE || 
-                           currentUser.role === UserRole.TECHICO_COMMERCIAL;
-    
-    if (!canCreateQuotes) return 0;
-    
-    return requests.filter(req => {
-      // La demande doit être validée ou avoir un statut QUOTED
-      if (req.status !== RequestStatus.VALIDATED && req.status !== RequestStatus.QUOTED) return false;
+    const count = requests.filter(req => {
+      // 1. Déterminer si l'utilisateur a le rôle pour établir un devis pour ce type de demande
+      const workType = workTypes.find(wt => wt.label?.toLowerCase() === req.serviceType?.toLowerCase());
+      const quoteRoles = workType?.quoteAllowedRoles && workType.quoteAllowedRoles.length > 0
+        ? workType.quoteAllowedRoles
+        : [UserRole.ADMIN, UserRole.CHEF_CENTRE, UserRole.TECHICO_COMMERCIAL]; // fallback par défaut
       
-      // Vérifier qu'il n'y a pas encore de devis créé pour cette demande
+      if (!quoteRoles.includes(currentUser.role)) return false;
+      
+      // 2. Vérifier qu'il n'y a pas encore de devis créé pour cette demande
       const hasQuote = quotes.some(q => q.requestId === req.id);
-      if (hasQuote) return false;
+      if (hasQuote || req.status === RequestStatus.QUOTED || req.status === RequestStatus.REJECTED) return false;
       
-      // Vérifier que toutes les validations requises sont faites
+      // 3. Vérifier que toutes les validations requises sont faites
       if (req.assignedValidations && req.assignedValidations.length > 0) {
+        // La logique exacte du bouton: toutes les validations assignées doivent être terminées
         const allValidated = req.assignedValidations.every(type => 
           req.validations?.find(v => v.type === type && v.status === 'validated')
         );
-        return allValidated;
+        if (!allValidated) return false;
+      } else if (req.validations && req.validations.length > 0) {
+        // Si pas de assignedValidations, mais il y a des validations, on vérifie qu'elles sont toutes validées
+        const allValidatedFallback = req.validations.every(v => v.status === 'validated');
+        if (!allValidatedFallback) return false;
+      } else {
+        // Si aucune validation requise et aucune assignée, on se base sur le statut VALIDATED (workflow sans validation ?)
+        if (req.status !== RequestStatus.VALIDATED) return false;
       }
       
-      // Si pas de validations requises, la demande est prête
       return true;
     }).length;
+    
+    return count;
   };
 
-  // Calcul des demandes avec établissement de devis généré (notification pour ADMIN, CHEF_CENTRE, TECHICO_COMMERCIAL)
   const getQuoteEstablishmentCount = () => {
-    if (!currentUser) return 0;
-    
-    // Seuls ces rôles voient la notification
-    const canCreateQuotes = currentUser.role === UserRole.ADMIN || 
-                           currentUser.role === UserRole.CHEF_CENTRE || 
-                           currentUser.role === UserRole.TECHICO_COMMERCIAL;
-    
-    if (!canCreateQuotes) return 0;
-    
-    // Compter les demandes VALIDATED qui ont besoin d'un devis
-    return requests.filter(req => {
-      // Doit être au statut VALIDATED (demande d'établissement générée)
-      if (req.status !== RequestStatus.VALIDATED) return false;
-      
-      // Vérifier qu'il n'y a pas encore de devis créé
-      const hasQuote = quotes.some(q => q.requestId === req.id);
-      if (hasQuote) return false;
-      
-      // Vérifier que toutes les validations sont complètes
-      if (req.assignedValidations && req.assignedValidations.length > 0) {
-        const allValidated = req.assignedValidations.every(type => 
-          req.validations?.find(v => v.type === type && v.status === 'validated')
-        );
-        return allValidated;
-      }
-      
-      return true;
-    }).length;
+    // Rendue obsolète par la fonction ci-dessus, on retourne simplement 0.
+    return 0;
   };
 
   const pendingValidationsCount = getPendingValidationsCount();

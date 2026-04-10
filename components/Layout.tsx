@@ -96,10 +96,9 @@ export const Layout: React.FC<LayoutProps> = ({
   }, []);
 
   // ── Nav items ─────────────────────────────────────────
-  const navBadge =
-    (user?.role === UserRole.ADMIN || user?.role === UserRole.CHEF_CENTRE || user?.role === UserRole.TECHICO_COMMERCIAL)
-      ? (quotesBadgeCount > 0 ? quotesBadgeCount : undefined)
-      : (requestsBadgeCount > 0 ? requestsBadgeCount : (validationsBadgeCount > 0 ? validationsBadgeCount : undefined));
+  const navBadge = quotesBadgeCount > 0
+    ? quotesBadgeCount
+    : (requestsBadgeCount > 0 ? requestsBadgeCount : (validationsBadgeCount > 0 ? validationsBadgeCount : undefined));
 
   const NAV_ITEMS: NavItem[] = [
     { id: 'dashboard', label: 'Tableau De Bord', shortLabel: 'Accueil',  show: true,               icon: <Icon name="dashboard" /> },

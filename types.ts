@@ -265,6 +265,10 @@ export interface Quote {
   clientFax?: string;
   validations?: ValidationRecord[];
   aiNotes?: string;
+  branchementType?: string;
+  branchementDetails?: string;
+  diameter?: string;
+  flowRate?: string;
 }
 
 export interface WorkType {

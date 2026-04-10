@@ -132,8 +132,8 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
 
   // Générer ou récupérer le numéro de devis
   const getQuoteNumber = (): string => {
-    // Si un devis existant est fourni, utiliser son ID
-    if (existingQuote && existingQuote.id) {
+    // Si un devis existant est fourni, utiliser son ID (uniquement s'il n'est pas temporaire)
+    if (existingQuote && existingQuote.id && !existingQuote.id.startsWith('TEMP-')) {
       return existingQuote.id;
     }
     

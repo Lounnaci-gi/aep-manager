@@ -768,7 +768,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                           const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
                           const quoteRoles = workType?.quoteAllowedRoles && workType.quoteAllowedRoles.length > 0
                             ? workType.quoteAllowedRoles
-                            : [UserRole.TECHICO_COMMERCIAL, UserRole.CHEF_CENTRE]; // Fallback par défaut
+                            : [UserRole.ADMIN, UserRole.CHEF_CENTRE, UserRole.TECHICO_COMMERCIAL]; // Fallback par défaut
                           const canCreateQuote = quoteRoles.includes(currentUser?.role);
                           
                           return canCreateQuote ? (
@@ -792,7 +792,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                           const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
                           const quoteRoles = workType?.quoteAllowedRoles && workType.quoteAllowedRoles.length > 0
                             ? workType.quoteAllowedRoles
-                            : [UserRole.TECHICO_COMMERCIAL, UserRole.CHEF_CENTRE]; // Fallback par défaut
+                            : [UserRole.ADMIN, UserRole.CHEF_CENTRE, UserRole.TECHICO_COMMERCIAL]; // Fallback par défaut
                           const canCreateQuote = quoteRoles.includes(currentUser?.role);
                           
                           return canCreateQuote ? (
@@ -829,15 +829,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                         );
                       })()}
 
-                      {(currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.CHEF_CENTRE) && (
-                        <select
-                          className="text-[10px] font-black uppercase bg-gray-50 border border-gray-100 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500/20 outline-none"
-                          value={req.status}
-                          onChange={(e) => onUpdateStatus(req.id, e.target.value as RequestStatus)}
-                        >
-                          {Object.values(RequestStatus).map(s => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                      )}
+
 
                       {/* Suppression autorisée selon deleteAllowedRoles du type de travail */}
                       {currentUser && (() => {

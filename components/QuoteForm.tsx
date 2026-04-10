@@ -107,23 +107,23 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
   // --- NOUVEAU: LOGIQUE DE VALIDATION MULTI-UTILISATEUR ---
   const isFullyApproved = useMemo(() => {
     if (!initialData) return false;
-    
+
     // 1. Trouver le type de travaux et ses rôles de validation
     const matchedWorkType = workTypes.find(wt => wt.label === initialData.serviceType);
     const quoteValidationRoles = (matchedWorkType?.quoteValidationRoles && matchedWorkType.quoteValidationRoles.length > 0)
       ? matchedWorkType.quoteValidationRoles
       : [UserRole.ADMIN, UserRole.CHEF_CENTRE];
-    
+
     // 2. Identifier tous les utilisateurs ayant ces rôles
     const requiredUsers = users.filter(u => quoteValidationRoles.includes(u.role));
-    
+
     // 3. Vérifier les validations actuelles
     const currentValidations = initialData.validations || [];
     const validatedUserIds = currentValidations.filter(v => v.status === 'validated').map(v => v.userId);
-    
+
     // 4. Est-ce que TOUS les utilisateurs requis ont validé ?
     const allUsersValidated = requiredUsers.every(u => validatedUserIds.includes(u.id));
-    
+
     // Le devis est "Pleinement Approuvé" SSI statut APPROVED ET toutes les signatures ok
     return initialData.status === QuoteStatus.APPROVED && allUsersValidated;
   }, [initialData, users, workTypes]);
@@ -803,14 +803,13 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                 {!isReadOnly && (
                   <button type="button" onClick={() => setActiveTab('preview')} className="px-6 py-2 text-xs font-bold text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-all">Aperçu</button>
                 )}
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={items.length === 0 || total === 0}
-                  className={`px-8 py-3 text-xs font-bold rounded-lg shadow-lg transition-all ${
-                    (items.length === 0 || total === 0)
-                      ? 'bg-gray-400 text-white cursor-not-allowed opacity-60 shadow-none'
-                      : 'bg-[#1e90ff] text-white shadow-blue-100 hover:bg-blue-600'
-                  }`}
+                  className={`px-8 py-3 text-xs font-bold rounded-lg shadow-lg transition-all ${(items.length === 0 || total === 0)
+                    ? 'bg-gray-400 text-white cursor-not-allowed opacity-60 shadow-none'
+                    : 'bg-[#1e90ff] text-white shadow-blue-100 hover:bg-blue-600'
+                    }`}
                 >
                   VALIDER ET ENREGISTRER
                 </button>
@@ -933,7 +932,9 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                   DEVIS QUANTITATIF ET ESTIMATIF
                 </h1>
                 <div className="text-[11px] font-bold mt-3">
-                  N°: {initialData?.id || `AEP-${Date.now().toString().slice(-6)}`} du: {new Date().toLocaleDateString('fr-DZ')}
+                  N°: {initialData?.id && !initialData.id.startsWith('TEMP-') && !initialData.id.startsWith('AEP-')
+                    ? initialData.id
+                    : getNextQuoteNumber()} du: {new Date().toLocaleDateString('fr-DZ')}
                 </div>
               </div>
             </div>
@@ -1026,7 +1027,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
 
           {/* Total in Letters */}
           <div className="mt-8 text-[11px] space-y-3">
-            <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
+            <div className="bg-gray-50 p-3 rounded-xl">
               <p className="font-black text-[11px] tracking-tight capitalize leading-relaxed">
                 {numberToFrenchLetters(total).toLowerCase()}.
               </p>
@@ -1067,9 +1068,9 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
             </div>
           </div>
         )}
-        
+
         {/* Floating return button to keep preview clean */}
-        <button 
+        <button
           onClick={() => setActiveTab('form')}
           className="fixed bottom-8 right-8 z-[110] bg-white border border-slate-200 text-slate-600 px-6 py-3 rounded-full font-black uppercase text-[10px] tracking-widest shadow-2xl hover:bg-slate-50 transition-all flex items-center gap-2"
         >
