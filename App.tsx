@@ -20,6 +20,7 @@ import { UserList } from './components/UserList';
 import { UserForm } from './components/UserForm';
 
 import { DbService } from './services/dbService';
+import { updateWorkflowRegistryFromWorkTypes } from './services/workflowConfig';
 import { Quote, QuoteStatus, WorkType, Client, User, UserRole, WorkRequest, RequestStatus, Unit, Centre, CommercialAgency, ValidationType } from './types';
 
 const App: React.FC = () => {
@@ -74,6 +75,8 @@ const App: React.FC = () => {
       setRequests(r);
       setClients(c);
       setWorkTypes(w);
+      // Mettre à jour le registre dynamique des workflows avec la nouvelle configuration
+      updateWorkflowRegistryFromWorkTypes(w);
       setUsers(u);
       setCentres(ctr);
       setAgencies(agc);
@@ -655,6 +658,7 @@ const App: React.FC = () => {
       const newType = workType || { id: Date.now().toString(), label };
       const newTypes = [...currentTypes, newType];
       await DbService.saveWorkTypes(newTypes);
+      updateWorkflowRegistryFromWorkTypes(newTypes);
       await loadData();
     } catch (error) {
       console.error('Erreur lors de l\'ajout du type de travail:', error);
@@ -672,6 +676,7 @@ const App: React.FC = () => {
       const currentTypes = await DbService.getWorkTypes();
       const newTypes = currentTypes.map(t => t.id === id ? workType || { ...t, label } : t);
       await DbService.saveWorkTypes(newTypes);
+      updateWorkflowRegistryFromWorkTypes(newTypes);
       await loadData();
     } catch (error) {
       console.error('Erreur lors de la mise à jour du type de travail:', error);
@@ -689,6 +694,7 @@ const App: React.FC = () => {
       const currentTypes = await DbService.getWorkTypes();
       const newTypes = currentTypes.filter(t => t.id !== id);
       await DbService.saveWorkTypes(newTypes);
+      updateWorkflowRegistryFromWorkTypes(newTypes);
       await loadData();
     } catch (error) {
       console.error('Erreur lors de la suppression du type de travail:', error);

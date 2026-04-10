@@ -343,13 +343,6 @@ export interface WorkTypeWorkflow {
   requiresQuotation: boolean; // true si le devis est obligatoire
 }
 
-// État actuel d'une demande dans le workflow
-export interface WorkflowState {
-  currentStep: WorkflowStepType;
-  completedSteps: WorkflowStepType[];
-  isComplete: boolean;
-  canProceed: boolean;
-}
 
 // Résultat de vérification de permission
 export interface PermissionResult {

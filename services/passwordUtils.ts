@@ -1,6 +1,6 @@
 // Utility functions for password hashing using Web Crypto API
 
-export async function hashPassword(password: string): Promise<string> {
+async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(password);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
@@ -9,9 +9,7 @@ export async function hashPassword(password: string): Promise<string> {
   return hashHex;
 }
 
-export function generateSalt(): string {
-  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-}
+
 
 export async function hashPasswordWithSalt(password: string, salt: string): Promise<string> {
   const encoder = new TextEncoder();

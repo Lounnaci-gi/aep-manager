@@ -27,7 +27,7 @@ const DB_CONFIG = {
   note: 'MongoDB Atlas via API'
 };
 
-export const COLLECTIONS = {
+const COLLECTIONS = {
   USERS: 'users',
   UNITS: 'units',
   CENTRES: 'centres',
