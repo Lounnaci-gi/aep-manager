@@ -19,12 +19,14 @@ export const WorkTypeManager: React.FC<WorkTypeManagerProps> = ({ workTypes, use
   const [newRequestValidationRoles, setNewRequestValidationRoles] = useState<UserRole[]>([]); // Rôles pour valider la demande
   const [newQuoteAllowedRoles, setNewQuoteAllowedRoles] = useState<UserRole[]>([]); // Rôles pour créer le devis
   const [newQuoteValidationRoles, setNewQuoteValidationRoles] = useState<UserRole[]>([]); // Rôles pour valider le devis
+  const [newDeleteAllowedRoles, setNewDeleteAllowedRoles] = useState<UserRole[]>([]); // Rôles pour supprimer le type
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState('');
   const [editAllowedRoles, setEditAllowedRoles] = useState<UserRole[]>([]);
   const [editRequestValidationRoles, setEditRequestValidationRoles] = useState<UserRole[]>([]);
   const [editQuoteAllowedRoles, setEditQuoteAllowedRoles] = useState<UserRole[]>([]);
   const [editQuoteValidationRoles, setEditQuoteValidationRoles] = useState<UserRole[]>([]);
+  const [editDeleteAllowedRoles, setEditDeleteAllowedRoles] = useState<UserRole[]>([]);
 
 
   const handleAdd = (e: React.FormEvent) => {
@@ -77,7 +79,8 @@ export const WorkTypeManager: React.FC<WorkTypeManagerProps> = ({ workTypes, use
             allowedRoles: newAllowedRoles,
             requestValidationRoles: newRequestValidationRoles,
             quoteAllowedRoles: newQuoteAllowedRoles,
-            quoteValidationRoles: newQuoteValidationRoles
+            quoteValidationRoles: newQuoteValidationRoles,
+            deleteAllowedRoles: newDeleteAllowedRoles
           };
           onAdd(newLabel.trim(), newType);
           setNewLabel('');
@@ -85,6 +88,7 @@ export const WorkTypeManager: React.FC<WorkTypeManagerProps> = ({ workTypes, use
           setNewRequestValidationRoles([]);
           setNewQuoteAllowedRoles([]);
           setNewQuoteValidationRoles([]);
+          setNewDeleteAllowedRoles([]);
           Swal.fire({
             title: 'Ajouté !',
             text: `Le type de travail "${newLabel.trim()}" a été ajouté avec succès.`,
@@ -110,6 +114,8 @@ export const WorkTypeManager: React.FC<WorkTypeManagerProps> = ({ workTypes, use
     setEditQuoteAllowedRoles(quoteRoles);
     const quoteValidationRoles = type.quoteValidationRoles && Array.isArray(type.quoteValidationRoles) ? type.quoteValidationRoles : [];
     setEditQuoteValidationRoles(quoteValidationRoles);
+    const deleteRoles = type.deleteAllowedRoles && Array.isArray(type.deleteAllowedRoles) ? type.deleteAllowedRoles : [];
+    setEditDeleteAllowedRoles(deleteRoles);
   };
 
   const handleUpdate = () => {
@@ -161,7 +167,8 @@ export const WorkTypeManager: React.FC<WorkTypeManagerProps> = ({ workTypes, use
             allowedRoles: editAllowedRoles,
             requestValidationRoles: editRequestValidationRoles,
             quoteAllowedRoles: editQuoteAllowedRoles,
-            quoteValidationRoles: editQuoteValidationRoles
+            quoteValidationRoles: editQuoteValidationRoles,
+            deleteAllowedRoles: editDeleteAllowedRoles
           };
           onUpdate(editingId, editLabel.trim(), updatedType);
           setEditingId(null);
@@ -179,7 +186,7 @@ export const WorkTypeManager: React.FC<WorkTypeManagerProps> = ({ workTypes, use
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-20">
+    <div className="max-w-[95%] mx-auto space-y-8 pb-20">
 
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -462,6 +469,72 @@ export const WorkTypeManager: React.FC<WorkTypeManagerProps> = ({ workTypes, use
                   ))}
                 </div>
               </div>
+
+              {/* NOUVEAU: Section pour les rôles de suppression */}
+              <div className="mt-3 pt-3 border-t border-rose-100">
+                <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-2">🗑️ Rôles - Suppression :</p>
+                <div className="relative">
+                  <button
+                    type="button"
+                    className="w-full p-2 border border-rose-300 rounded-md text-xs bg-white text-left flex justify-between items-center"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const dropdowns = document.querySelectorAll('.role-dropdown');
+                      dropdowns.forEach(dropdown => {
+                        if (dropdown !== e.currentTarget.nextElementSibling) {
+                          (dropdown as HTMLElement).style.display = 'none';
+                        }
+                      });
+                      const dropdown = e.currentTarget.nextElementSibling;
+                      (dropdown as HTMLElement).style.display = (dropdown as HTMLElement).style.display === 'block' ? 'none' : 'block';
+                    }}
+                  >
+                    {newDeleteAllowedRoles.length > 0 ? `${newDeleteAllowedRoles.length} rôle(s) sélectionné(s)` : 'Sélectionner des rôles...'}
+                    <svg className="w-4 h-4 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </button>
+                  
+                  <div className="role-dropdown absolute z-10 w-full mt-1 bg-white border border-rose-300 rounded-md shadow-lg max-h-60 overflow-y-auto" style={{ display: 'none' }}>
+                    {Object.values(UserRole).map((role, index) => (
+                      <label key={index} className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="rounded text-rose-600 focus:ring-rose-500"
+                          checked={newDeleteAllowedRoles.some(allowedRole => allowedRole === role)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              if (!newDeleteAllowedRoles.some(allowedRole => allowedRole === role)) {
+                                setNewDeleteAllowedRoles([...newDeleteAllowedRoles, role]);
+                              }
+                            } else {
+                              setNewDeleteAllowedRoles(newDeleteAllowedRoles.filter(allowedRole => allowedRole !== role));
+                            }
+                          }}
+                        />
+                        <span className="ml-2 text-xs">{role}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {newDeleteAllowedRoles.map((role, index) => (
+                    <span key={index} className="inline-flex items-center gap-1 bg-rose-100 text-rose-800 px-2 py-1 rounded-full text-[8px] font-bold">
+                      {role}
+                      <button
+                        type="button"
+                        className="text-rose-600 hover:text-rose-800"
+                        onClick={() => {
+                          setNewDeleteAllowedRoles(newDeleteAllowedRoles.filter(r => r !== role));
+                        }}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
               
               <button 
                 type="submit" 
@@ -639,29 +712,63 @@ export const WorkTypeManager: React.FC<WorkTypeManagerProps> = ({ workTypes, use
                             <button onClick={() => startEdit(type)} className="text-blue-600 hover:text-blue-800 transition-colors">
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                             </button>
-                            <button onClick={async () => {
-                              const result = await Swal.fire({
-                                title: 'Êtes-vous sûr ?',
-                                text: 'Cette action supprimera définitivement ce type de travail.',
-                                icon: 'warning',
-                                showCancelButton: true,
-                                confirmButtonColor: '#dc2626',
-                                cancelButtonColor: '#64748b',
-                                confirmButtonText: 'Oui, supprimer',
-                                cancelButtonText: 'Annuler'
-                              });
-                              if (result.isConfirmed) {
-                                onDelete(type.id);
-                                Swal.fire({
-                                  title: 'Supprimé !',
-                                  text: 'Le type de travail a été supprimé avec succès.',
-                                  icon: 'success',
-                                  confirmButtonColor: '#2563eb',
-                                  timer: 2000,
-                                  showConfirmButton: false
+                            <button 
+                              onClick={async () => {
+                                // Vérifier si l'utilisateur actuel a le droit de supprimer
+                                const canDelete = !type.deleteAllowedRoles || 
+                                                  type.deleteAllowedRoles.length === 0 || 
+                                                  type.deleteAllowedRoles.includes(currentUser?.role);
+                                
+                                if (!canDelete) {
+                                  Swal.fire({
+                                    title: 'Accès Refusé',
+                                    text: 'Vous n\'avez pas l\'autorisation de supprimer ce type de travail.',
+                                    icon: 'error',
+                                    confirmButtonColor: '#2563eb',
+                                    timer: 3000,
+                                    showConfirmButton: true
+                                  });
+                                  return;
+                                }
+                                
+                                const result = await Swal.fire({
+                                  title: 'Êtes-vous sûr ?',
+                                  text: 'Cette action supprimera définitivement ce type de travail.',
+                                  icon: 'warning',
+                                  showCancelButton: true,
+                                  confirmButtonColor: '#dc2626',
+                                  cancelButtonColor: '#64748b',
+                                  confirmButtonText: 'Oui, supprimer',
+                                  cancelButtonText: 'Annuler'
                                 });
+                                if (result.isConfirmed) {
+                                  onDelete(type.id);
+                                  Swal.fire({
+                                    title: 'Supprimé !',
+                                    text: 'Le type de travail a été supprimé avec succès.',
+                                    icon: 'success',
+                                    confirmButtonColor: '#2563eb',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                  });
+                                }
+                              }} 
+                              className={`${
+                                (!type.deleteAllowedRoles || type.deleteAllowedRoles.length === 0 || type.deleteAllowedRoles.includes(currentUser?.role))
+                                  ? 'text-red-300 hover:text-red-600'
+                                  : 'text-gray-300 cursor-not-allowed'
+                              } transition-colors`}
+                              disabled={
+                                type.deleteAllowedRoles && 
+                                type.deleteAllowedRoles.length > 0 && 
+                                !type.deleteAllowedRoles.includes(currentUser?.role)
                               }
-                            }} className="text-red-300 hover:text-red-600 transition-colors">
+                              title={
+                                (type.deleteAllowedRoles && type.deleteAllowedRoles.length > 0 && !type.deleteAllowedRoles.includes(currentUser?.role))
+                                  ? 'Vous n\'avez pas l\'autorisation de supprimer'
+                                  : 'Supprimer'
+                              }
+                            >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                             </button>
                           </div>
@@ -926,6 +1033,72 @@ export const WorkTypeManager: React.FC<WorkTypeManagerProps> = ({ workTypes, use
                                 className="text-purple-600 hover:text-purple-800"
                                 onClick={() => {
                                   setEditQuoteValidationRoles(editQuoteValidationRoles.filter(r => r !== role));
+                                }}
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* NOUVEAU: Rôles suppression */}
+                      <div className="pt-3 border-t border-rose-100">
+                        <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-2">🗑️ Rôles - Suppression :</p>
+                        <div className="relative">
+                          <button
+                            type="button"
+                            className="w-full p-2 border border-rose-300 rounded-md text-xs bg-white text-left flex justify-between items-center"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const dropdowns = document.querySelectorAll('.role-dropdown');
+                              dropdowns.forEach(dropdown => {
+                                if (dropdown !== e.currentTarget.nextElementSibling) {
+                                  (dropdown as HTMLElement).style.display = 'none';
+                                }
+                              });
+                              const dropdown = e.currentTarget.nextElementSibling;
+                              (dropdown as HTMLElement).style.display = (dropdown as HTMLElement).style.display === 'block' ? 'none' : 'block';
+                            }}
+                          >
+                            {editDeleteAllowedRoles.length > 0 ? `${editDeleteAllowedRoles.length} rôle(s) sélectionné(s)` : 'Sélectionner des rôles...'}
+                            <svg className="w-4 h-4 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                          </button>
+                          
+                          <div className="role-dropdown absolute z-10 w-full mt-1 bg-white border border-rose-300 rounded-md shadow-lg max-h-60 overflow-y-auto" style={{ display: 'none' }}>
+                            {Object.values(UserRole).map((role, index) => (
+                              <label key={index} className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  className="rounded text-rose-600 focus:ring-rose-500"
+                                  checked={editDeleteAllowedRoles.some(allowedRole => allowedRole === role)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      if (!editDeleteAllowedRoles.some(allowedRole => allowedRole === role)) {
+                                        setEditDeleteAllowedRoles([...editDeleteAllowedRoles, role]);
+                                      }
+                                    } else {
+                                      setEditDeleteAllowedRoles(editDeleteAllowedRoles.filter(allowedRole => allowedRole !== role));
+                                    }
+                                  }}
+                                />
+                                <span className="ml-2 text-xs">{role}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {editDeleteAllowedRoles.map((role, index) => (
+                            <span key={index} className="inline-flex items-center gap-1 bg-rose-100 text-rose-800 px-2 py-1 rounded-full text-[8px] font-bold">
+                              {role}
+                              <button
+                                type="button"
+                                className="text-rose-600 hover:text-rose-800"
+                                onClick={() => {
+                                  setEditDeleteAllowedRoles(editDeleteAllowedRoles.filter(r => r !== role));
                                 }}
                               >
                                 ×

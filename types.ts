@@ -274,6 +274,7 @@ export interface WorkType {
   requestValidationRoles?: UserRole[]; // Rôles autorisés à valider la demande
   quoteAllowedRoles?: UserRole[]; // Rôles autorisés à créer des devis pour ce type
   quoteValidationRoles?: UserRole[]; // Rôles autorisés à valider les devis pour ce type
+  deleteAllowedRoles?: UserRole[]; // Rôles autorisés à supprimer ce type de travail
 }
 
 export interface User {
