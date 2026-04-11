@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => {
               'sweetalert2': ['sweetalert2'],
               'written-number': ['written-number'],
               // Séparer les composants lourds
-              'components-forms': ['./components/QuoteForm', './components/BranchementQuoteForm', './components/WorkRequestForm'],
+              'components-forms': ['./components/QuoteForm', './components/WorkRequestForm'],
               'components-managers': ['./components/ArticleManager', './components/WorkTypeManager', './components/StructureManager'],
               'components-lists': ['./components/QuoteList', './components/WorkRequestList', './components/ClientList', './components/UserList']
             }

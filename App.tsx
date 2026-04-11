@@ -10,7 +10,7 @@ import { ClientForm } from './components/ClientForm';
 import { WorkRequestList } from './components/WorkRequestList';
 import { WorkRequestForm } from './components/WorkRequestForm';
 import { WorkRequestSuccess } from './components/WorkRequestSuccess';
-import { BranchementQuoteForm } from './components/BranchementQuoteForm';
+
 import { ArticleManager } from './components/ArticleManager';
 import { StructureManager } from './components/StructureManager';
 import { AgencyManager } from './components/AgencyManager';
@@ -36,7 +36,7 @@ const App: React.FC = () => {
   const [editingRequest, setEditingRequest] = useState<WorkRequest | undefined>(undefined);
   const [lastSavedRequest, setLastSavedRequest] = useState<WorkRequest | undefined>(undefined);
   const [quoteRequest, setQuoteRequest] = useState<WorkRequest | undefined>(undefined);
-  const [existingQuoteForBranchement, setExistingQuoteForBranchement] = useState<Quote | undefined>(undefined);
+
   const [loading, setLoading] = useState(true);
   
   const [quotes, setQuotes] = useState<Quote[]>([]);
@@ -516,47 +516,41 @@ const App: React.FC = () => {
     // Vérifier s'il existe déjà un devis pour cette demande
     const existingQuote = quotes.find(q => q.requestId === request.id);
     
-    // Pour les branchements, utiliser le formulaire spécifique
-    if (request.serviceType.toLowerCase().includes("branchement")) {
-      setQuoteRequest(request);
-      setExistingQuoteForBranchement(existingQuote);
-      setView('branchement-quote');
-    } else {
-      // Pour les autres types, utiliser le formulaire existant
-      const agency = agencies.find(a => a.id === request.agencyId);
-      const centre = agency ? centres.find(c => c.id === agency.centreId) : centres[0];
-      const prefix = centre?.prefix || 'DV';
-      const year = new Date().getFullYear();
-      const tempId = `TEMP-QUOTE-${Date.now()}-${prefix}-${year}`;
+    // TOUS les types de travaux utilisent maintenant le QuoteForm universel
+    setQuoteRequest(request);
+    const agency = agencies.find(a => a.id === request.agencyId);
+    const centre = agency ? centres.find(c => c.id === agency.centreId) : centres[0];
+    const prefix = centre?.prefix || 'DV';
+    const year = new Date().getFullYear();
+    const tempId = `TEMP-QUOTE-${Date.now()}-${prefix}-${year}`;
 
-      const partialQuote: Partial<Quote> = existingQuote || {
-        id: tempId,
-        requestId: request.id,
-        agencyId: request.agencyId,
-        category: request.category,
-        civility: request.civility,
-        clientName: request.clientName,
-        businessName: request.businessName,
-        idDocumentType: request.idDocumentType,
-        idDocumentNumber: request.idDocumentNumber,
-        idDocumentIssueDate: request.idDocumentIssueDate,
-        idDocumentIssuer: request.idDocumentIssuer,
-        clientEmail: request.clientEmail || request.correspondenceEmail || '',
-        clientPhone: request.clientPhone || request.correspondencePhone || '',
-        clientFax: request.clientFax || '',
-        address: request.address,
-        commune: request.commune,
-        installationAddress: request.installationAddress,
-        installationCommune: request.installationCommune,
-        serviceType: request.serviceType,
-        description: request.description,
-        type: request.type,
-        status: QuoteStatus.PENDING,
-        createdAt: new Date().toISOString()
-      };
-      setEditingQuote(partialQuote as Quote);
-      setView('create');
-    }
+    const partialQuote: Partial<Quote> = existingQuote || {
+      id: tempId,
+      requestId: request.id,
+      agencyId: request.agencyId,
+      category: request.category,
+      civility: request.civility,
+      clientName: request.clientName,
+      businessName: request.businessName,
+      idDocumentType: request.idDocumentType,
+      idDocumentNumber: request.idDocumentNumber,
+      idDocumentIssueDate: request.idDocumentIssueDate,
+      idDocumentIssuer: request.idDocumentIssuer,
+      clientEmail: request.clientEmail || request.correspondenceEmail || '',
+      clientPhone: request.clientPhone || request.correspondencePhone || '',
+      clientFax: request.clientFax || '',
+      address: request.address,
+      commune: request.commune,
+      installationAddress: request.installationAddress,
+      installationCommune: request.installationCommune,
+      serviceType: request.serviceType,
+      description: request.description,
+      type: request.type,
+      status: QuoteStatus.PENDING,
+      createdAt: new Date().toISOString()
+    };
+    setEditingQuote(partialQuote as Quote);
+    setView('create');
   };
 
   const handleSaveClient = async (client: Client) => {
@@ -814,22 +808,6 @@ const App: React.FC = () => {
             agencies={agencies}
             centres={centres}
             onBack={() => { setView('requests'); setLastSavedRequest(undefined); }}
-          />
-        )}
-        {view === 'branchement-quote' && quoteRequest && (
-          <BranchementQuoteForm 
-            request={quoteRequest}
-            clients={clients} 
-            agencies={agencies}
-            centres={centres}
-            units={units}
-            quotes={quotes}
-            users={users}
-            workTypes={workTypes}
-            currentUser={currentUser}
-            existingQuote={existingQuoteForBranchement}
-            onSave={handleSaveQuote}
-            onCancel={() => { setView('requests'); setQuoteRequest(undefined); setExistingQuoteForBranchement(undefined); }} 
           />
         )}
         

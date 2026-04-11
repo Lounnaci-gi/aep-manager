@@ -71,6 +71,11 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
     bic: initialData?.bic || 'MCPRIFRPP',
     wasteManagement: initialData?.wasteManagement || 'À définir',
     clientFax: initialData?.clientFax || '',
+    // Champs techniques pour types de travaux spécifiques
+    branchementType: initialData?.branchementType || '',
+    branchementDetails: initialData?.branchementDetails || '',
+    diameter: initialData?.diameter || '',
+    flowRate: initialData?.flowRate || '',
   });
 
   const [items, setItems] = useState<QuoteItem[]>(() => {
@@ -103,6 +108,39 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
   }, [initialData]);
 
   const isLegal = formData.category === ClientCategory.LEGAL;
+
+  // Déterminer le type de travaux actuel
+  const currentWorkType = useMemo(() => {
+    return workTypes.find(wt => wt.label === formData.serviceType);
+  }, [formData.serviceType, workTypes]);
+
+  // Configuration dynamique selon le type de travaux
+  const workTypeConfig = useMemo(() => {
+    const isBranchement = formData.serviceType.toLowerCase().includes('branchement');
+    const isReparation = formData.serviceType.toLowerCase().includes('réparation') || formData.serviceType.toLowerCase().includes('reparation');
+    const isChangement = formData.serviceType.toLowerCase().includes('changement');
+    const isDeménagement = formData.serviceType.toLowerCase().includes('déménagement') || formData.serviceType.toLowerCase().includes('deménagement');
+    const isFermeture = formData.serviceType.toLowerCase().includes('fermeture');
+    const isRésiliation = formData.serviceType.toLowerCase().includes('résiliation') || formData.serviceType.toLowerCase().includes('resiliation');
+    const isAudit = formData.serviceType.toLowerCase().includes('audit');
+    const isAssainissement = formData.serviceType.toLowerCase().includes('assainissement');
+
+    return {
+      isBranchement,
+      isReparation,
+      isChangement,
+      isDeménagement,
+      isFermeture,
+      isRésiliation,
+      isAudit,
+      isAssainissement,
+      requiresTechnicalDetails: isBranchement || isChangement || isDeménagement,
+      requiresDuration: isReparation || isAudit || isBranchement,
+      showDiameter: isBranchement || isChangement,
+      showFlowRate: isBranchement,
+      showBranchementType: isBranchement,
+    };
+  }, [formData.serviceType]);
 
   // --- NOUVEAU: LOGIQUE DE VALIDATION MULTI-UTILISATEUR ---
   const isFullyApproved = useMemo(() => {
@@ -176,6 +214,11 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
           idDocumentNumber: prev.idDocumentNumber || sourceRequest.idDocumentNumber || '',
           idDocumentIssueDate: prev.idDocumentIssueDate || sourceRequest.idDocumentIssueDate || '',
           idDocumentIssuer: prev.idDocumentIssuer || sourceRequest.idDocumentIssuer || '',
+          // Champs techniques
+          branchementType: prev.branchementType || sourceRequest.branchementType || '',
+          branchementDetails: prev.branchementDetails || sourceRequest.branchementDetails || '',
+          diameter: prev.diameter || sourceRequest.diameter || '',
+          flowRate: prev.flowRate || sourceRequest.flowRate || '',
         }));
       }
     }
@@ -408,6 +451,11 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
         serviceType: selected.serviceType,
         description: selected.description,
         type: selected.type || 'Propriétaire',
+        // Champs techniques
+        branchementType: selected.branchementType || '',
+        branchementDetails: selected.branchementDetails || '',
+        diameter: selected.diameter || '',
+        flowRate: selected.flowRate || '',
       });
     }
   };
@@ -486,7 +534,12 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
       total,
       status: initialData?.status || QuoteStatus.PENDING,
       createdAt: initialData?.createdAt || new Date().toISOString(),
-      aiNotes: aiRec
+      aiNotes: aiRec,
+      // Champs techniques
+      branchementType: formData.branchementType || undefined,
+      branchementDetails: formData.branchementDetails || undefined,
+      diameter: formData.diameter || undefined,
+      flowRate: formData.flowRate || undefined,
     };
     onSave(quoteData);
   };
@@ -657,6 +710,88 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
           {/* Advanced Table Section (Quote Details) */}
           <div className="space-y-4">
             <h3 className="text-[#1e90ff] font-extrabold text-sm uppercase pl-2 tracking-wide">Details du Devis</h3>
+            
+            {/* Champs techniques conditionnels selon le type de travaux */}
+            {workTypeConfig.requiresTechnicalDetails && (
+              <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-5 space-y-4">
+                <h4 className="text-xs font-black text-blue-700 uppercase tracking-widest flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Informations Techniques
+                </h4>
+                
+                {workTypeConfig.showBranchementType && (
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                      Type de branchement
+                    </label>
+                    <select
+                      value={formData.branchementType}
+                      onChange={e => setFormData({ ...formData, branchementType: e.target.value })}
+                      className="w-full border border-gray-200 rounded-lg p-2.5 text-xs bg-white text-gray-700 focus:border-blue-400 focus:ring-1 focus:ring-blue-100"
+                    >
+                      <option value="">-- Sélectionner --</option>
+                      <option value="Domestique (Maison individuelle)">Domestique (Maison individuelle)</option>
+                      <option value="Immeuble collectif">Immeuble collectif</option>
+                      <option value="Commerciaux">Commerciaux</option>
+                      <option value="Industrie ou tourisme">Industrie ou tourisme</option>
+                      <option value="Besoins de chantier">Besoins de chantier</option>
+                      <option value="Borne d'incendie">Borne d'incendie</option>
+                      <option value="Autres (à préciser)">Autres (à préciser)</option>
+                    </select>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {workTypeConfig.showDiameter && (
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                        Diamètre (mm)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Ex: 20, 25, 32..."
+                        value={formData.diameter}
+                        onChange={e => setFormData({ ...formData, diameter: e.target.value })}
+                        className="w-full border border-gray-200 rounded-lg p-2.5 text-xs bg-white text-gray-700 focus:border-blue-400 focus:ring-1 focus:ring-blue-100"
+                      />
+                    </div>
+                  )}
+
+                  {workTypeConfig.showFlowRate && (
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                        Débit (m³/h)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Ex: 1.5, 2.0, 3.0..."
+                        value={formData.flowRate}
+                        onChange={e => setFormData({ ...formData, flowRate: e.target.value })}
+                        className="w-full border border-gray-200 rounded-lg p-2.5 text-xs bg-white text-gray-700 focus:border-blue-400 focus:ring-1 focus:ring-blue-100"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {workTypeConfig.showBranchementType && formData.branchementType === 'Autres (à préciser)' && (
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                      Précisions
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={formData.branchementDetails}
+                      onChange={e => setFormData({ ...formData, branchementDetails: e.target.value })}
+                      className="w-full border border-gray-200 rounded-lg p-2.5 text-xs bg-white text-gray-700 focus:border-blue-400 focus:ring-1 focus:ring-blue-100"
+                      placeholder="Décrivez le type de branchement..."
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="bg-white border border-gray-100 rounded-xl shadow-sm">
               <table className="w-full text-sm border-collapse">
                 <thead className="bg-[#1e90ff] text-white">
@@ -993,7 +1128,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
             </div>
           </div>
 
-          {/* Object & Project Title */}
+          {/* Title Section - Dynamic based on work type */}
           <div className="mb-6 pt-4 space-y-2">
             <div>
               <span className="font-black text-[11px] uppercase border-b border-black pb-0.5">OBJET :</span>
@@ -1003,6 +1138,31 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
               <div>
                 <span className="font-bold text-[11px] lowercase italic">Désignation :</span>
                 <span className="font-medium text-[11px] ml-2 uppercase leading-relaxed">{formData.projectTitle}</span>
+              </div>
+            )}
+            {formData.description && (
+              <div>
+                <span className="font-bold text-[11px] lowercase italic">Description :</span>
+                <span className="font-medium text-[11px] ml-2 leading-relaxed">{formData.description}</span>
+              </div>
+            )}
+            {/* Technical details for specific work types */}
+            {workTypeConfig.showBranchementType && formData.branchementType && (
+              <div>
+                <span className="font-bold text-[11px] lowercase italic">Type de branchement :</span>
+                <span className="font-medium text-[11px] ml-2 uppercase leading-relaxed">{formData.branchementType}</span>
+              </div>
+            )}
+            {workTypeConfig.showDiameter && formData.diameter && (
+              <div>
+                <span className="font-bold text-[11px] lowercase italic">Diamètre :</span>
+                <span className="font-medium text-[11px] ml-2 uppercase leading-relaxed">{formData.diameter}</span>
+              </div>
+            )}
+            {workTypeConfig.showFlowRate && formData.flowRate && (
+              <div>
+                <span className="font-bold text-[11px] lowercase italic">Débit :</span>
+                <span className="font-medium text-[11px] ml-2 uppercase leading-relaxed">{formData.flowRate}</span>
               </div>
             )}
           </div>
@@ -1068,24 +1228,77 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
             </table>
           </div>
 
-          {/* Total in Letters */}
+          {/* Validity Note - Dynamic based on work type */}
           <div className="mt-8 text-[11px] space-y-3">
             <div className="bg-gray-50 p-3 rounded-xl">
               <p className="font-black text-[11px] tracking-tight capitalize leading-relaxed">
                 {numberToFrenchLetters(total).toLowerCase()}.
               </p>
             </div>
-            <p className="italic text-[9px] text-gray-500">Nb: ce devis est valable pour une durée de 01 mois à compter de sa date d'établissement.</p>
+            <p className="italic text-[9px] text-gray-500">
+              {workTypeConfig.isAudit 
+                ? 'Nb: Ce devis est valable pour une durée de 03 mois à compter de sa date d\'établissement.'
+                : workTypeConfig.isReparation
+                ? 'Nb: Ce devis est valable pour une durée de 02 mois à compter de sa date d\'établissement.'
+                : 'Nb: Ce devis est valable pour une durée de 01 mois à compter de sa date d\'établissement.'}
+            </p>
           </div>
 
-          {/* Signatures */}
-          <div className="mt-12 flex justify-end">
-            <div className="text-center w-64">
-              <p className="font-black text-[11px] border-b-2 border-black inline-block pb-1 uppercase tracking-widest mb-16">
-                LE CHEF D'AGENCE COMMERCIALE
-              </p>
-              <div className="text-[9px] text-gray-400 italic">(Nom, Signature et Cachet)</div>
-            </div>
+          {/* Dynamic Signatures Section - Based on work type and validation roles */}
+          <div className="mt-12 space-y-8">
+            {/* Show Chef Agence signature for most work types */}
+            {(workTypeConfig.isBranchement || workTypeConfig.isReparation || workTypeConfig.isChangement || workTypeConfig.isDeménagement) && (
+              <div className="flex justify-end">
+                <div className="text-center w-64">
+                  <p className="font-black text-[11px] border-b-2 border-black inline-block pb-1 uppercase tracking-widest mb-16">
+                    LE CHEF D'AGENCE COMMERCIALE
+                  </p>
+                  <div className="text-[9px] text-gray-400 italic">(Nom, Signature et Cachet)</div>
+                </div>
+              </div>
+            )}
+
+            {/* Show Chef Centre signature for audit and complex works */}
+            {(workTypeConfig.isAudit || workTypeConfig.isRésiliation || workTypeConfig.isFermeture) && (
+              <div className="flex justify-end">
+                <div className="text-center w-64">
+                  <p className="font-black text-[11px] border-b-2 border-black inline-block pb-1 uppercase tracking-widest mb-16">
+                    LE CHEF DE CENTRE
+                  </p>
+                  <div className="text-[9px] text-gray-400 italic">(Nom, Signature et Cachet)</div>
+                </div>
+              </div>
+            )}
+
+            {/* Show Technico-Commercial for technical works */}
+            {workTypeConfig.isAudit && (
+              <div className="flex justify-end">
+                <div className="text-center w-64">
+                  <p className="font-black text-[11px] border-b-2 border-black inline-block pb-1 uppercase tracking-widest mb-16">
+                    LE RESPONSABLE TECHNIQUE
+                  </p>
+                  <div className="text-[9px] text-gray-400 italic">(Nom, Signature et Cachet)</div>
+                </div>
+              </div>
+            )}
+
+            {/* Default signature if no specific type matched */}
+            {!workTypeConfig.isBranchement && 
+             !workTypeConfig.isReparation && 
+             !workTypeConfig.isChangement && 
+             !workTypeConfig.isDeménagement && 
+             !workTypeConfig.isAudit && 
+             !workTypeConfig.isRésiliation && 
+             !workTypeConfig.isFermeture && (
+              <div className="flex justify-end">
+                <div className="text-center w-64">
+                  <p className="font-black text-[11px] border-b-2 border-black inline-block pb-1 uppercase tracking-widest mb-16">
+                    LE RESPONSABLE
+                  </p>
+                  <div className="text-[9px] text-gray-400 italic">(Nom, Signature et Cachet)</div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Final footer watermark for screen only */}
