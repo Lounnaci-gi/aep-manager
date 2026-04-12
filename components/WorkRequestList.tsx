@@ -757,13 +757,18 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                       )}
 
                       {/* Bouton Établir Devis - Apparaît quand TOUTES les validations sont terminées */}
-                      {req.validations &&
-                        req.validations.length > 0 &&
-                        req.validations.every(v => v.status === 'validated') &&
-                        req.status !== RequestStatus.QUOTED &&
-                        !quotes.some(q => q.requestId === req.id) &&
-                        req.status !== RequestStatus.REJECTED &&
-                        (() => {
+                      {(() => {
+                        if (req.status === RequestStatus.QUOTED || req.status === RequestStatus.REJECTED || quotes.some(q => q.requestId === req.id)) {
+                          return false;
+                        }
+                        if (req.assignedValidations && req.assignedValidations.length > 0) {
+                          return req.assignedValidations.every(type => req.validations?.find(v => v.type === type && v.status === 'validated'));
+                        }
+                        if (req.validations && req.validations.length > 0) {
+                          return req.validations.every(v => v.status === 'validated');
+                        }
+                        return req.status === RequestStatus.VALIDATED;
+                      })() && (() => {
                           // Vérifier les rôles autorisés pour créer le devis selon le type de travail
                           const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
                           const quoteRoles = workType?.quoteAllowedRoles && workType.quoteAllowedRoles.length > 0
@@ -784,10 +789,18 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                         })()}
 
                       {/* Message si validations en cours */}
-                      {req.validations &&
-                        req.validations.length > 0 &&
-                        !req.validations.every(v => v.status === 'validated') &&
-                        (() => {
+                      {(() => {
+                        if (req.status === RequestStatus.QUOTED || req.status === RequestStatus.REJECTED || quotes.some(q => q.requestId === req.id)) {
+                          return false;
+                        }
+                        if (req.assignedValidations && req.assignedValidations.length > 0) {
+                          return !req.assignedValidations.every(type => req.validations?.find(v => v.type === type && v.status === 'validated'));
+                        }
+                        if (req.validations && req.validations.length > 0) {
+                          return !req.validations.every(v => v.status === 'validated');
+                        }
+                        return req.status !== RequestStatus.VALIDATED;
+                      })() && (() => {
                           // Vérifier les rôles autorisés pour créer le devis selon le type de travail
                           const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
                           const quoteRoles = workType?.quoteAllowedRoles && workType.quoteAllowedRoles.length > 0
