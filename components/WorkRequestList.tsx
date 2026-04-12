@@ -320,10 +320,10 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
 
     // Vérifier les permissions de suppression selon le type de travail
     const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
-    const canDelete = !workType?.deleteAllowedRoles || 
-                      workType.deleteAllowedRoles.length === 0 || 
-                      workType.deleteAllowedRoles.includes(currentUser?.role);
-    
+    const canDelete = !workType?.deleteAllowedRoles ||
+      workType.deleteAllowedRoles.length === 0 ||
+      workType.deleteAllowedRoles.includes(currentUser?.role);
+
     if (!canDelete) {
       Swal.fire({
         title: 'Accès Refusé',
@@ -641,7 +641,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                               const canValidate = validationRoles.includes(currentUser?.role);
                               const isAlreadyValidated = req.validations?.find(v => v.type === ValidationType.AGENCY && v.status === 'validated');
                               const hasQuote = quotes.some(q => q.requestId === req.id);
-                                                        
+
                               return canValidate ? (
                                 <div className="flex gap-2">
                                   {!isAlreadyValidated ? (
@@ -682,7 +682,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                               const canValidate = validationRoles.includes(currentUser?.role);
                               const isAlreadyValidated = req.validations?.find(v => v.type === ValidationType.CUSTOMER_SERVICE && v.status === 'validated');
                               const hasQuote = quotes.some(q => q.requestId === req.id);
-                                                        
+
                               return canValidate ? (
                                 <div className="flex gap-2">
                                   {!isAlreadyValidated ? (
@@ -723,7 +723,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                               const canValidate = validationRoles.includes(currentUser?.role);
                               const isAlreadyValidated = req.validations?.find(v => v.type === ValidationType.LAWYER && v.status === 'validated');
                               const hasQuote = quotes.some(q => q.requestId === req.id);
-                                                        
+
                               return canValidate ? (
                                 <div className="flex gap-2">
                                   {!isAlreadyValidated ? (
@@ -769,24 +769,24 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                         }
                         return req.status === RequestStatus.VALIDATED;
                       })() && (() => {
-                          // Vérifier les rôles autorisés pour créer le devis selon le type de travail
-                          const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
-                          const quoteRoles = workType?.quoteAllowedRoles && workType.quoteAllowedRoles.length > 0
-                            ? workType.quoteAllowedRoles
-                            : [UserRole.ADMIN, UserRole.CHEF_CENTRE, UserRole.TECHICO_COMMERCIAL]; // Fallback par défaut
-                          const canCreateQuote = quoteRoles.includes(currentUser?.role);
-                          
-                          return canCreateQuote ? (
-                            <button
-                              onClick={() => onCreateQuote(req)}
-                              className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100/50 flex items-center gap-2"
-                              title="Toutes les validations sont terminées. Créer un devis."
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                              Établir Devis
-                            </button>
-                          ) : null;
-                        })()}
+                        // Vérifier les rôles autorisés pour créer le devis selon le type de travail
+                        const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
+                        const quoteRoles = workType?.quoteAllowedRoles && workType.quoteAllowedRoles.length > 0
+                          ? workType.quoteAllowedRoles
+                          : [UserRole.ADMIN, UserRole.CHEF_CENTRE, UserRole.TECHICO_COMMERCIAL]; // Fallback par défaut
+                        const canCreateQuote = quoteRoles.includes(currentUser?.role);
+
+                        return canCreateQuote ? (
+                          <button
+                            onClick={() => onCreateQuote(req)}
+                            className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100/50 flex items-center gap-2"
+                            title="Toutes les validations sont terminées. Créer un devis."
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                            Établir Devis
+                          </button>
+                        ) : null;
+                      })()}
 
                       {/* Message si validations en cours */}
                       {(() => {
@@ -801,28 +801,60 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                         }
                         return req.status !== RequestStatus.VALIDATED;
                       })() && (() => {
-                          // Vérifier les rôles autorisés pour créer le devis selon le type de travail
-                          const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
-                          const quoteRoles = workType?.quoteAllowedRoles && workType.quoteAllowedRoles.length > 0
-                            ? workType.quoteAllowedRoles
-                            : [UserRole.ADMIN, UserRole.CHEF_CENTRE, UserRole.TECHICO_COMMERCIAL]; // Fallback par défaut
-                          const canCreateQuote = quoteRoles.includes(currentUser?.role);
-                          
-                          return canCreateQuote ? (
-                            <div className="text-[9px] text-amber-600 font-black uppercase tracking-widest bg-amber-50 px-3 py-2 rounded-lg border border-amber-200">
-                              <svg className="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586a1 1 0 01.293.707V19a2 2 0 01-2 2z" clipRule="evenodd" /></svg>
-                              En attente de validations
+                        // Vérifier les rôles autorisés pour créer le devis selon le type de travail
+                        const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
+                        const quoteRoles = workType?.quoteAllowedRoles && workType.quoteAllowedRoles.length > 0
+                          ? workType.quoteAllowedRoles
+                          : [UserRole.ADMIN, UserRole.CHEF_CENTRE, UserRole.TECHICO_COMMERCIAL]; // Fallback par défaut
+                        const canCreateQuote = quoteRoles.includes(currentUser?.role);
+
+                        const missingRoles: string[] = [];
+                        if (req.assignedValidations) {
+                          req.assignedValidations.forEach(type => {
+                            const isValidated = req.validations?.some(v => v.type === type && v.status === 'validated');
+                            if (!isValidated) {
+                              if (type === ValidationType.AGENCY) missingRoles.push("Chef d'Agence");
+                              if (type === ValidationType.CUSTOMER_SERVICE) missingRoles.push("Relation Clientèle");
+                              if (type === ValidationType.LAWYER) missingRoles.push("Juriste");
+                            }
+                          });
+                        }
+                        return canCreateQuote ? (
+                          <div className="relative group flex items-center">
+                            <div className="text-[9px] text-amber-600 font-black uppercase tracking-widest bg-amber-50 px-3 py-2 rounded-lg border border-amber-200 cursor-help flex items-center">
+                              <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586a1 1 0 01.293.707V19a2 2 0 01-2 2z" clipRule="evenodd" /></svg>
+                              Validation En attente
                             </div>
-                          ) : null;
-                        })()}
+
+                            {missingRoles.length > 0 && (
+                              <div className="absolute bottom-[calc(100%+5px)] right-0 w-max opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                                <div className="bg-gray-900 shadow-xl rounded-xl p-3 relative transform translate-y-1 group-hover:translate-y-0 transition-transform">
+                                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 pb-2 border-b border-gray-700/50">
+                                    En attente de :
+                                  </div>
+                                  <ul className="space-y-1.5 min-w-[130px] text-left">
+                                    {missingRoles.map((role, idx) => (
+                                      <li key={idx} className="flex items-center gap-2 text-white text-xs font-bold">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shadow-[0_0_5px_rgba(245,158,11,0.5)]"></div>
+                                        {role}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                  <div className="absolute -bottom-1 right-6 w-2.5 h-2.5 bg-gray-900 transform rotate-45 rounded-sm"></div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : null;
+                      })()}
 
                       {/* Bouton Modifier selon allowedRoles du type de travail */}
                       {currentUser && (() => {
                         const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
-                        const canEdit = !workType?.allowedRoles || 
-                                        workType.allowedRoles.length === 0 || 
-                                        workType.allowedRoles.includes(currentUser.role);
-                        
+                        const canEdit = !workType?.allowedRoles ||
+                          workType.allowedRoles.length === 0 ||
+                          workType.allowedRoles.includes(currentUser.role);
+
                         return canEdit ? (
                           <button
                             onClick={() => onEdit(req)}
@@ -847,18 +879,17 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                       {/* Suppression autorisée selon deleteAllowedRoles du type de travail */}
                       {currentUser && (() => {
                         const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
-                        const canDelete = !workType?.deleteAllowedRoles || 
-                                          workType.deleteAllowedRoles.length === 0 || 
-                                          workType.deleteAllowedRoles.includes(currentUser.role);
-                        
+                        const canDelete = !workType?.deleteAllowedRoles ||
+                          workType.deleteAllowedRoles.length === 0 ||
+                          workType.deleteAllowedRoles.includes(currentUser.role);
+
                         return (
                           <button
                             onClick={() => canDelete && handleDeleteClick(req)}
-                            className={`${
-                              canDelete 
-                                ? 'text-gray-200 hover:text-rose-600 transition-colors p-1.5 hover:bg-rose-50 rounded-lg' 
+                            className={`${canDelete
+                                ? 'text-gray-200 hover:text-rose-600 transition-colors p-1.5 hover:bg-rose-50 rounded-lg'
                                 : 'text-gray-300 cursor-not-allowed p-1.5'
-                            }`}
+                              }`}
                             title={canDelete ? 'Supprimer la demande' : 'Vous n\'avez pas l\'autorisation de supprimer'}
                             disabled={!canDelete}
                           >
