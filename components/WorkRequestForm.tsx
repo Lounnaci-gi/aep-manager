@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Swal from 'sweetalert2';
 import { WorkRequest, RequestStatus, WorkType, Client, CommercialAgency, Centre, ClientCategory, UserRole, WORK_TYPE_PERMISSIONS, BranchementType, ValidationType } from '../types';
 import { WorkflowEngine } from '../services/workflowEngine';
 
@@ -89,6 +90,12 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
   const flowRateRef = useRef<HTMLDivElement>(null);
   const filteredFlowRates = FLOW_RATE_OPTIONS.filter(f => f.toLowerCase().includes(flowRateSearch.toLowerCase()));
 
+  // Calcul des limites de date pour la pièce d'identité (max 10 ans)
+  const todayStr = new Date().toISOString().split('T')[0];
+  const tenYearsAgo = new Date();
+  tenYearsAgo.setFullYear(tenYearsAgo.getFullYear() - 10);
+  const minDateStr = tenYearsAgo.toISOString().split('T')[0];
+
   // Close dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -173,6 +180,37 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validation de la date de la pièce d'identité (max 10 ans)
+    if (!isLegal && formData.idDocumentIssueDate) {
+      const issueDate = new Date(formData.idDocumentIssueDate);
+      const minAllowedDate = new Date();
+      minAllowedDate.setFullYear(minAllowedDate.getFullYear() - 10);
+      minAllowedDate.setHours(0, 0, 0, 0);
+
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+
+      if (issueDate < minAllowedDate) {
+        Swal.fire({
+          title: 'Pièce d\'identité périmée',
+          text: 'La date de délivrance ne peut pas dépasser 10 ans. La pièce n\'est plus valide.',
+          icon: 'error',
+          confirmButtonColor: '#2563eb'
+        });
+        return;
+      }
+
+      if (issueDate > today) {
+        Swal.fire({
+          title: 'Date invalide',
+          text: 'La date de délivrance ne peut pas être dans le futur.',
+          icon: 'error',
+          confirmButtonColor: '#2563eb'
+        });
+        return;
+      }
+    }
     
     // NOUVEAU: Utiliser le moteur de workflow pour déterminer les validations
     const tempRequest: WorkRequest = {
@@ -355,6 +393,8 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                   <input 
                     required 
                     type="date" 
+                    min={minDateStr}
+                    max={todayStr}
                     className={`rounded-lg border-blue-100 p-2.5 text-[11px] font-black border bg-white ${!isServiceTypeSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
                     value={formData.idDocumentIssueDate} 
                     onChange={e => isServiceTypeSelected && setFormData({ ...formData, idDocumentIssueDate: e.target.value })}
