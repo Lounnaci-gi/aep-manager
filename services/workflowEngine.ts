@@ -51,10 +51,19 @@ export class WorkflowEngine {
    * Vérifie si toutes les validations requises sont complètes
    */
   static allValidationsComplete(request: WorkRequest): boolean {
+    const validations = request.validations || [];
+    
+    // Si on a des validations explicitement assignées (instantané au moment de la création), 
+    // on les utilise en priorité pour le calcul d'achèvement.
+    if (request.assignedValidations && request.assignedValidations.length > 0) {
+      return request.assignedValidations.every(type => 
+        validations.find(v => v.type === type && v.status === 'validated')
+      );
+    }
+
+    // Sinon, on utilise le workflow configuré actuellement
     const workflow = this.getWorkflow(request);
     if (!workflow) return false;
-
-    const validations = request.validations || [];
     
     return workflow.steps
       .filter(s => s.validationType)
@@ -102,12 +111,17 @@ export class WorkflowEngine {
    * Calcule le nouveau statut de la demande après une action
    */
   static calculateNewStatus(request: WorkRequest): RequestStatus {
-    const allValidated = this.allValidationsComplete(request);
-    const hasRejection = request.validations?.some(v => v.status === 'rejected');
-
+    const validations = request.validations || [];
+    const hasRejection = validations.some(v => v.status === 'rejected');
     if (hasRejection) return RequestStatus.REJECTED;
+
+    const allValidated = this.allValidationsComplete(request);
     if (allValidated) return RequestStatus.VALIDATED;
-    return RequestStatus.UNDER_STUDY;
+
+    const atLeastOneValidated = validations.some(v => v.status === 'validated');
+    if (atLeastOneValidated) return RequestStatus.UNDER_STUDY;
+
+    return RequestStatus.RECEIVED;
   }
 
   /**

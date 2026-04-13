@@ -233,10 +233,8 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
     const validations = WorkflowEngine.buildInitialValidations(tempRequest);
     const assignedValidations = validations.map(v => v.type);
     
-    // Déterminer le statut initial
-    const initialStatus = validations.length > 0 
-      ? RequestStatus.AWAITING_AGENCY_VALIDATION 
-      : RequestStatus.RECEIVED;
+    // Déterminer le statut initial (toujours Reçu à la création selon la demande utilisateur)
+    const initialStatus = RequestStatus.RECEIVED;
     
     // Capitaliser la 1ère lettre de chaque mot
     const capitalizeWords = (str: string | undefined | null) => {

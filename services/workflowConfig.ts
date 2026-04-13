@@ -30,46 +30,56 @@ export function buildWorkflowFromWorkType(workType: WorkType): WorkTypeWorkflow 
   const steps: WorkflowStepConfig[] = [];
   
   // 1. Validation Chef Agence
-  if (workType.agencyValidationRoles && workType.agencyValidationRoles.length > 0) {
-    steps.push({
-      step: WorkflowStepType.VALIDATION,
-      label: 'Validation Agence',
-      requiredRoles: workType.agencyValidationRoles,
-      validationType: ValidationType.AGENCY,
-      nextStep: WorkflowStepType.VALIDATION
-    });
-  }
+  const agencyRoles = workType.agencyValidationRoles && workType.agencyValidationRoles.length > 0
+    ? workType.agencyValidationRoles
+    : [UserRole.CHEF_AGENCE];
+  
+  steps.push({
+    step: WorkflowStepType.VALIDATION,
+    label: 'Validation Agence',
+    requiredRoles: agencyRoles,
+    validationType: ValidationType.AGENCY,
+    nextStep: WorkflowStepType.VALIDATION
+  });
 
   // 2. Validation Relation Clientèle
-  if (workType.customerServiceValidationRoles && workType.customerServiceValidationRoles.length > 0) {
-    steps.push({
-      step: WorkflowStepType.VALIDATION,
-      label: 'Validation Relation Clientèle',
-      requiredRoles: workType.customerServiceValidationRoles,
-      validationType: ValidationType.CUSTOMER_SERVICE,
-      nextStep: WorkflowStepType.VALIDATION
-    });
-  }
+  const customerServiceRoles = workType.customerServiceValidationRoles && workType.customerServiceValidationRoles.length > 0
+    ? workType.customerServiceValidationRoles
+    : [UserRole.AGENT];
+
+  steps.push({
+    step: WorkflowStepType.VALIDATION,
+    label: 'Validation Relation Clientèle',
+    requiredRoles: customerServiceRoles,
+    validationType: ValidationType.CUSTOMER_SERVICE,
+    nextStep: WorkflowStepType.VALIDATION
+  });
 
   // 3. Validation Juriste
-  if (workType.lawyerValidationRoles && workType.lawyerValidationRoles.length > 0) {
-    steps.push({
-      step: WorkflowStepType.VALIDATION,
-      label: 'Validation Juriste',
-      requiredRoles: workType.lawyerValidationRoles,
-      validationType: ValidationType.LAWYER,
-      nextStep: WorkflowStepType.QUOTATION
-    });
-  }
+  const lawyerRoles = workType.lawyerValidationRoles && workType.lawyerValidationRoles.length > 0
+    ? workType.lawyerValidationRoles
+    : [UserRole.JURISTE];
 
-  const requiresQuotation = !!workType.quoteAllowedRoles && workType.quoteAllowedRoles.length > 0;
+  steps.push({
+    step: WorkflowStepType.VALIDATION,
+    label: 'Validation Juriste',
+    requiredRoles: lawyerRoles,
+    validationType: ValidationType.LAWYER,
+    nextStep: WorkflowStepType.QUOTATION
+  });
+
+  const quoteRoles = workType.quoteAllowedRoles && workType.quoteAllowedRoles.length > 0
+    ? workType.quoteAllowedRoles
+    : [UserRole.ADMIN, UserRole.CHEF_CENTRE, UserRole.TECHICO_COMMERCIAL];
+
+  const requiresQuotation = quoteRoles.length > 0;
   
   // 4. Établir Devis
   if (requiresQuotation) {
     steps.push({
       step: WorkflowStepType.QUOTATION,
       label: 'Établir Devis',
-      requiredRoles: workType.quoteAllowedRoles!,
+      requiredRoles: quoteRoles,
       nextStep: WorkflowStepType.PRINTING
     });
     
