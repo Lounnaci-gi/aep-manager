@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Quote, QuoteItem, QuoteStatus, WorkType, Client, CommercialAgency, Centre, ClientCategory, Unit, WorkRequest, UserRole, User, TaxRate } from '../types';
+import { Quote, QuoteItem, QuoteStatus, WorkType, Client, CommercialAgency, Centre, ClientCategory, Unit, WorkRequest, UserRole, User, TaxRate, TaxType } from '../types';
 import { TaxService } from '../services/taxService';
 import { getAIRecommendation } from '../services/geminiService';
 import { numberToFrenchLetters } from '../utils/numberToLetters';
@@ -42,6 +42,10 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
   currentUser,
   taxRates,
 }) => {
+  const defaultTva = useMemo(() => {
+    return TaxService.getApplicableRate(taxRates, TaxType.PRESTATION, new Date());
+  }, [taxRates]);
+
   const [formData, setFormData] = useState({
     requestId: initialData?.requestId || '',
     clientId: initialData?.clientId || '',
@@ -86,7 +90,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
       // Recalculer totalHT pour chaque ligne au chargement pour garantir la cohérence
       return initialData.items.map(item => ({
         ...item,
-        tva: item.tva ?? 19,
+        tva: item.tva ?? defaultTva,
         totalHT: (item.quantity || 0) * (item.unitPrice || 0),
       }));
     }
@@ -388,8 +392,8 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
         unit: article.unit
       };
 
-      // Lookup dynamic TVA
-      const type = TaxService.getTaxTypeByCategory(article.category || '');
+      // Lookup dynamic TVA - prioritiser le type défini sur l'article
+      const type = article.taxType || TaxService.getTaxTypeByCategory(article.category || '');
       const rate = TaxService.getApplicableRate(taxRates, type, new Date());
       newItems[index].tva = rate;
       
@@ -944,7 +948,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
             <div className="py-2">
               <button
                 type="button"
-                onClick={() => setItems([...items, { description: '', quantity: 1, unitPrice: 0, unit: 'U', margin: 0, tva: 19, totalHT: 0 }])}
+                onClick={() => setItems([...items, { description: '', quantity: 1, unitPrice: 0, unit: 'U', margin: 0, tva: defaultTva, totalHT: 0 }])}
                 className="bg-transparent border-[1.5px] border-dashed border-[#1e90ff] text-[#1e90ff] rounded-[4px] px-[18px] py-[6px] text-[13px] font-semibold cursor-pointer tracking-[0.3px] hover:bg-blue-50 transition-colors flex items-center gap-2 mt-2"
               >
                 <span>+</span> Ajouter une ligne

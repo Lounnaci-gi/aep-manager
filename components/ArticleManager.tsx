@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
-import { Article, ArticlePrice, ArticleProperty, PropertyType } from '../types';
+import { Article, ArticlePrice, ArticleProperty, PropertyType, TaxType } from '../types';
 import { ArticleService } from '../services/articleService';
 import { DbService } from '../services/dbService';
 
@@ -24,7 +24,8 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
     material: '',
     class: '',
     nominalPressure: '',
-    color: ''
+    color: '',
+    taxType: TaxType.PRESTATION as TaxType
   });
   const [showAddMaterial, setShowAddMaterial] = useState(false);
   const [newMaterial, setNewMaterial] = useState('');
@@ -172,7 +173,8 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
       material: article.material || '',
       class: article.class || '',
       nominalPressure: article.nominalPressure || '',
-      color: article.color || ''
+      color: article.color || '',
+      taxType: article.taxType || TaxType.PRESTATION
     });
     
     // Initialiser les prix avec les valeurs existantes
@@ -214,7 +216,8 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
       material: '', // Champ texte vidé mais la liste des matériaux reste accessible
       class: '', // Champ texte vidé mais la liste des classes reste accessible
       nominalPressure: '', // Champ texte vidé mais la liste des pressions reste accessible
-      color: '' // Champ texte vidé mais la liste des couleurs reste accessible
+      color: '', // Champ texte vidé mais la liste des couleurs reste accessible
+      taxType: TaxType.PRESTATION
     });
     setArticlePrices([
       { type: 'fourniture', price: 0 },
@@ -858,6 +861,46 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
             
 
             
+            <div className="bg-blue-50/50 p-6 rounded-2xl border border-blue-100/50 mb-6">
+              <h3 className="text-sm font-black text-blue-900 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
+                </svg>
+                Configuration de la TVA
+              </h3>
+              <div className="flex flex-wrap gap-4">
+                {[TaxType.PRESTATION, TaxType.EAU].map((type) => (
+                  <label key={type} className={`flex-1 min-w-[200px] relative flex flex-col p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                    formData.taxType === type 
+                    ? 'border-blue-500 bg-white shadow-md' 
+                    : 'border-transparent bg-white/50 hover:bg-white'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="taxType"
+                      value={type}
+                      checked={formData.taxType === type}
+                      onChange={() => setFormData({...formData, taxType: type})}
+                      className="absolute opacity-0"
+                    />
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+                      Type de TVA
+                    </span>
+                    <span className="text-sm font-black text-gray-900 uppercase tracking-tight">
+                      TVA {type}
+                    </span>
+                    {formData.taxType === type && (
+                      <div className="absolute top-3 right-3 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                        <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    )}
+                  </label>
+                ))}
+              </div>
+            </div>
+
             <div>
               <h3 className="text-base font-black text-gray-900 uppercase tracking-tight mb-3">
                 Tarifs *
@@ -1016,7 +1059,7 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
                     Propriétés
                   </th>
                   <th scope="col" className="px-4 py-2 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                    Prix
+                    Prix & TVA
                   </th>
                   <th scope="col" className="px-4 py-2 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">
                     Actions
@@ -1074,6 +1117,15 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
                         ) : (
                           <span className="text-[10px] font-black text-gray-400 italic">Aucun prix défini</span>
                         )}
+                        <div className="pt-1 mt-1 border-t border-gray-50">
+                          <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-widest ${
+                            article.taxType === TaxType.EAU 
+                            ? 'bg-cyan-50 text-cyan-600 border border-cyan-100' 
+                            : 'bg-indigo-50 text-indigo-600 border border-indigo-100'
+                          }`}>
+                            TVA {article.taxType || TaxType.PRESTATION}
+                          </span>
+                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-xs font-medium">

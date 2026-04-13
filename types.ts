@@ -196,6 +196,7 @@ export interface Article {
   properties?: ArticleProperty[];
   createdAt: string;
   defaultPriceType?: 'fourniture' | 'pose' | 'fourniture_et_pose';
+  taxType?: TaxType;
 }
 
 export interface WorkRequest {
