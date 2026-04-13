@@ -15,13 +15,14 @@ import { ArticleManager } from './components/ArticleManager';
 import { StructureManager } from './components/StructureManager';
 import { AgencyManager } from './components/AgencyManager';
 import { WorkTypeManager } from './components/WorkTypeManager';
+import { TaxManager } from './components/TaxManager';
 import { Login } from './components/Login';
 import { UserList } from './components/UserList';
 import { UserForm } from './components/UserForm';
 
 import { DbService } from './services/dbService';
 import { updateWorkflowRegistryFromWorkTypes } from './services/workflowConfig';
-import { Quote, QuoteStatus, WorkType, Client, User, UserRole, WorkRequest, RequestStatus, Unit, Centre, CommercialAgency, ValidationType } from './types';
+import { Quote, QuoteStatus, WorkType, Client, User, UserRole, WorkRequest, RequestStatus, Unit, Centre, CommercialAgency, ValidationType, TaxRate } from './types';
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
@@ -29,7 +30,7 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : null;
   });
 
-  const [view, setView] = useState<'dashboard' | 'requests' | 'request-form' | 'request-success' | 'list' | 'create' | 'edit-quote' | 'clients' | 'client-form' | 'settings' | 'users' | 'user-form' | 'structure' | 'agencies' | 'branchement-quote' | 'articles'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'requests' | 'request-form' | 'request-success' | 'list' | 'create' | 'edit-quote' | 'clients' | 'client-form' | 'settings' | 'users' | 'user-form' | 'structure' | 'agencies' | 'branchement-quote' | 'articles' | 'tax-manager'>('dashboard');
   const [editingClient, setEditingClient] = useState<Client | undefined>(undefined);
   const [editingUser, setEditingUser] = useState<User | undefined>(undefined);
   const [editingQuote, setEditingQuote] = useState<Quote | undefined>(undefined);
@@ -47,6 +48,7 @@ const App: React.FC = () => {
   const [centres, setCentres] = useState<Centre[]>([]);
   const [agencies, setAgencies] = useState<CommercialAgency[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
+  const [taxRates, setTaxRates] = useState<TaxRate[]>([]);
 
   useEffect(() => {
     if (currentUser) {
@@ -60,7 +62,7 @@ const App: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [q, r, c, w, u, ctr, agc, unitsData] = await Promise.all([
+      const [q, r, c, w, u, ctr, agc, unitsData, taxRatesData] = await Promise.all([
         DbService.getQuotes(),
         DbService.getRequests(),
         DbService.getClients(),
@@ -68,7 +70,8 @@ const App: React.FC = () => {
         DbService.getUsers(),
         DbService.getCentres(),
         DbService.getAgencies(),
-        DbService.getUnits()
+        DbService.getUnits(),
+        DbService.getTaxRates()
       ]);
       
       setQuotes(q);
@@ -81,6 +84,7 @@ const App: React.FC = () => {
       setCentres(ctr);
       setAgencies(agc);
       setUnits(unitsData as Unit[]);
+      setTaxRates(taxRatesData as TaxRate[]);
     } catch (error) {
       console.error("Erreur de chargement:", error);
       // Afficher une notification utilisateur en cas d'erreur
@@ -816,6 +820,13 @@ const App: React.FC = () => {
             onBack={() => setView('dashboard')} 
           />
         )}
+
+        {view === 'tax-manager' && (
+          <TaxManager 
+            onBack={() => setView('dashboard')} 
+            currentUserRole={currentUser.role}
+          />
+        )}
                 
         {(view === 'create' || view === 'edit-quote') && (() => {
           const canManageQuotes = currentUser.role === UserRole.CHEF_CENTRE || 
@@ -849,6 +860,7 @@ const App: React.FC = () => {
               centres={centres}
               units={units}
               users={users}
+              taxRates={taxRates}
               initialData={editingQuote}
               currentUserAgencyId={currentUser.agencyId}
               currentUser={currentUser}

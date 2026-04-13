@@ -160,6 +160,19 @@ export enum PropertyType {
   CUSTOM = 'Personnalisé'
 }
 
+export enum TaxType {
+  PRESTATION = 'Prestation',
+  EAU = 'Eau'
+}
+
+export interface TaxRate {
+  id: string;
+  type: TaxType;
+  rate: number;
+  effectiveDate: string; // ISO date
+  createdAt: string;
+}
+
 export interface ArticleProperty {
   id: string;
   name: string;

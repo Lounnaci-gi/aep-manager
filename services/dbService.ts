@@ -36,7 +36,8 @@ const COLLECTIONS = {
   REQUESTS: 'requests',
   QUOTES: 'quotes',
   WORK_TYPES: 'work_types',
-  ARTICLES: 'articles'
+  ARTICLES: 'articles',
+  TAX_RATES: 'tax_rates'
 };
 
 async function apiRequest<T>(method: string, collection: string, data?: any): Promise<T> {
@@ -395,6 +396,20 @@ export const DbService = {
   async deleteArticle(id: string): Promise<void> {
     const encodedId = encodeURIComponent(id);
     await fetch(`${API_URL}/${COLLECTIONS.ARTICLES}/${encodedId}`, { method: 'DELETE' });
+  },
+
+  // Tax Rates methods
+  async getTaxRates(): Promise<TaxRate[]> {
+    return await apiRequest<TaxRate[]>('GET', COLLECTIONS.TAX_RATES);
+  },
+
+  async saveTaxRate(taxRate: TaxRate): Promise<void> {
+    await apiRequest('POST', COLLECTIONS.TAX_RATES, taxRate);
+  },
+
+  async deleteTaxRate(id: string): Promise<void> {
+    const encodedId = encodeURIComponent(id);
+    await fetch(`${API_URL}/${COLLECTIONS.TAX_RATES}/${encodedId}`, { method: 'DELETE' });
   },
 
 };

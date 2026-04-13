@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Quote, QuoteItem, QuoteStatus, WorkType, Client, CommercialAgency, Centre, ClientCategory, Unit, WorkRequest, UserRole, User } from '../types';
+import { Quote, QuoteItem, QuoteStatus, WorkType, Client, CommercialAgency, Centre, ClientCategory, Unit, WorkRequest, UserRole, User, TaxRate } from '../types';
+import { TaxService } from '../services/taxService';
 import { getAIRecommendation } from '../services/geminiService';
 import { numberToFrenchLetters } from '../utils/numberToLetters';
 import { ArticleService } from '../services/articleService';
@@ -21,6 +22,7 @@ interface QuoteFormProps {
   initialData?: Quote;
   currentUserAgencyId?: string;
   currentUser?: { role: UserRole, id: string };
+  taxRates: TaxRate[];
 }
 
 export const QuoteForm: React.FC<QuoteFormProps> = ({
@@ -38,6 +40,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
   currentUserAgencyId,
   requests,
   currentUser,
+  taxRates,
 }) => {
   const [formData, setFormData] = useState({
     requestId: initialData?.requestId || '',
@@ -88,7 +91,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
       }));
     }
     return [];
-  });
+  }, [initialData]);
 
   const [loadingAI, setLoadingAI] = useState(false);
   const [aiRec, setAiRec] = useState(initialData?.aiNotes || '');
@@ -384,6 +387,12 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
         description: article.name,
         unit: article.unit
       };
+
+      // Lookup dynamic TVA
+      const type = TaxService.getTaxTypeByCategory(article.category || '');
+      const rate = TaxService.getApplicableRate(taxRates, type, new Date());
+      newItems[index].tva = rate;
+      
       return newItems;
     });
 
@@ -799,7 +808,8 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                     <th className="px-6 py-4 text-left font-bold text-[11px] uppercase tracking-wider rounded-tl-xl w-1/2">Description</th>
                     <th className="px-4 py-4 text-center font-bold text-[11px] uppercase tracking-wider w-20">Unité</th>
                     <th className="px-4 py-4 text-center font-bold text-[11px] uppercase tracking-wider w-20">Qté</th>
-                    <th className="px-4 py-4 text-center font-bold text-[11px] uppercase tracking-wider w-36">Prix Unitaire (DZD)</th>
+                    <th className="px-4 py-4 text-center font-bold text-[11px] uppercase tracking-wider w-36">Prix Unit (DZD)</th>
+                    <th className="px-4 py-4 text-center font-bold text-[11px] uppercase tracking-wider w-16">TVA</th>
                     <th className="px-6 py-4 text-right font-bold text-[11px] uppercase tracking-wider w-44 rounded-tr-xl">Total</th>
                   </tr>
                 </thead>
@@ -896,6 +906,17 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                             title="Double-cliquez pour choisir le type de prix"
                           />
                         </td>
+                        <td className="px-2 py-4">
+                          <div className="relative">
+                            <input
+                              type="number"
+                              className="w-full border border-gray-200 rounded-md p-2.5 text-[13px] bg-white text-center text-gray-700 focus:border-blue-400 transition-all font-medium"
+                              value={item.tva}
+                              onChange={e => updateItem(index, 'tva', parseFloat(e.target.value) || 0)}
+                            />
+                            <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[9px] font-bold text-gray-300">%</span>
+                          </div>
+                        </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center justify-end gap-4">
                             <span className="text-blue-600 font-bold text-[14px] whitespace-nowrap">
@@ -961,7 +982,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
               <div className="w-full max-w-[400px] space-y-4">
                 <div className="space-y-1.5 border-b border-gray-50 pb-3 px-4 text-xs font-semibold">
                   <div className="flex justify-between text-gray-500"><span>Sous-total HT</span><span className="text-gray-700">{subtotal.toLocaleString()} DA</span></div>
-                  <div className="flex justify-between text-gray-500"><span>Montant TVA (19%)</span><span className="text-gray-700">{tax.toLocaleString()} DA</span></div>
+                  <div className="flex justify-between text-gray-500"><span>Montant TVA</span><span className="text-gray-700">{tax.toLocaleString()} DA</span></div>
                 </div>
 
                 <div className="bg-[#1e90ff] text-white p-4 rounded-xl flex justify-between items-center shadow-lg shadow-blue-100 ring-4 ring-blue-50/10 mx-1">
@@ -1177,6 +1198,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                   <th className="border-b border-r border-gray-400 p-2 text-center w-16">Unité</th>
                   <th className="border-b border-r border-gray-400 p-2 text-center w-16">Qtité</th>
                   <th className="border-b border-r border-gray-400 p-2 text-right w-24">P.U (HT)</th>
+                  <th className="border-b border-r border-gray-400 p-2 text-center w-12">TVA</th>
                   <th className="border-b border-gray-400 p-2 text-right w-28">Montant HT</th>
                 </tr>
               </thead>
@@ -1197,6 +1219,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                       <td className="border-b border-r border-gray-400 px-2 py-1.5 text-center">{unit}</td>
                       <td className="border-b border-r border-gray-400 px-2 py-1.5 text-center font-bold">{item.quantity}</td>
                       <td className="border-b border-r border-gray-400 px-2 py-1.5 text-right whitespace-nowrap">{item.unitPrice.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
+                      <td className="border-b border-r border-gray-400 px-2 py-1.5 text-center text-[9px]">{item.tva}%</td>
                       <td className="border-b border-gray-400 px-2 py-1.5 text-right font-bold whitespace-nowrap">{(item.totalHT || 0).toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
                     </tr>
                   );
@@ -1207,19 +1230,19 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                     <p>Compte <span className="font-bold">{activeCentre?.bankName || activeUnit?.bankName || '..........'}</span> N°: <span className="font-bold">{activeCentre?.bankAccount || activeUnit?.bankAccount || '...........................'}</span></p>
                     <p>Mode de paiement : Chèque,Espece,versement</p>
                   </td>
-                  <td colSpan={3} className="border-b border-r border-gray-400 font-bold p-2 text-left uppercase text-gray-600">Total HT</td>
+                  <td colSpan={4} className="border-b border-r border-gray-400 font-bold p-2 text-left uppercase text-gray-600">Total HT</td>
                   <td colSpan={1} className="border-b border-gray-400 p-2 text-right font-black text-[12px]">
                     {subtotal.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
                   </td>
                 </tr>
                 <tr>
-                  <td colSpan={3} className="border-b border-r border-gray-400 font-bold p-2 text-left uppercase text-gray-600">TVA (19%)</td>
+                  <td colSpan={4} className="border-b border-r border-gray-400 font-bold p-2 text-left uppercase text-gray-600">Montant TVA</td>
                   <td colSpan={1} className="border-b border-gray-400 p-2 text-right font-bold">
                     {tax.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
                   </td>
                 </tr>
                 <tr className="bg-gray-100 text-gray-900">
-                  <td colSpan={3} className="font-black p-2 text-left uppercase text-[12px] border-r border-gray-400">NET A PAYER (TTC)</td>
+                  <td colSpan={4} className="font-black p-2 text-left uppercase text-[12px] border-r border-gray-400">NET A PAYER (TTC)</td>
                   <td colSpan={1} className="p-2 text-right font-black text-[11px] tracking-tight">
                     {total.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })} DA
                   </td>

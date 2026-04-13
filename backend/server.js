@@ -75,7 +75,8 @@ const COLLECTIONS = [
   'requests',
   'quotes',
   'work_types',
-  'articles'
+  'articles',
+  'tax_rates'
 ];
 
 // ⚠️ SÉCURITÉ: Route d'authentification avec gestion des tentatives échouées

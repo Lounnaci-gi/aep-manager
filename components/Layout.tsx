@@ -111,7 +111,13 @@ export const Layout: React.FC<LayoutProps> = ({
       subItems: [{ id: 'structure', label: 'Unités & Centres' }, { id: 'agencies', label: 'Agences Commerciales' }]
     },
     { id: 'users',    label: 'Utilisateurs', show: isAdmin, icon: <Icon name="users"    /> },
-    { id: 'settings', label: 'Paramètres',   show: isAdmin, icon: <Icon name="settings" /> },
+    { 
+      id: 'settings', label: 'Paramètres', show: isAdmin, icon: <Icon name="settings" />,
+      subItems: [
+        { id: 'settings', label: 'Types de Travaux' },
+        { id: 'tax-manager', label: 'Fiscalité (TVA)' }
+      ]
+    },
   ];
 
   const visibleItems = NAV_ITEMS.filter(i => i.show);
