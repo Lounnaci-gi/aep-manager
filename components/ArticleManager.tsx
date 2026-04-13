@@ -34,6 +34,10 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
     { type: 'prestation', price: 0 }
   ]);
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
 
   const categories = ['TRAVAUX DE TERRASSEMENT & VOIRIE', 'CANALISATIONS (TUBES PEHD)', 'PIÈCES SPÉCIALES', 'DIVERS & PRESTATIONS', 'Comptage', 'Cautionnement pour Branchement'];
   
@@ -60,6 +64,33 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
       setLoading(false);
     }
   };
+
+  // Réinitialiser la page quand les filtres changent
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterCategory, filterUnit]);
+
+  // Logique de filtrage et pagination
+  const filteredArticles = articles.filter(article => {
+    // Filtre par recherche
+    const matchesSearch = searchTerm === '' || 
+      article.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      article.description.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Filtre par catégorie
+    const matchesCategory = filterCategory === '' || article.category === filterCategory;
+    
+    // Filtre par unité
+    const matchesUnit = filterUnit === '' || article.unit === filterUnit;
+    
+    return matchesSearch && matchesCategory && matchesUnit;
+  });
+
+  const totalPages = Math.ceil(filteredArticles.length / ITEMS_PER_PAGE);
+  const paginatedArticles = filteredArticles.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -993,22 +1024,7 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {articles
-                  .filter(article => {
-                    // Filtre par recherche
-                    const matchesSearch = searchTerm === '' || 
-                      article.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      article.description.toLowerCase().includes(searchTerm.toLowerCase());
-                    
-                    // Filtre par catégorie
-                    const matchesCategory = filterCategory === '' || article.category === filterCategory;
-                    
-                    // Filtre par unité
-                    const matchesUnit = filterUnit === '' || article.unit === filterUnit;
-                    
-                    return matchesSearch && matchesCategory && matchesUnit;
-                  })
-                  .map((article) => (
+                {paginatedArticles.map((article) => (
                   <tr key={article.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="text-xs font-black text-gray-900">{article.name}</div>
@@ -1086,6 +1102,78 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {filteredArticles.length > 0 && (
+          <div className="px-4 py-3 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between">
+            <div className="flex-1 flex justify-between sm:hidden">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-xs font-black uppercase rounded-md text-gray-700 bg-white hover:bg-gray-50 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                Précédent
+              </button>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className={`ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-xs font-black uppercase rounded-md text-gray-700 bg-white hover:bg-gray-50 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                Suivant
+              </button>
+            </div>
+            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs text-gray-700">
+                  Affichage de <span className="font-black">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> à <span className="font-black">{Math.min(currentPage * ITEMS_PER_PAGE, filteredArticles.length)}</span> sur <span className="font-black">{filteredArticles.length}</span> articles
+                </p>
+              </div>
+              <div>
+                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <span className="sr-only">Précédent</span>
+                    <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                  
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`relative inline-flex items-center px-4 py-2 border text-xs font-black uppercase ${
+                        currentPage === page
+                          ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                          : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  )).filter((_, i, arr) => {
+                    // Logique simple pour limiter le nombre de boutons de page affichés si nécessaire
+                    // Pour l'instant on les affiche tous, mais on pourrait optimiser
+                    return arr.length <= 7 || i === 0 || i === arr.length - 1 || (i >= currentPage - 2 && i <= currentPage);
+                  })}
+
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <span className="sr-only">Suivant</span>
+                    <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </nav>
+              </div>
+            </div>
           </div>
         )}
       </div>
