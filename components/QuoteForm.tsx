@@ -650,7 +650,11 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
               </p>
               <p className="text-[11px] text-gray-400 font-extrabold uppercase tracking-[0.2em] flex items-center gap-2">
                 <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                État : <span className="text-emerald-600 font-black px-2 py-0.5 bg-emerald-50 rounded italic">{initialData?.status || QuoteStatus.PENDING}</span>
+                État : <span className="text-emerald-600 font-black px-2 py-0.5 bg-emerald-50 rounded italic">
+                  {(initialData?.status === QuoteStatus.APPROVED) ? 'Validé' : 
+                   (initialData?.status === QuoteStatus.PENDING || !initialData) ? 'Validation en attente' : 
+                   initialData?.status}
+                </span>
               </p>
             </div>
           </div>

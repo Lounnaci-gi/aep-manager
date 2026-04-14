@@ -179,6 +179,7 @@ export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies,
               
               const isFullyApproved = quote.status === QuoteStatus.APPROVED && allUsersValidated;
               const hasUserValidated = currentUser ? validatedUserIds.includes(currentUser.id) : false;
+              const missingUsers = requiredUsers.filter(u => !validatedUserIds.includes(u.id));
 
               return (
                 <tr key={quote.id} className={`hover:bg-blue-50/30 transition-colors group ${expired ? 'bg-rose-50/10' : ''}`}>
@@ -329,13 +330,50 @@ export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies,
                               )}
                             </>
                           )}
-                          <select
-                            className="text-[10px] font-black uppercase bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 focus:ring-2 focus:ring-blue-500/20"
-                            value={quote.status}
-                            onChange={(e) => onUpdateStatus(quote.id, e.target.value as QuoteStatus)}
-                          >
-                            {Object.values(QuoteStatus).map(s => <option key={s} value={s}>{s}</option>)}
-                          </select>
+                          <div className="relative group/status">
+                            <div className={`text-[10px] font-black uppercase px-3 py-1.5 rounded-xl border flex items-center justify-center min-w-[120px] ${
+                              quote.status === QuoteStatus.APPROVED 
+                                ? 'bg-emerald-50 text-emerald-600 border-emerald-200 shadow-sm shadow-emerald-50' 
+                                : quote.status === QuoteStatus.PENDING
+                                ? 'bg-amber-50 text-amber-600 border-amber-200 shadow-sm shadow-amber-50 cursor-help'
+                                : 'bg-gray-50 text-gray-500 border-gray-200 shadow-sm'
+                            }`}>
+                              {quote.status === QuoteStatus.APPROVED ? 'Validé' : 
+                               quote.status === QuoteStatus.PENDING ? 'Validation en attente' : 
+                               quote.status}
+                            </div>
+
+                            {/* Bulle des valideurs manquants - Version Dark refined */}
+                            {quote.status === QuoteStatus.PENDING && missingUsers.length > 0 && (
+                              <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 opacity-0 group-hover/status:opacity-100 transition-all duration-300 pointer-events-none z-[100] translate-y-2 group-hover/status:translate-y-0">
+                                <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700/50 p-4 rounded-2xl shadow-2xl min-w-[240px]">
+                                  {/* User's exact header snippet */}
+                                  <div className="flex items-center gap-2 mb-3 pb-3 border-b border-slate-700/50">
+                                    <div className="bg-amber-500/20 p-1.5 rounded-lg">
+                                      <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </div>
+                                    <div className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Validations Requises</div>
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    {missingUsers.map(u => (
+                                      <div key={u.id} className="flex items-center gap-2.5 px-2 py-1.5 bg-slate-800/50 rounded-xl border border-slate-700/30">
+                                        <div className="w-7 h-7 rounded-lg bg-slate-700 flex items-center justify-center text-[10px] font-black text-slate-300 border border-slate-600">
+                                          {u.fullName.charAt(0)}
+                                        </div>
+                                        <div className="flex flex-col">
+                                          <span className="text-[10px] font-black text-slate-100 leading-tight">{u.fullName}</span>
+                                          <span className="text-[8px] text-slate-500 font-black uppercase tracking-widest mt-0.5">{u.role}</span>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                  {/* Arrow */}
+                                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-900/95"></div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </>
                       )}
 
