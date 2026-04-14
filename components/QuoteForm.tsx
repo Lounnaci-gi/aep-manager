@@ -261,7 +261,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
     if (validPrices.length === 0) {
       Swal.fire({
         title: 'Aucun prix disponible',
-        text: `L'article "${article.name}" n'a aucun prix de vente défini.`,
+        text: `L'article "${article.name}" n'a aucun prix de vente défini. Les informations de l'article (Désignation, Unité, TVA) ont été chargées, vous pouvez saisir le prix manuellement.`,
         icon: 'info',
         confirmButtonColor: '#3b82f6'
       });
@@ -341,7 +341,6 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
             newItems[index].totalHT = (newItems[index].quantity || 0) * (newItems[index].unitPrice || 0);
             return newItems;
           });
-          setSearchTerm(prev => ({ ...prev, [index]: article.name }));
         }
       });
     } else {
@@ -354,7 +353,6 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
         newItems[index].totalHT = (newItems[index].quantity || 0) * (newItems[index].unitPrice || 0);
         return newItems;
       });
-      setSearchTerm(prev => ({ ...prev, [index]: article.name }));
 
       // Petit feedback visuel
       Swal.fire({
@@ -371,7 +369,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
   // Gérer la sélection d'un article
   const handleArticleSelect = (article: any, index: number) => {
     // Vérifier si l'article est déjà dans le devis
-    const isAlreadyAdded = items.some(item => item.description === article.name);
+    const isAlreadyAdded = items.some((item, i) => i !== index && item.description === article.name);
     if (isAlreadyAdded) {
       Swal.fire({
         title: 'Article déjà ajouté',
@@ -384,28 +382,27 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
       return;
     }
 
+    // Lookup dynamic TVA - prioritiser le type défini sur l'article
+    const taxType = article.taxType || TaxService.getTaxTypeByCategory(article.category || '');
+    const rate = TaxService.getApplicableRate(taxRates, taxType, new Date());
+
     setItems(prevItems => {
       const newItems = [...prevItems];
       newItems[index] = {
         ...newItems[index],
         description: article.name,
-        unit: article.unit
+        unit: article.unit,
+        tva: rate
       };
-
-      // Lookup dynamic TVA - prioritiser le type défini sur l'article
-      const type = article.taxType || TaxService.getTaxTypeByCategory(article.category || '');
-      const rate = TaxService.getApplicableRate(taxRates, type, new Date());
-      newItems[index].tva = rate;
-
       return newItems;
     });
 
-    // Ouvrir la boîte de dialogue de sélection de prix (ou appliquer automatiquement si un seul prix)
-    openPriceSelectionDialog(article, index);
-
-    // Fermer le dropdown et mettre à jour le terme de recherche
+    // Mettre à jour le terme de recherche et fermer le dropdown
     setSearchTerm(prev => ({ ...prev, [index]: article.name }));
     setShowArticleDropdown(prev => ({ ...prev, [index]: false }));
+
+    // Ouvrir la boîte de dialogue de sélection de prix
+    openPriceSelectionDialog(article, index);
   };
 
   useEffect(() => {
