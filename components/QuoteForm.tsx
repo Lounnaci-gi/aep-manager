@@ -103,20 +103,11 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
 
   const [loadingAI, setLoadingAI] = useState(false);
   const [aiRec, setAiRec] = useState(initialData?.aiNotes || '');
-  const [activeTab, setActiveTab] = useState<'form' | 'preview'>(
-    (initialData && initialData.id && !initialData.id.startsWith('TEMP-')) ? 'preview' : 'form'
-  );
+  const [activeTab, setActiveTab] = useState<'form' | 'preview'>('form');
   const [articles, setArticles] = useState<any[]>([]);
   const [filteredArticles, setFilteredArticles] = useState<any[]>([]);
   const [showArticleDropdown, setShowArticleDropdown] = useState<{ [key: number]: boolean }>({});
   const [searchTerm, setSearchTerm] = useState<{ [key: number]: string }>({});
-
-  useEffect(() => {
-    const shouldShowForm = !initialData || !initialData.id || initialData.id.startsWith('TEMP-');
-    if (shouldShowForm && activeTab !== 'form') {
-      setActiveTab('form');
-    }
-  }, [initialData]);
 
   const isLegal = formData.category === ClientCategory.LEGAL;
 
@@ -738,13 +729,18 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
               <input
                 type="text"
                 placeholder="Nature de la demande"
-                className="w-full bg-gray-50 border-none rounded-lg p-3 text-lg font-medium text-gray-700 cursor-default select-none"
+                className="w-full bg-gray-50 border-none rounded-lg p-3 text-lg font-medium text-gray-700 cursor-default select-none transition-all"
                 value={formData.serviceType}
                 readOnly
               />
               <div className="flex gap-2">
-                <button type="button" className="p-2 text-gray-300 hover:text-gray-600 transition-colors">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                <button 
+                  type="button" 
+                  onClick={() => setActiveTab('form')}
+                  className="p-2 text-gray-400 hover:text-blue-600 transition-colors" 
+                  title="Modifier la nature de la demande"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                 </button>
                 <button type="button" className="p-2 text-gray-300 hover:text-gray-600 transition-colors">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>

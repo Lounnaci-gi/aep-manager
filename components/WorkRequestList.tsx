@@ -917,7 +917,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                         ) : null;
                       })()}
 
-                      {/* Bouton Modifier selon allowedRoles du type de travail */}
+                      {/* Bouton Modifier (Crayon) - Modifie le dossier de demande */}
                       {currentUser && (() => {
                         const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
                         const canEdit = !workType?.allowedRoles ||
@@ -927,20 +927,12 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                         return canEdit ? (
                           <button
                             onClick={() => onEdit(req)}
-                            className="text-blue-400 hover:text-blue-600 transition-colors p-1.5 hover:bg-blue-50 rounded-lg"
-                            title="Modifier la demande"
+                            className="text-blue-500 hover:text-blue-700 p-2 hover:bg-blue-50 rounded-xl transition-all"
+                            title="Modifier les détails de la demande"
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                           </button>
-                        ) : (
-                          <button
-                            disabled
-                            className="text-gray-300 cursor-not-allowed p-1.5"
-                            title="Vous n'avez pas l'autorisation de modifier"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                          </button>
-                        );
+                        ) : null;
                       })()}
 
 
