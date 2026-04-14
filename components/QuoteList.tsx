@@ -1,5 +1,6 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Swal from 'sweetalert2';
 import { Quote, QuoteStatus, Centre, CommercialAgency, WorkType, User, UserRole, WorkRequest } from '../types';
 
@@ -18,6 +19,65 @@ interface QuoteListProps {
 }
 
 type SortDirection = 'asc' | 'desc' | 'none';
+
+// --- PORTAL TOOLTIP COMPONENT ---
+interface PortalTooltipProps {
+  trigger: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+}
+
+const PortalTooltip: React.FC<PortalTooltipProps> = ({ trigger, children, className = "" }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [coords, setCoords] = useState({ top: 0, left: 0 });
+  const triggerRef = useRef<HTMLDivElement>(null);
+
+  const updatePosition = () => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setCoords({
+        top: rect.top + window.scrollY,
+        left: rect.left + rect.width / 2 + window.scrollX
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (isVisible) {
+      updatePosition();
+      window.addEventListener('scroll', updatePosition);
+      window.addEventListener('resize', updatePosition);
+    }
+    return () => {
+      window.removeEventListener('scroll', updatePosition);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [isVisible]);
+
+  return (
+    <div 
+      ref={triggerRef}
+      onMouseEnter={() => setIsVisible(true)}
+      onMouseLeave={() => setIsVisible(false)}
+      className={`relative inline-block ${className}`}
+    >
+      {trigger}
+      {isVisible && createPortal(
+        <div 
+          className="fixed z-[9999] pointer-events-none animate-in fade-in zoom-in duration-200"
+          style={{ 
+            top: coords.top - 12 + 'px', 
+            left: coords.left + 'px',
+            transform: 'translate(-50%, -100%)'
+          }}
+        >
+          {children}
+        </div>,
+        document.body
+      )}
+    </div>
+  );
+};
 
 export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies, workTypes, requests, onDelete, onUpdateStatus, onCancelValidation, onEdit, currentUser, users = [] }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -202,14 +262,20 @@ export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies,
                         {quote.status}
                       </span>
                       {expired && (
-                        <div className="flex items-center gap-1 group/expired relative cursor-help" title="Dépassement du délai de 30 jours">
-                          <div className="w-5 h-5 text-rose-600 animate-pulse bg-rose-100 rounded-full flex items-center justify-center p-1 border border-rose-200 shadow-sm shadow-rose-200">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                          </div>
-                          <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover/expired:opacity-100 transition-opacity bg-rose-600 text-white text-[8px] px-2 py-1 rounded font-black uppercase tracking-widest whitespace-nowrap z-10 shadow-xl pointer-events-none">
+                        <PortalTooltip
+                          trigger={
+                            <div className="flex items-center gap-1 cursor-help">
+                              <div className="w-5 h-5 text-rose-600 animate-pulse bg-rose-100 rounded-full flex items-center justify-center p-1 border border-rose-200 shadow-sm shadow-rose-200">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                              </div>
+                            </div>
+                          }
+                        >
+                          <div className="bg-rose-600 text-white text-[8px] px-2 py-1 rounded font-black uppercase tracking-widest whitespace-nowrap shadow-xl">
                             Relance requise (+30j)
-                          </span>
-                        </div>
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-rose-600"></div>
+                          </div>
+                        </PortalTooltip>
                       )}
                     </div>
                   </td>
@@ -330,24 +396,24 @@ export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies,
                               )}
                             </>
                           )}
-                          <div className="relative group/status">
-                            <div className={`text-[10px] font-black uppercase px-3 py-1.5 rounded-xl border flex items-center justify-center min-w-[120px] ${
-                              quote.status === QuoteStatus.APPROVED 
-                                ? 'bg-emerald-50 text-emerald-600 border-emerald-200 shadow-sm shadow-emerald-50' 
-                                : quote.status === QuoteStatus.PENDING
-                                ? 'bg-amber-50 text-amber-600 border-amber-200 shadow-sm shadow-amber-50 cursor-help'
-                                : 'bg-gray-50 text-gray-500 border-gray-200 shadow-sm'
-                            }`}>
-                              {quote.status === QuoteStatus.APPROVED ? 'Validé' : 
-                               quote.status === QuoteStatus.PENDING ? 'Validation en attente' : 
-                               quote.status}
-                            </div>
-
+                          <PortalTooltip
+                            trigger={
+                              <div className={`text-[10px] font-black uppercase px-3 py-1.5 rounded-xl border flex items-center justify-center min-w-[120px] ${
+                                quote.status === QuoteStatus.APPROVED 
+                                  ? 'bg-emerald-50 text-emerald-600 border-emerald-200 shadow-sm shadow-emerald-50' 
+                                  : quote.status === QuoteStatus.PENDING
+                                  ? 'bg-amber-50 text-amber-600 border-amber-200 shadow-sm shadow-amber-50 cursor-help'
+                                  : 'bg-gray-50 text-gray-500 border-gray-200 shadow-sm'
+                              }`}>
+                                {quote.status === QuoteStatus.APPROVED ? 'Validé' : 
+                                 quote.status === QuoteStatus.PENDING ? 'Validation en attente' : 
+                                 quote.status}
+                              </div>
+                            }
+                          >
                             {/* Bulle des valideurs manquants - Version Dark refined */}
                             {quote.status === QuoteStatus.PENDING && missingUsers.length > 0 && (
-                              <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 opacity-0 group-hover/status:opacity-100 transition-all duration-300 pointer-events-none z-[100] translate-y-2 group-hover/status:translate-y-0">
                                 <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700/50 p-4 rounded-2xl shadow-2xl min-w-[240px]">
-                                  {/* User's exact header snippet */}
                                   <div className="flex items-center gap-2 mb-3 pb-3 border-b border-slate-700/50">
                                     <div className="bg-amber-500/20 p-1.5 rounded-lg">
                                       <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -355,25 +421,25 @@ export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies,
                                     <div className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Validations Requises</div>
                                   </div>
 
-                                  <div className="space-y-2">
+                                  <ul className="space-y-3">
                                     {missingUsers.map(u => (
-                                      <div key={u.id} className="flex items-center gap-2.5 px-2 py-1.5 bg-slate-800/50 rounded-xl border border-slate-700/30">
-                                        <div className="w-7 h-7 rounded-lg bg-slate-700 flex items-center justify-center text-[10px] font-black text-slate-300 border border-slate-600">
-                                          {u.fullName.charAt(0)}
+                                      <li key={u.id} className="flex items-center gap-3">
+                                        <div className="relative flex h-2 w-2">
+                                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                          <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                                         </div>
                                         <div className="flex flex-col">
-                                          <span className="text-[10px] font-black text-slate-100 leading-tight">{u.fullName}</span>
+                                          <span className="text-white text-xs font-bold tracking-wide leading-tight">{u.fullName}</span>
                                           <span className="text-[8px] text-slate-500 font-black uppercase tracking-widest mt-0.5">{u.role}</span>
                                         </div>
-                                      </div>
+                                      </li>
                                     ))}
-                                  </div>
+                                  </ul>
                                   {/* Arrow */}
                                   <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-900/95"></div>
                                 </div>
-                              </div>
                             )}
-                          </div>
+                          </PortalTooltip>
                         </>
                       )}
 

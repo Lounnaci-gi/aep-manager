@@ -1,5 +1,6 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Swal from 'sweetalert2';
 import { WorkRequest, RequestStatus, CommercialAgency, Centre, BranchementType, UserRole, User, ValidationType, ValidationRecord, WorkType, Quote, Unit, WorkflowStepType } from '../types';
 import { WorkRequestPrint } from './WorkRequestPrint';
@@ -25,6 +26,65 @@ interface WorkRequestListProps {
 }
 
 type SortOption = 'date-desc' | 'date-asc' | 'name-asc';
+
+// --- PORTAL TOOLTIP COMPONENT (HARMONIZED) ---
+interface PortalTooltipProps {
+  trigger: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+}
+
+const PortalTooltip: React.FC<PortalTooltipProps> = ({ trigger, children, className = "" }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [coords, setCoords] = useState({ top: 0, left: 0 });
+  const triggerRef = useRef<HTMLDivElement>(null);
+
+  const updatePosition = () => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setCoords({
+        top: rect.top + window.scrollY,
+        left: rect.left + rect.width / 2 + window.scrollX
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (isVisible) {
+      updatePosition();
+      window.addEventListener('scroll', updatePosition, { passive: true });
+      window.addEventListener('resize', updatePosition);
+    }
+    return () => {
+      window.removeEventListener('scroll', updatePosition);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [isVisible]);
+
+  return (
+    <div 
+      ref={triggerRef}
+      onMouseEnter={() => setIsVisible(true)}
+      onMouseLeave={() => setIsVisible(false)}
+      className={`relative inline-block ${className}`}
+    >
+      {trigger}
+      {isVisible && createPortal(
+        <div 
+          className="fixed z-[9999] pointer-events-none animate-in fade-in zoom-in duration-200"
+          style={{ 
+            top: coords.top - 12 + 'px', 
+            left: coords.left + 'px',
+            transform: 'translate(-50%, -100%)'
+          }}
+        >
+          {children}
+        </div>,
+        document.body
+      )}
+    </div>
+  );
+};
 
 export const WorkRequestList: React.FC<WorkRequestListProps> = ({
   requests,
@@ -820,15 +880,16 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                           });
                         }
                         return canCreateQuote ? (
-                          <div className="relative group flex items-center">
-                            <div className="text-[9px] text-amber-600 font-black uppercase tracking-widest bg-amber-50 px-3 py-2 rounded-lg border border-amber-200 cursor-help flex items-center">
-                              <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586a1 1 0 01.293.707V19a2 2 0 01-2 2z" clipRule="evenodd" /></svg>
-                              Validation En attente
-                            </div>
-
+                          <PortalTooltip
+                            trigger={
+                              <div className="text-[9px] text-amber-600 font-black uppercase tracking-widest bg-amber-50 px-3 py-2 rounded-lg border border-amber-200 cursor-help flex items-center">
+                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586a1 1 0 01.293.707V19a2 2 0 01-2 2z" clipRule="evenodd" /></svg>
+                                Validation En attente
+                              </div>
+                            }
+                          >
                             {missingRoles.length > 0 && (
-                              <div className="absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 w-max opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[100] origin-right">
-                                <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700/50 shadow-2xl rounded-2xl p-4 relative transform translate-x-2 group-hover:translate-x-0 transition-all duration-300">
+                                <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700/50 shadow-2xl rounded-2xl p-4 relative">
                                   <div className="flex items-center gap-2 mb-3 pb-3 border-b border-slate-700/50">
                                     <div className="bg-amber-500/20 p-1.5 rounded-lg">
                                       <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -844,16 +905,15 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
                                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                                           <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                                         </div>
-                                        <span className="text-white text-xs font-bold tracking-wide">{role}</span>
+                                        <span className="text-white text-[11px] font-bold tracking-wide">{role}</span>
                                       </li>
                                     ))}
                                   </ul>
                                   {/* Flèche */}
-                                  <div className="absolute top-1/2 -translate-y-1/2 -right-1.5 w-3 h-3 bg-slate-900/95 border-t border-r border-slate-700/50 transform rotate-45 rounded-sm"></div>
+                                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-900/95"></div>
                                 </div>
-                              </div>
                             )}
-                          </div>
+                          </PortalTooltip>
                         ) : null;
                       })()}
 
