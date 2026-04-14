@@ -37,6 +37,7 @@ const App: React.FC = () => {
   const [editingRequest, setEditingRequest] = useState<WorkRequest | undefined>(undefined);
   const [lastSavedRequest, setLastSavedRequest] = useState<WorkRequest | undefined>(undefined);
   const [quoteRequest, setQuoteRequest] = useState<WorkRequest | undefined>(undefined);
+  const [quoteInitialTab, setQuoteInitialTab] = useState<'form' | 'preview'>('form');
 
   const [loading, setLoading] = useState(true);
   
@@ -855,7 +856,8 @@ const App: React.FC = () => {
             onDelete={handleDeleteQuote} 
             onUpdateStatus={handleUpdateStatus} 
             onCancelValidation={handleCancelValidation}
-            onEdit={(q) => { setEditingQuote(q); setView('edit-quote'); }}
+            onEdit={(q) => { setQuoteInitialTab('form'); setEditingQuote(q); setView('edit-quote'); }}
+            onView={(q) => { setQuoteInitialTab('preview'); setEditingQuote(q); setView('edit-quote'); }}
             currentUser={currentUser}
             users={users}
           />
@@ -918,6 +920,7 @@ const App: React.FC = () => {
               initialData={editingQuote}
               currentUserAgencyId={currentUser.agencyId}
               currentUser={currentUser}
+              initialTab={quoteInitialTab}
               onSave={handleSaveQuote}
               onDelete={handleDeleteQuote}
               onUpdateStatus={handleUpdateStatus}

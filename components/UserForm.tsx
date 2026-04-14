@@ -22,7 +22,7 @@ export const UserForm: React.FC<UserFormProps> = ({ onSave, onCancel, centres, a
     email: initialData?.email || '',
     password: initialData?.password || '',
     role: initialData?.role || UserRole.AGENT,
-    centreId: initialData?.centreId || '',
+    centreId: initialData?.centreId || (currentUser?.role === UserRole.CHEF_CENTRE ? currentUser.centreId : ''),
     agencyId: initialData?.agencyId || '',
   });
   const [oldPassword, setOldPassword] = useState('');

@@ -110,7 +110,7 @@ export const Layout: React.FC<LayoutProps> = ({
       id: 'structure', label: 'Structure', show: isAdmin, icon: <Icon name="structure" />,
       subItems: [{ id: 'structure', label: 'Unités & Centres' }, { id: 'agencies', label: 'Agences Commerciales' }]
     },
-    { id: 'users',    label: 'Utilisateurs', show: isAdmin, icon: <Icon name="users"    /> },
+    { id: 'users',    label: 'Utilisateurs', show: isAdmin || user.role === UserRole.CHEF_CENTRE, icon: <Icon name="users"    /> },
     { 
       id: 'settings', label: 'Paramètres', show: isAdmin, icon: <Icon name="settings" />,
       subItems: [

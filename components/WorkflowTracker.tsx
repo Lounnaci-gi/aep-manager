@@ -14,7 +14,7 @@ interface WorkflowTrackerProps {
   currentUser: { role: UserRole } | null;
   onValidate?: (validationType: string) => void;
   onCreateQuote?: () => void;
-  onPrint?: () => void;
+  onPrint?: () => void; // Toujours = impression du devis (étape PRINTING)
   className?: string;
 }
 

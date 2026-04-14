@@ -25,6 +25,7 @@ interface QuoteFormProps {
   currentUserAgencyId?: string;
   currentUser?: { role: UserRole, id: string };
   taxRates: TaxRate[];
+  initialTab?: 'form' | 'preview'; // Permet d'ouvrir directement en aperçu
 }
 
 export const QuoteForm: React.FC<QuoteFormProps> = ({
@@ -45,6 +46,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
   requests,
   currentUser,
   taxRates,
+  initialTab = 'form',
 }) => {
   const defaultTva = useMemo(() => {
     return TaxService.getApplicableRate(taxRates, TaxType.PRESTATION, new Date());
@@ -103,7 +105,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
 
   const [loadingAI, setLoadingAI] = useState(false);
   const [aiRec, setAiRec] = useState(initialData?.aiNotes || '');
-  const [activeTab, setActiveTab] = useState<'form' | 'preview'>('form');
+  const [activeTab, setActiveTab] = useState<'form' | 'preview'>(initialTab);
   const [articles, setArticles] = useState<any[]>([]);
   const [filteredArticles, setFilteredArticles] = useState<any[]>([]);
   const [showArticleDropdown, setShowArticleDropdown] = useState<{ [key: number]: boolean }>({});

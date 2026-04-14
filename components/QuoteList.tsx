@@ -14,6 +14,7 @@ interface QuoteListProps {
   onUpdateStatus: (id: string, status: QuoteStatus) => void;
   onCancelValidation?: (id: string, reason: string) => void;
   onEdit: (quote: Quote) => void;
+  onView: (quote: Quote) => void; // Ouvre directement l'aperçu (mode lecture)
   currentUser?: User;
   users?: User[];
 }
@@ -79,7 +80,7 @@ const PortalTooltip: React.FC<PortalTooltipProps> = ({ trigger, children, classN
   );
 };
 
-export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies, workTypes, requests, onDelete, onUpdateStatus, onCancelValidation, onEdit, currentUser, users = [] }) => {
+export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies, workTypes, requests, onDelete, onUpdateStatus, onCancelValidation, onEdit, onView, currentUser, users = [] }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -281,18 +282,18 @@ export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies,
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right">
                     <div className="flex justify-end items-center gap-3">
-                      {/* Bouton Imprimer/Visualiser - selon le statut du devis */}
+                      {/* Bouton Visualiser (œil) → ouvre l'aperçu du devis */}
                       {currentUser?.role !== UserRole.JURISTE && (
                         <button 
-                          onClick={() => { onEdit(quote); }} 
+                          onClick={() => { onView(quote); }} 
                           className={`p-2 rounded-xl transition-all ${
                             isFullyApproved
                               ? 'text-blue-500 hover:text-blue-700 hover:bg-blue-50'
                               : 'text-amber-500 hover:text-amber-700 hover:bg-amber-50'
                           }`}
-                          title={isFullyApproved ? 'Imprimer le devis' : 
-                                 !allUsersValidated ? `Impression bloquée (En attente de ${requiredUsers.length - validatedUserIds.length} validations)` :
-                                 'Visualisation uniquement (devis non approuvé — impression bloquée)'}
+                          title={isFullyApproved ? 'Aperçu et impression du devis' : 
+                                 !allUsersValidated ? `Aperçu (En attente de ${requiredUsers.length - validatedUserIds.length} validation(s))` :
+                                 'Aperçu du devis'}
                         >
                           {isFullyApproved ? (
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -358,14 +359,6 @@ export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies,
                                 </>
                               ) : (
                                 <>
-                                  <button 
-                                    className="bg-emerald-100 text-emerald-600 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-1" 
-                                    title="Vous avez déjà validé ce devis"
-                                    disabled
-                                  >
-                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
-                                    Validé par vous
-                                  </button>
                                   <button 
                                     onClick={async () => {
                                       const { value: reason } = await Swal.fire({

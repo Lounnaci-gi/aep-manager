@@ -516,8 +516,29 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
             setSelectedRequestForWorkflow(null);
           }}
           onPrint={() => {
-            setPrintMode('standard');
-            setActivePrintRequest(selectedRequestForWorkflow);
+            const req = selectedRequestForWorkflow;
+            const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
+
+            // L'étape PRINTING = impression du devis → vérifier quoteAllowedRoles
+            const quoteRoles = workType?.quoteAllowedRoles && workType.quoteAllowedRoles.length > 0
+              ? workType.quoteAllowedRoles
+              : [UserRole.ADMIN, UserRole.CHEF_CENTRE, UserRole.TECHICO_COMMERCIAL];
+
+            const canPrintQuote = quoteRoles.includes(currentUser?.role);
+            if (!canPrintQuote) {
+              Swal.fire({
+                title: 'Accès Refusé',
+                html: `Vous n'avez pas l'autorisation d'imprimer ce devis.<br/><small style="color:#6b7280">Rôles autorisés : ${quoteRoles.join(', ')}</small>`,
+                icon: 'error',
+                confirmButtonColor: '#2563eb',
+                confirmButtonText: 'Compris'
+              });
+              return;
+            }
+
+            // Ouvrir le devis existant via QuoteForm (mode visualisation/impression)
+            setSelectedRequestForWorkflow(null);
+            onCreateQuote(req);
           }}
         />
       )}
