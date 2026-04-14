@@ -396,7 +396,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
       const type = article.taxType || TaxService.getTaxTypeByCategory(article.category || '');
       const rate = TaxService.getApplicableRate(taxRates, type, new Date());
       newItems[index].tva = rate;
-      
+
       return newItems;
     });
 
@@ -628,7 +628,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
 
           {/* 2. RESTRUCTURED FLEX ROW WITH TWO BOXES SIDE-BY-SIDE */}
           <div className="flex flex-col md:flex-row justify-between items-stretch gap-8 border-b border-gray-50 pb-10">
-            
+
             {/* COMPANY INFO BOX (LEFT) */}
             <div className="w-full md:w-1/2 bg-gray-50/50 p-6 rounded-2xl border border-gray-100 flex flex-col space-y-4 relative overflow-hidden group hover:border-blue-200 transition-colors">
               <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-110"></div>
@@ -723,7 +723,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
           {/* Advanced Table Section (Quote Details) */}
           <div className="space-y-4">
             <h3 className="text-[#1e90ff] font-extrabold text-sm uppercase pl-2 tracking-wide">Details du Devis</h3>
-            
+
             {/* Champs techniques conditionnels selon le type de travaux */}
             {workTypeConfig.requiresTechnicalDetails && (
               <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-5 space-y-4">
@@ -733,7 +733,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                   </svg>
                   Informations Techniques
                 </h4>
-                
+
                 {workTypeConfig.showBranchementType && (
                   <div>
                     <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
@@ -1202,7 +1202,6 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                   <th className="border-b border-r border-gray-400 p-2 text-center w-16">Unité</th>
                   <th className="border-b border-r border-gray-400 p-2 text-center w-16">Qtité</th>
                   <th className="border-b border-r border-gray-400 p-2 text-right w-24">P.U (HT)</th>
-                  <th className="border-b border-r border-gray-400 p-2 text-center w-12">TVA</th>
                   <th className="border-b border-gray-400 p-2 text-right w-28">Montant HT</th>
                 </tr>
               </thead>
@@ -1223,7 +1222,6 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                       <td className="border-b border-r border-gray-400 px-2 py-1.5 text-center">{unit}</td>
                       <td className="border-b border-r border-gray-400 px-2 py-1.5 text-center font-bold">{item.quantity}</td>
                       <td className="border-b border-r border-gray-400 px-2 py-1.5 text-right whitespace-nowrap">{item.unitPrice.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
-                      <td className="border-b border-r border-gray-400 px-2 py-1.5 text-center text-[9px]">{item.tva}%</td>
                       <td className="border-b border-gray-400 px-2 py-1.5 text-right font-bold whitespace-nowrap">{(item.totalHT || 0).toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
                     </tr>
                   );
@@ -1234,19 +1232,21 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                     <p>Compte <span className="font-bold">{activeCentre?.bankName || activeUnit?.bankName || '..........'}</span> N°: <span className="font-bold">{activeCentre?.bankAccount || activeUnit?.bankAccount || '...........................'}</span></p>
                     <p>Mode de paiement : Chèque,Espece,versement</p>
                   </td>
-                  <td colSpan={4} className="border-b border-r border-gray-400 font-bold p-2 text-left uppercase text-gray-600">Total HT</td>
+                  <td colSpan={3} className="border-b border-r border-gray-400 font-bold p-2 text-left uppercase text-gray-600">Total HT</td>
                   <td colSpan={1} className="border-b border-gray-400 p-2 text-right font-black text-[12px]">
                     {subtotal.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
                   </td>
                 </tr>
                 <tr>
-                  <td colSpan={4} className="border-b border-r border-gray-400 font-bold p-2 text-left uppercase text-gray-600">Montant TVA</td>
+                  <td colSpan={3} className="border-b border-r border-gray-400 font-bold p-2 text-left uppercase text-gray-600">
+                    TVA {(items[0]?.tva || defaultTva)}%
+                  </td>
                   <td colSpan={1} className="border-b border-gray-400 p-2 text-right font-bold">
                     {tax.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
                   </td>
                 </tr>
                 <tr className="bg-gray-100 text-gray-900">
-                  <td colSpan={4} className="font-black p-2 text-left uppercase text-[12px] border-r border-gray-400">NET A PAYER (TTC)</td>
+                  <td colSpan={3} className="font-black p-2 text-left uppercase text-[12px] border-r border-gray-400">NET A PAYER (TTC)</td>
                   <td colSpan={1} className="p-2 text-right font-black text-[11px] tracking-tight">
                     {total.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })} DA
                   </td>
@@ -1263,11 +1263,11 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
               </p>
             </div>
             <p className="italic text-[9px] text-gray-500">
-              {workTypeConfig.isAudit 
+              {workTypeConfig.isAudit
                 ? 'Nb: Ce devis est valable pour une durée de 03 mois à compter de sa date d\'établissement.'
                 : workTypeConfig.isReparation
-                ? 'Nb: Ce devis est valable pour une durée de 02 mois à compter de sa date d\'établissement.'
-                : 'Nb: Ce devis est valable pour une durée de 01 mois à compter de sa date d\'établissement.'}
+                  ? 'Nb: Ce devis est valable pour une durée de 02 mois à compter de sa date d\'établissement.'
+                  : 'Nb: Ce devis est valable pour une durée de 01 mois à compter de sa date d\'établissement.'}
             </p>
           </div>
 
@@ -1310,22 +1310,22 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
             )}
 
             {/* Default signature if no specific type matched */}
-            {!workTypeConfig.isBranchement && 
-             !workTypeConfig.isReparation && 
-             !workTypeConfig.isChangement && 
-             !workTypeConfig.isDeménagement && 
-             !workTypeConfig.isAudit && 
-             !workTypeConfig.isRésiliation && 
-             !workTypeConfig.isFermeture && (
-              <div className="flex justify-end">
-                <div className="text-center w-64">
-                  <p className="font-black text-[11px] border-b-2 border-black inline-block pb-1 uppercase tracking-widest mb-16">
-                    LE RESPONSABLE
-                  </p>
-                  <div className="text-[9px] text-gray-400 italic">(Nom, Signature et Cachet)</div>
+            {!workTypeConfig.isBranchement &&
+              !workTypeConfig.isReparation &&
+              !workTypeConfig.isChangement &&
+              !workTypeConfig.isDeménagement &&
+              !workTypeConfig.isAudit &&
+              !workTypeConfig.isRésiliation &&
+              !workTypeConfig.isFermeture && (
+                <div className="flex justify-end">
+                  <div className="text-center w-64">
+                    <p className="font-black text-[11px] border-b-2 border-black inline-block pb-1 uppercase tracking-widest mb-16">
+                      LE RESPONSABLE
+                    </p>
+                    <div className="text-[9px] text-gray-400 italic">(Nom, Signature et Cachet)</div>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
           </div>
 
           {/* Final footer watermark for screen only */}
