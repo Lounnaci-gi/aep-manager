@@ -1,8 +1,10 @@
-
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Swal from 'sweetalert2';
-import { WorkRequest, RequestStatus, CommercialAgency, Centre, BranchementType, UserRole, User, ValidationType, ValidationRecord, WorkType, Quote, Unit, WorkflowStepType } from '../types';
+import { User, UserRole, WorkRequest, RequestStatus, ValidationType, WorkType, Unit, Centre, CommercialAgency, Quote } from '../types';
+import { DbService } from '../services/dbService';
+import { workflowConfig } from '../services/workflowConfig';
+import { PermissionService } from '../services/permissionService';
 import { WorkRequestPrint } from './WorkRequestPrint';
 import { QuoteEstablishmentRequestPrint } from './QuoteEstablishmentRequestPrint';
 import { WorkflowTracker } from './WorkflowTracker';
@@ -512,6 +514,19 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
             setSelectedRequestForWorkflow(null);
           }}
           onCreateQuote={() => {
+            const req = selectedRequestForWorkflow;
+            const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
+            
+            if (!PermissionService.canManageQuote(currentUser, workType)) {
+              Swal.fire({
+                title: 'Accès Refusé',
+                html: `Votre rôle ne vous permet pas d'établir un devis pour ce type de travaux.<br/><small style="color:#6b7280">Veuillez consulter l'administrateur.</small>`,
+                icon: 'error',
+                confirmButtonColor: '#2563eb'
+              });
+              return;
+            }
+            
             onCreateQuote(selectedRequestForWorkflow);
             setSelectedRequestForWorkflow(null);
           }}

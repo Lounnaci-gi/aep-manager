@@ -22,6 +22,7 @@ import { UserForm } from './components/UserForm';
 
 import { DbService } from './services/dbService';
 import { updateWorkflowRegistryFromWorkTypes } from './services/workflowConfig';
+import { PermissionService } from './services/permissionService';
 import { Quote, QuoteStatus, WorkType, Client, User, UserRole, WorkRequest, RequestStatus, Unit, Centre, CommercialAgency, ValidationType, TaxRate } from './types';
 
 const App: React.FC = () => {
@@ -560,6 +561,19 @@ const App: React.FC = () => {
   };
 
   const handleCreateQuoteFromRequest = (request: WorkRequest) => {
+    // 1. Vérifier si l'utilisateur a le droit selon le Type de Travaux
+    const workType = workTypes.find(wt => wt.label?.toLowerCase() === request.serviceType?.toLowerCase());
+    
+    if (!PermissionService.canManageQuote(currentUser, workType)) {
+      Swal.fire({
+        title: 'Accès Refusé',
+        html: `Vous n'avez pas l'autorisation de créer un devis pour ce type de travaux.<br/><small style="color:#6b7280">Veuillez contacter votre administrateur.</small>`,
+        icon: 'error',
+        confirmButtonColor: '#dc2626'
+      });
+      return;
+    }
+
     // Notification de création de devis
     Swal.fire({
       title: 'Création de Devis',
@@ -885,22 +899,23 @@ const App: React.FC = () => {
         )}
                 
         {(view === 'create' || view === 'edit-quote') && (() => {
-          const canManageQuotes = currentUser.role === UserRole.CHEF_CENTRE || 
-                                  currentUser.role === UserRole.TECHICO_COMMERCIAL ||
-                                  currentUser.role === UserRole.AGENT ||
-                                  currentUser.role === UserRole.CHEF_AGENCE ||
-                                  currentUser.role === UserRole.ADMIN;
+          const workTypeLabel = editingQuote?.serviceType || quoteRequest?.serviceType;
+          const workType = workTypes.find(wt => wt.label?.toLowerCase() === workTypeLabel?.toLowerCase());
+          const canManageQuotes = PermissionService.canManageQuote(currentUser, workType);
+
           if (!canManageQuotes) {
             return (
-              <div className="flex flex-col items-center justify-center py-24 text-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center">
-                  <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.07 16.5C2.3 17.333 3.262 19 4.803 19z" />
+              <div className="flex flex-col items-center justify-center py-24 text-center gap-4 animate-in fade-in duration-500">
+                <div className="w-20 h-20 rounded-[2rem] bg-rose-50 flex items-center justify-center border border-rose-100 shadow-xl shadow-rose-50/50">
+                  <svg className="w-10 h-10 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                 </div>
-                <h2 className="text-lg font-black text-gray-700 uppercase tracking-widest">Accès Non Autorisé</h2>
-                <p className="text-sm text-gray-400 max-w-sm">Seuls le Chef de Centre et le Technico-Commercial sont autorisés à créer ou modifier des devis.</p>
-                <button onClick={() => setView('list')} className="mt-2 px-6 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition-all">
+                <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Accès Restreint</h2>
+                <p className="text-sm text-gray-400 max-w-sm font-bold uppercase tracking-widest leading-relaxed">
+                  Votre rôle ne vous autorise pas à gérer les devis pour ce type de travaux ({workTypeLabel || 'Inconnu'}).
+                </p>
+                <button onClick={() => setView('list')} className="mt-4 px-8 py-3 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-100">
                   Retour à la liste
                 </button>
               </div>
