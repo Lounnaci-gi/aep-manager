@@ -487,6 +487,15 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
   const tax = items.reduce((acc, item) => acc + ((item.totalHT || 0) * (item.tva || 19) / 100), 0);
   const total = subtotal + tax;
 
+  const tvaSummaries = useMemo(() => {
+    const sums: { [key: number]: number } = {};
+    items.forEach(item => {
+      const rate = item.tva ?? defaultTva;
+      sums[rate] = (sums[rate] || 0) + ((item.totalHT || 0) * rate / 100);
+    });
+    return Object.entries(sums).map(([r, a]) => [Number(r), a] as [number, number]).sort((a, b) => b[0] - a[0]);
+  }, [items, defaultTva]);
+
   const grossMargin = items.reduce((acc, item) => {
     const cost = (item.unitPrice || 0) / (1 + (item.margin || 0) / 100);
     return acc + (item.quantity * ((item.unitPrice || 0) - cost));
@@ -1227,7 +1236,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                   );
                 })}
                 <tr>
-                  <td rowSpan={3} className="border-r border-gray-400 p-1.5 text-left align-top leading-tight space-y-0.5">
+                  <td rowSpan={2 + Math.max(1, tvaSummaries.length)} className="border-r border-gray-400 p-1.5 text-left align-top leading-tight space-y-0.5">
                     <p>Compte CCP N°: <span className="font-bold">{activeCentre?.comptePostale || activeUnit?.comptePostale || '...........................'}</span></p>
                     <p>Compte <span className="font-bold">{activeCentre?.bankName || activeUnit?.bankName || '..........'}</span> N°: <span className="font-bold">{activeCentre?.bankAccount || activeUnit?.bankAccount || '...........................'}</span></p>
                     <p>Mode de paiement : Chèque,Espece,versement</p>
@@ -1237,14 +1246,16 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                     {subtotal.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
                   </td>
                 </tr>
-                <tr>
-                  <td colSpan={3} className="border-b border-r border-gray-400 font-bold p-2 text-left uppercase text-gray-600">
-                    TVA {(items[0]?.tva || defaultTva)}%
-                  </td>
-                  <td colSpan={1} className="border-b border-gray-400 p-2 text-right font-bold">
-                    {tax.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
-                  </td>
-                </tr>
+                {(tvaSummaries.length > 0 ? tvaSummaries : [[defaultTva, tax]]).map(([rate, amount], idx) => (
+                  <tr key={idx}>
+                    <td colSpan={3} className="border-b border-r border-gray-400 font-bold p-2 text-left uppercase text-gray-600">
+                      TVA {rate}%
+                    </td>
+                    <td colSpan={1} className="border-b border-gray-400 p-2 text-right font-bold">
+                      {amount.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
+                    </td>
+                  </tr>
+                ))}
                 <tr className="bg-gray-100 text-gray-900">
                   <td colSpan={3} className="font-black p-2 text-left uppercase text-[12px] border-r border-gray-400">NET A PAYER (TTC)</td>
                   <td colSpan={1} className="p-2 text-right font-black text-[11px] tracking-tight">
