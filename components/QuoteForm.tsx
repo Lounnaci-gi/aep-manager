@@ -11,6 +11,8 @@ interface QuoteFormProps {
   onSave: (quote: Quote) => void;
   onDelete?: (id: string) => void;
   onCancel: () => void;
+  onUpdateStatus?: (id: string, status: QuoteStatus) => void;
+  onCancelValidation?: (id: string, reason: string) => void;
   clients: Client[];
   requests: WorkRequest[];
   quotes: Quote[];
@@ -29,6 +31,8 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
   onSave,
   onDelete,
   onCancel,
+  onUpdateStatus,
+  onCancelValidation,
   clients,
   quotes,
   workTypes,
@@ -95,7 +99,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
       }));
     }
     return [];
-  }, [initialData]);
+  });
 
   const [loadingAI, setLoadingAI] = useState(false);
   const [aiRec, setAiRec] = useState(initialData?.aiNotes || '');
@@ -172,6 +176,25 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
     // Le devis est "Pleinement Approuvé" SSI statut APPROVED ET toutes les signatures ok
     return initialData.status === QuoteStatus.APPROVED && allUsersValidated;
   }, [initialData, users, workTypes]);
+
+  // Vérifier si l'utilisateur actuel a validé
+  const hasUserValidated = useMemo(() => {
+    if (!initialData || !currentUser) return false;
+    const currentValidations = initialData.validations || [];
+    return currentValidations.some(v => v.userId === currentUser.id && v.status === 'validated');
+  }, [initialData, currentUser]);
+
+  // Définir les rôles de validation
+  const quoteValidationRoles = useMemo(() => {
+    if (!initialData) return [UserRole.ADMIN, UserRole.CHEF_CENTRE];
+    const matchedWorkType = workTypes.find(wt => wt.label === initialData.serviceType);
+    return (matchedWorkType?.quoteValidationRoles && matchedWorkType.quoteValidationRoles.length > 0)
+      ? matchedWorkType.quoteValidationRoles
+      : [UserRole.ADMIN, UserRole.CHEF_CENTRE];
+  }, [initialData, workTypes]);
+
+  // Vérifier si l'utilisateur peut valider
+  const canValidateQuote = currentUser?.role ? quoteValidationRoles.includes(currentUser.role) : false;
 
   // Relation Clientèle et Chef d'Agence : mode lecture seule
   const isReadOnly = currentUser?.role === UserRole.AGENT || currentUser?.role === UserRole.CHEF_AGENCE;
@@ -1028,7 +1051,8 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
         </form>
       </div>
 
-      {/* Printing Style Orchestration - MOVED OUTSIDE FOR ABSOLUTE PROTECTION */}
+      <div className={activeTab === 'preview' ? 'block' : 'hidden'}>
+        {/* Printing Style Orchestration - MOVED OUTSIDE FOR ABSOLUTE PROTECTION */}
       <style>{`
         @media print {
           @page {
@@ -1361,14 +1385,76 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
         )}
 
         {/* Floating return button to keep preview clean */}
-        <button
-          onClick={() => setActiveTab('form')}
-          className="fixed bottom-8 right-8 z-[110] bg-white border border-slate-200 text-slate-600 px-6 py-3 rounded-full font-black uppercase text-[10px] tracking-widest shadow-2xl hover:bg-slate-50 transition-all flex items-center gap-2"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5L6 10L11 15M6 10H18" /></svg>
-          Retour à l'édition
-        </button>
+        <div className="fixed bottom-8 right-8 z-[110] flex flex-col gap-3 items-end">
+          {/* Validation Controls UI */}
+          {initialData && !initialData.id.startsWith('TEMP-') && canValidateQuote && (
+            <div className="bg-white/80 backdrop-blur-md border border-gray-200 p-2 rounded-2xl shadow-2xl flex gap-2 items-center animate-in slide-in-from-right duration-500">
+              {initialData.status === QuoteStatus.PENDING && (
+                <>
+                  {!hasUserValidated ? (
+                    <>
+                      <button 
+                        onClick={() => onUpdateStatus?.(initialData.id, QuoteStatus.APPROVED)} 
+                        className="bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 flex items-center gap-2"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        Valider le devis
+                      </button>
+                      <button 
+                        onClick={() => onUpdateStatus?.(initialData.id, QuoteStatus.REJECTED)} 
+                        className="bg-rose-600 text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100 flex items-center gap-2"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
+                        Rejeter
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="bg-emerald-50 text-emerald-600 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 border border-emerald-100">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                        Déjà validé par vous
+                      </div>
+                      <button 
+                        onClick={async () => {
+                          const { value: reason } = await Swal.fire({
+                            title: 'Annuler la validation',
+                            input: 'textarea',
+                            inputLabel: 'Motif de l\'annulation',
+                            inputPlaceholder: 'Expliquez pourquoi vous annulez votre signature...',
+                            showCancelButton: true,
+                            confirmButtonText: 'Confirmer l\'annulation',
+                            cancelButtonText: 'Conserver la validation',
+                            confirmButtonColor: '#e11d48',
+                            inputValidator: (value) => {
+                              if (!value) return 'Un motif est obligatoire pour annuler !';
+                            }
+                          });
+                          if (reason && onCancelValidation) {
+                            onCancelValidation(initialData.id, reason);
+                          }
+                        }} 
+                        className="bg-white border border-rose-200 text-rose-600 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-50 transition-all flex items-center gap-2"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        Annuler ma signature
+                      </button>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          <button
+            onClick={() => setActiveTab('form')}
+            className="bg-white border border-slate-200 text-slate-600 px-6 py-3 rounded-full font-black uppercase text-[10px] tracking-widest shadow-2xl hover:bg-slate-50 transition-all flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5L6 10L11 15M6 10H18" /></svg>
+            Retour à l'édition
+          </button>
+        </div>
       </div>
+    </div>
     </div>
   );
 };

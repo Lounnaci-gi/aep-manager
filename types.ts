@@ -29,7 +29,7 @@ export interface ValidationRecord {
   userId: string;
   userName: string;
   validatedAt: string;
-  status: 'pending' | 'validated' | 'rejected';
+  status: 'pending' | 'validated' | 'rejected' | 'cancelled';
   date?: string;
   user?: string;
   reason?: string;

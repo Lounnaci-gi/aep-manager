@@ -421,6 +421,59 @@ const App: React.FC = () => {
     }
   };
 
+  const handleCancelValidation = async (id: string, reason: string) => {
+    try {
+      if (!currentUser) return;
+
+      const quotes = await DbService.getQuotes();
+      const quote = quotes.find(q => q.id === id);
+      if (!quote) throw new Error('Devis non trouvé');
+
+      const currentValidations = quote.validations || [];
+      const updatedValidations = currentValidations.map(v => {
+        if (v.userId === currentUser.id && v.status === 'validated') {
+          return {
+            ...v,
+            status: 'cancelled' as const,
+            reason,
+            date: new Date().toISOString()
+          };
+        }
+        return v;
+      });
+
+      // Si aucune validation n'a été mise à jour (l'utilisateur n'a pas validé ou c'est déjà annulé)
+      if (JSON.stringify(currentValidations) === JSON.stringify(updatedValidations)) {
+        Swal.fire({ title: 'Erreur', text: 'Aucune validation active trouvée pour votre compte.', icon: 'error' });
+        return;
+      }
+
+      const updatedQuote = {
+        ...quote,
+        validations: updatedValidations,
+        status: QuoteStatus.PENDING // Toujours repasser en PENDING si une validation est annulée
+      };
+
+      await DbService.saveQuote(updatedQuote);
+      Swal.fire({ 
+        title: 'Validation Annulée', 
+        text: 'Votre validation a été révoquée avec succès.', 
+        icon: 'success',
+        toast: true,
+        position: 'top-end',
+        timer: 3000
+      });
+      await loadData();
+    } catch (error) {
+      console.error('Erreur lors de l\'annulation de la validation:', error);
+      Swal.fire({
+        title: 'Erreur',
+        text: 'Impossible d\'annuler la validation.',
+        icon: 'error'
+      });
+    }
+  };
+
   const handleSaveRequest = async (request: WorkRequest) => {
     try {
       const saved = await DbService.saveRequest(request);
@@ -801,6 +854,7 @@ const App: React.FC = () => {
             requests={requests}
             onDelete={handleDeleteQuote} 
             onUpdateStatus={handleUpdateStatus} 
+            onCancelValidation={handleCancelValidation}
             onEdit={(q) => { setEditingQuote(q); setView('edit-quote'); }}
             currentUser={currentUser}
             users={users}
@@ -866,6 +920,8 @@ const App: React.FC = () => {
               currentUser={currentUser}
               onSave={handleSaveQuote}
               onDelete={handleDeleteQuote}
+              onUpdateStatus={handleUpdateStatus}
+              onCancelValidation={handleCancelValidation}
               onCancel={() => { setView('list'); setEditingQuote(undefined); }} 
             />
           );

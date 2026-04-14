@@ -11,6 +11,7 @@ interface QuoteListProps {
   requests?: WorkRequest[];
   onDelete: (id: string) => void;
   onUpdateStatus: (id: string, status: QuoteStatus) => void;
+  onCancelValidation?: (id: string, reason: string) => void;
   onEdit: (quote: Quote) => void;
   currentUser?: User;
   users?: User[];
@@ -18,7 +19,7 @@ interface QuoteListProps {
 
 type SortDirection = 'asc' | 'desc' | 'none';
 
-export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies, workTypes, requests, onDelete, onUpdateStatus, onEdit, currentUser, users = [] }) => {
+export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies, workTypes, requests, onDelete, onUpdateStatus, onCancelValidation, onEdit, currentUser, users = [] }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -269,32 +270,63 @@ export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies,
                         <>
                           {quote.status === QuoteStatus.PENDING && (
                             <>
-                              <button 
-                                onClick={() => {
-                                  if (hasUserValidated) {
-                                    Swal.fire({ title: 'Déjà validé', text: 'Vous avez déjà validé ce devis.', icon: 'info', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
-                                    return;
-                                  }
-                                  onUpdateStatus(quote.id, QuoteStatus.APPROVED);
-                                }} 
-                                className={`${hasUserValidated ? 'bg-emerald-100 text-emerald-600' : 'bg-emerald-600 text-white hover:bg-emerald-700'} px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-100/50 flex items-center gap-1`} 
-                                title={hasUserValidated ? 'Vous avez déjà validé' : `Valider le devis (autorisé : ${quoteValidationRoles.join(', ')})`}
-                              >
-                                {hasUserValidated ? (
-                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
-                                ) : (
-                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                )}
-                                {hasUserValidated ? 'Validé par vous' : 'Valider'}
-                              </button>
-                              <button 
-                                onClick={() => onUpdateStatus(quote.id, QuoteStatus.REJECTED)} 
-                                className="bg-rose-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100/50 flex items-center gap-1" 
-                                title="Rejeter le devis"
-                              >
-                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
-                                Rejeter
-                              </button>
+                              {!hasUserValidated ? (
+                                <>
+                                  <button 
+                                    onClick={() => onUpdateStatus(quote.id, QuoteStatus.APPROVED)} 
+                                    className="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100/50 flex items-center gap-1" 
+                                    title={`Valider le devis (autorisé : ${quoteValidationRoles.join(', ')})`}
+                                  >
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    Valider
+                                  </button>
+                                  <button 
+                                    onClick={() => onUpdateStatus(quote.id, QuoteStatus.REJECTED)} 
+                                    className="bg-rose-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100/50 flex items-center gap-1" 
+                                    title="Rejeter le devis"
+                                  >
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
+                                    Rejeter
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button 
+                                    className="bg-emerald-100 text-emerald-600 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-1" 
+                                    title="Vous avez déjà validé ce devis"
+                                    disabled
+                                  >
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                                    Validé par vous
+                                  </button>
+                                  <button 
+                                    onClick={async () => {
+                                      const { value: reason } = await Swal.fire({
+                                        title: 'Annuler la validation',
+                                        input: 'textarea',
+                                        inputLabel: 'Motif de l\'annulation',
+                                        inputPlaceholder: 'Saisissez la raison pour laquelle vous annulez votre validation...',
+                                        inputAttributes: { 'aria-label': 'Saisissez la raison' },
+                                        showCancelButton: true,
+                                        confirmButtonText: 'Confirmer l\'annulation',
+                                        cancelButtonText: 'Ignorer',
+                                        confirmButtonColor: '#e11d48', // rose-600
+                                        inputValidator: (value) => {
+                                          if (!value) return 'Vous devez fournir un motif pour annuler !';
+                                        }
+                                      });
+                                      if (reason && onCancelValidation) {
+                                        onCancelValidation(quote.id, reason);
+                                      }
+                                    }} 
+                                    className="bg-gray-100 text-gray-500 hover:bg-gray-200 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1" 
+                                    title="Annuler ma validation"
+                                  >
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    Annuler
+                                  </button>
+                                </>
+                              )}
                             </>
                           )}
                           <select
