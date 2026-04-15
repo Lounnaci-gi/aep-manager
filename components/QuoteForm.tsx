@@ -1197,7 +1197,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                   <div className="text-[11px] font-bold mt-3">
                     N°: {initialData?.id && !initialData.id.startsWith('TEMP-') && !initialData.id.startsWith('AEP-')
                       ? initialData.id
-                      : getNextQuoteNumber()} du: {new Date().toLocaleDateString('fr-DZ')}
+                      : getNextQuoteNumber()} du: {new Date(initialData?.createdAt || new Date()).toLocaleDateString('fr-DZ')}
                   </div>
                 </div>
               </div>
@@ -1393,7 +1393,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
             {/* Final footer watermark for screen only */}
             <div className="mt-auto pt-10 text-[8px] text-gray-300 italic flex justify-between print:hidden">
               <span>Généré par ADE-MANAGER — Document Officiel</span>
-              <span>Date système : {new Date().toLocaleString()}</span>
+              <span>Date tirage : {new Date().toLocaleString()}</span>
             </div>
           </div>
         </div>

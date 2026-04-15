@@ -1072,7 +1072,7 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
                 DEVIS QUANTITATIF ET ESTIMATIF
               </h1>
               <div className="text-[11px] font-bold mt-1">
-                N°: {getQuoteNumber()} du: {new Date().toLocaleDateString('fr-DZ')}
+                N°: {getQuoteNumber()} du: {new Date(existingQuote?.createdAt || new Date()).toLocaleDateString('fr-DZ')}
               </div>
             </div>
           </div>
