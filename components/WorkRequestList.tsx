@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Swal from 'sweetalert2';
-import { User, UserRole, WorkRequest, RequestStatus, ValidationType, WorkType, Unit, Centre, CommercialAgency, Quote } from '../types';
+import { User, UserRole, WorkRequest, RequestStatus, ValidationType, WorkType, Unit, Centre, CommercialAgency, Quote, WorkflowStepType, BranchementType, ValidationRecord } from '../types';
 import { DbService } from '../services/dbService';
 import { workflowConfig } from '../services/workflowConfig';
 import { PermissionService } from '../services/permissionService';
@@ -514,19 +514,7 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
             setSelectedRequestForWorkflow(null);
           }}
           onCreateQuote={() => {
-            const req = selectedRequestForWorkflow;
-            const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
-            
-            if (!PermissionService.canManageQuote(currentUser, workType)) {
-              Swal.fire({
-                title: 'Accès Refusé',
-                html: `Votre rôle ne vous permet pas d'établir un devis pour ce type de travaux.<br/><small style="color:#6b7280">Veuillez consulter l'administrateur.</small>`,
-                icon: 'error',
-                confirmButtonColor: '#2563eb'
-              });
-              return;
-            }
-            
+            if (!selectedRequestForWorkflow) return;
             onCreateQuote(selectedRequestForWorkflow);
             setSelectedRequestForWorkflow(null);
           }}
@@ -854,25 +842,10 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
 
                       {/* Bouton Établir Devis - Apparaît quand TOUTES les validations sont terminées */}
                       {(() => {
-                        if (req.status === RequestStatus.QUOTED || req.status === RequestStatus.REJECTED || quotes.some(q => q.requestId === req.id)) {
-                          return false;
-                        }
-                        if (req.assignedValidations && req.assignedValidations.length > 0) {
-                          return req.assignedValidations.every(type => req.validations?.find(v => v.type === type && v.status === 'validated'));
-                        }
-                        if (req.validations && req.validations.length > 0) {
-                          return req.validations.every(v => v.status === 'validated');
-                        }
-                        return req.status === RequestStatus.VALIDATED;
-                      })() && (() => {
-                        // Vérifier les rôles autorisés pour créer le devis selon le type de travail
-                        const workType = workTypes.find(wt => wt.label.toLowerCase() === req.serviceType.toLowerCase());
-                        const quoteRoles = workType?.quoteAllowedRoles && workType.quoteAllowedRoles.length > 0
-                          ? workType.quoteAllowedRoles
-                          : [UserRole.ADMIN, UserRole.CHEF_CENTRE, UserRole.TECHICO_COMMERCIAL]; // Fallback par défaut
-                        const canCreateQuote = quoteRoles.includes(currentUser?.role);
-
-                        return canCreateQuote ? (
+                        if (!currentUser) return false;
+                        const result = WorkflowEngine.canPerformAction(req, currentUser.role, WorkflowStepType.QUOTATION);
+                        
+                        return result.allowed ? (
                           <button
                             onClick={() => onCreateQuote(req)}
                             className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100/50 flex items-center gap-2"

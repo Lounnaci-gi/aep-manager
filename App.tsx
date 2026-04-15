@@ -39,6 +39,7 @@ const App: React.FC = () => {
   const [lastSavedRequest, setLastSavedRequest] = useState<WorkRequest | undefined>(undefined);
   const [quoteRequest, setQuoteRequest] = useState<WorkRequest | undefined>(undefined);
   const [quoteInitialTab, setQuoteInitialTab] = useState<'form' | 'preview'>('form');
+  const [returnView, setReturnView] = useState<'requests' | 'list'>('list');
 
   const [loading, setLoading] = useState(true);
   
@@ -312,7 +313,7 @@ const App: React.FC = () => {
       await DbService.saveQuote(quote);
       if (quote.requestId) await DbService.updateRequestStatus(quote.requestId, RequestStatus.QUOTED);
       await loadData();
-      setView('list');
+      setView(returnView);
       setEditingQuote(undefined);
       Swal.fire({ title: 'Devis Archivé', icon: 'success' });
     } catch (error) {
@@ -338,7 +339,7 @@ const App: React.FC = () => {
         }
         
         await loadData();
-        if (view === 'edit-quote') setView('list');
+        if (view === 'edit-quote') setView(returnView);
         Swal.fire('Supprimé', '', 'success');
       } catch (error) {
         console.error("Erreur de suppression:", error);
@@ -622,6 +623,7 @@ const App: React.FC = () => {
       createdAt: new Date().toISOString()
     };
     setEditingQuote(partialQuote as Quote);
+    setReturnView('requests');
     setView('create');
   };
 
@@ -870,8 +872,8 @@ const App: React.FC = () => {
             onDelete={handleDeleteQuote} 
             onUpdateStatus={handleUpdateStatus} 
             onCancelValidation={handleCancelValidation}
-            onEdit={(q) => { setQuoteInitialTab('form'); setEditingQuote(q); setView('edit-quote'); }}
-            onView={(q) => { setQuoteInitialTab('preview'); setEditingQuote(q); setView('edit-quote'); }}
+            onEdit={(q) => { setQuoteInitialTab('form'); setEditingQuote(q); setReturnView('list'); setView('edit-quote'); }}
+            onView={(q) => { setQuoteInitialTab('preview'); setEditingQuote(q); setReturnView('list'); setView('edit-quote'); }}
             currentUser={currentUser}
             users={users}
           />
@@ -940,7 +942,7 @@ const App: React.FC = () => {
               onDelete={handleDeleteQuote}
               onUpdateStatus={handleUpdateStatus}
               onCancelValidation={handleCancelValidation}
-              onCancel={() => { setView('list'); setEditingQuote(undefined); }} 
+              onCancel={() => { setView(returnView); setEditingQuote(undefined); }} 
             />
           );
         })()}
