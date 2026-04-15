@@ -29,45 +29,40 @@ export function updateWorkflowRegistryFromWorkTypes(workTypes: WorkType[]) {
 export function buildWorkflowFromWorkType(workType: WorkType): WorkTypeWorkflow {
   const steps: WorkflowStepConfig[] = [];
   
-  // 1. Validation Chef Agence
-  const agencyRoles = workType.agencyValidationRoles && workType.agencyValidationRoles.length > 0
-    ? workType.agencyValidationRoles
-    : [UserRole.CHEF_AGENCE];
-  
-  steps.push({
-    step: WorkflowStepType.VALIDATION,
-    label: 'Validation Agence',
-    requiredRoles: agencyRoles,
-    validationType: ValidationType.AGENCY,
-    nextStep: WorkflowStepType.VALIDATION
-  });
+  // 1. Validation Chef Agence (seulement si des rôles sont définis)
+  if (workType.agencyValidationRoles && workType.agencyValidationRoles.length > 0) {
+    steps.push({
+      step: WorkflowStepType.VALIDATION,
+      label: 'Validation Agence',
+      requiredRoles: workType.agencyValidationRoles,
+      validationType: ValidationType.AGENCY,
+      nextStep: WorkflowStepType.VALIDATION
+    });
+  }
 
-  // 2. Validation Relation Clientèle
-  const customerServiceRoles = workType.customerServiceValidationRoles && workType.customerServiceValidationRoles.length > 0
-    ? workType.customerServiceValidationRoles
-    : [UserRole.AGENT];
+  // 2. Validation Relation Clientèle (seulement si des rôles sont définis)
+  if (workType.customerServiceValidationRoles && workType.customerServiceValidationRoles.length > 0) {
+    steps.push({
+      step: WorkflowStepType.VALIDATION,
+      label: 'Validation Relation Clientèle',
+      requiredRoles: workType.customerServiceValidationRoles,
+      validationType: ValidationType.CUSTOMER_SERVICE,
+      nextStep: WorkflowStepType.VALIDATION
+    });
+  }
 
-  steps.push({
-    step: WorkflowStepType.VALIDATION,
-    label: 'Validation Relation Clientèle',
-    requiredRoles: customerServiceRoles,
-    validationType: ValidationType.CUSTOMER_SERVICE,
-    nextStep: WorkflowStepType.VALIDATION
-  });
+  // 3. Validation Juriste (seulement si des rôles sont définis)
+  if (workType.lawyerValidationRoles && workType.lawyerValidationRoles.length > 0) {
+    steps.push({
+      step: WorkflowStepType.VALIDATION,
+      label: 'Validation Juriste',
+      requiredRoles: workType.lawyerValidationRoles,
+      validationType: ValidationType.LAWYER,
+      nextStep: WorkflowStepType.VALIDATION
+    });
+  }
 
-  // 3. Validation Juriste
-  const lawyerRoles = workType.lawyerValidationRoles && workType.lawyerValidationRoles.length > 0
-    ? workType.lawyerValidationRoles
-    : [UserRole.JURISTE];
-
-  steps.push({
-    step: WorkflowStepType.VALIDATION,
-    label: 'Validation Juriste',
-    requiredRoles: lawyerRoles,
-    validationType: ValidationType.LAWYER,
-    nextStep: WorkflowStepType.QUOTATION
-  });
-
+  // Rôles autorisés pour le devis
   const quoteRoles = workType.quoteAllowedRoles && workType.quoteAllowedRoles.length > 0
     ? workType.quoteAllowedRoles
     : [UserRole.ADMIN, UserRole.CHEF_CENTRE, UserRole.TECHICO_COMMERCIAL];
@@ -76,6 +71,11 @@ export function buildWorkflowFromWorkType(workType: WorkType): WorkTypeWorkflow 
   
   // 4. Établir Devis
   if (requiresQuotation) {
+    // Si on a des étapes de validation, la dernière doit pointer vers QUOTATION
+    if (steps.length > 0) {
+      steps[steps.length - 1].nextStep = WorkflowStepType.QUOTATION;
+    }
+
     steps.push({
       step: WorkflowStepType.QUOTATION,
       label: 'Établir Devis',
@@ -87,10 +87,12 @@ export function buildWorkflowFromWorkType(workType: WorkType): WorkTypeWorkflow 
     steps.push({
       step: WorkflowStepType.PRINTING,
       label: 'Impression Devis',
-      // Pour l'impression, on autorise ceux qui créent + ceux qui valident
-      requiredRoles: Array.from(new Set([...workType.quoteAllowedRoles!, ...(workType.quoteValidationRoles || [])])),
+      requiredRoles: Array.from(new Set([...quoteRoles, ...(workType.quoteValidationRoles || [])])),
       nextStep: WorkflowStepType.COMPLETION
     });
+  } else if (steps.length > 0) {
+    // Si pas de devis mais des validations, la dernière pointe vers la fin
+    steps[steps.length - 1].nextStep = WorkflowStepType.COMPLETION;
   }
 
   // 6. Demande Complétée

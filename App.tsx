@@ -121,6 +121,8 @@ const App: React.FC = () => {
 
   const handleLogout = () => {
     setCurrentUser(null);
+    setView('dashboard');
+    setQuoteInitialTab('form');
     Swal.fire({
       title: 'Déconnexion',
       text: 'Session terminée.',
@@ -623,6 +625,7 @@ const App: React.FC = () => {
       createdAt: new Date().toISOString()
     };
     setEditingQuote(partialQuote as Quote);
+    setQuoteInitialTab('form');
     setReturnView('requests');
     setView('create');
   };

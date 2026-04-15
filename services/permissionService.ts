@@ -8,10 +8,9 @@ export class PermissionService {
   static isQuoteFullyValidated(quote: Quote | undefined, workType: WorkType | undefined, allUsers: User[]): boolean {
     if (!quote || !workType) return false;
 
-    // 1. Définir les rôles de validation requis
-    const quoteValidationRoles = (workType.quoteValidationRoles && workType.quoteValidationRoles.length > 0)
-      ? workType.quoteValidationRoles
-      : [UserRole.ADMIN, UserRole.CHEF_CENTRE];
+    const quoteValidationRoles = (workType.quoteValidationRoles || []);
+    // Si aucun rôle de validation n'est défini, on considère le devis comme validé dès qu'il est APPROVED
+    if (quoteValidationRoles.length === 0) return quote.status === QuoteStatus.APPROVED;
 
     // 2. Identifier les utilisateurs physiques correspondant à ces rôles
     const requiredUsers = allUsers.filter(u => quoteValidationRoles.includes(u.role));
@@ -35,13 +34,11 @@ export class PermissionService {
     if (!user || !workType) return false;
     
     // Un utilisateur peut imprimer s'il peut gérer le devis OU s'il peut gérer la demande source
-    const quoteRoles = workType.quoteAllowedRoles && workType.quoteAllowedRoles.length > 0
-      ? workType.quoteAllowedRoles
-      : [UserRole.ADMIN, UserRole.CHEF_CENTRE, UserRole.TECHICO_COMMERCIAL];
+    const quoteRoles = workType.quoteAllowedRoles || [];
+    const requestRoles = workType.allowedRoles || [];
 
-    const requestRoles = workType.allowedRoles && workType.allowedRoles.length > 0
-      ? workType.allowedRoles
-      : [UserRole.ADMIN, UserRole.CHEF_CENTRE, UserRole.AGENT];
+    // Admin peut toujours imprimer, ainsi que les rôles configurés
+    return user.role === UserRole.ADMIN || quoteRoles.includes(user.role) || requestRoles.includes(user.role);
 
     return quoteRoles.includes(user.role) || requestRoles.includes(user.role);
   }
@@ -57,13 +54,10 @@ export class PermissionService {
   ): boolean {
     if (!user || !workType) return false;
     
-    const isQuoteRole = (workType.quoteAllowedRoles && workType.quoteAllowedRoles.length > 0
-      ? workType.quoteAllowedRoles
-      : [UserRole.ADMIN, UserRole.CHEF_CENTRE, UserRole.TECHICO_COMMERCIAL]).includes(user.role);
+    if (user.role === UserRole.ADMIN) return true;
 
-    const isRequestRole = (workType.allowedRoles && workType.allowedRoles.length > 0
-      ? workType.allowedRoles
-      : [UserRole.ADMIN, UserRole.CHEF_CENTRE, UserRole.AGENT]).includes(user.role);
+    const isQuoteRole = (workType.quoteAllowedRoles || []).includes(user.role);
+    const isRequestRole = (workType.allowedRoles || []).includes(user.role);
 
     // 1. Si l'utilisateur est dans les rôles spécifiques au devis, il peut gérer (sauf règles métier extra prioritaires)
     if (isQuoteRole) return true;
@@ -86,9 +80,8 @@ export class PermissionService {
   static canDeleteQuote(user: User | null | undefined, workType: WorkType | undefined): boolean {
     if (!user || !workType) return false;
     
-    const deleteRoles = workType.quoteDeleteAllowedRoles && workType.quoteDeleteAllowedRoles.length > 0
-      ? workType.quoteDeleteAllowedRoles
-      : [UserRole.ADMIN, UserRole.CHEF_CENTRE];
+    const deleteRoles = workType.quoteDeleteAllowedRoles || [];
+    return user.role === UserRole.ADMIN || deleteRoles.includes(user.role);
       
     return deleteRoles.includes(user.role);
   }
@@ -99,9 +92,8 @@ export class PermissionService {
   static canManageWorkRequest(user: User | null | undefined, workType: WorkType | undefined): boolean {
     if (!user || !workType) return false;
     
-    const allowedRoles = workType.allowedRoles && workType.allowedRoles.length > 0
-      ? workType.allowedRoles
-      : [UserRole.ADMIN, UserRole.CHEF_CENTRE, UserRole.AGENT, UserRole.TECHICO_COMMERCIAL];
+    const allowedRoles = workType.allowedRoles || [];
+    return user.role === UserRole.ADMIN || allowedRoles.includes(user.role);
       
     return allowedRoles.includes(user.role);
   }
