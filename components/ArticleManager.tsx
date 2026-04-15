@@ -104,14 +104,12 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
     try {
       const validPrices = articlePrices.filter(price => price.price > 0);
       
-      // Déterminer le type de prix par défaut : pose si disponible, sinon prestation
-      let defaultPriceType: 'fourniture' | 'pose' | 'prestation' | undefined;
-      if (validPrices.some(p => p.type === 'pose')) {
-        defaultPriceType = 'pose';
-      } else if (validPrices.some(p => p.type === 'prestation')) {
-        defaultPriceType = 'prestation';
-      } else if (validPrices.some(p => p.type === 'fourniture')) {
+      // Déterminer le type de prix par défaut : fourniture si disponible, sinon pose
+      let defaultPriceType: 'fourniture' | 'pose' | 'fourniture_et_pose' | undefined;
+      if (validPrices.some(p => p.type === 'fourniture')) {
         defaultPriceType = 'fourniture';
+      } else if (validPrices.some(p => p.type === 'pose')) {
+        defaultPriceType = 'pose';
       }
       
       const article: Article = {
@@ -169,7 +167,7 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({ onBack }) => {
       name: article.name,
       description: article.description,
       category: article.category,
-      unit: article.unit || 'U',
+      unit: (article.unit === 'M2' ? 'M²' : article.unit) || 'U',
       material: article.material || '',
       class: article.class || '',
       nominalPressure: article.nominalPressure || '',

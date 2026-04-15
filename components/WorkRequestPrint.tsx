@@ -161,7 +161,7 @@ export const WorkRequestPrint: React.FC<WorkRequestPrintProps> = ({ request, age
         <div style={{ marginBottom: '20px' }}>
           <p style={{ fontSize: '9.5pt', marginBottom: '2px' }}>
             <strong>Et agissant en qualité de : </strong>
-            <span style={{ textDecoration: (request.type === 'Propriétaire' || request.type === 'Proprietaire') ? 'none' : 'line-through', fontWeight: (request.type === 'Propriétaire' || request.type === 'Proprietaire') ? 'bold' : 'normal' }}>Propriétaire</span>, {''}
+            <span style={{ textDecoration: request.type === 'Proprietaire' ? 'none' : 'line-through', fontWeight: request.type === 'Proprietaire' ? 'bold' : 'normal' }}>Propriétaire</span>, {''}
             <span style={{ textDecoration: request.type === 'Locataire' ? 'none' : 'line-through', fontWeight: request.type === 'Locataire' ? 'bold' : 'normal' }}>Locataire</span>, {''}
             <span style={{ textDecoration: request.type === 'Mandataire' ? 'none' : 'line-through', fontWeight: request.type === 'Mandataire' ? 'bold' : 'normal' }}>Mandataire</span> {''}
             <span style={{ fontSize: '8pt', fontStyle: 'italic' }}>(rayer les mentions inutiles)</span>

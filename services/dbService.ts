@@ -1,5 +1,5 @@
 
-import { Quote, QuoteStatus, Client, WorkType, User, UserRole, WorkRequest, RequestStatus, Unit, Centre, CommercialAgency, Article, ArticlePrice } from '../types';
+import { Quote, QuoteStatus, Client, WorkType, User, UserRole, WorkRequest, RequestStatus, Unit, Centre, CommercialAgency, Article, ArticlePrice, TaxRate } from '../types';
 import { hashPasswordWithSalt, verifyPassword } from './passwordUtils';
 
 // ⚠️ IMPORTANT: URL dynamique pour supporter à la fois localhost et l'accès réseau

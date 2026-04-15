@@ -61,7 +61,7 @@ export const StructureManager: React.FC<StructureManagerProps> = ({
   });
 
   const [agencyFormData, setAgencyFormData] = useState<Omit<CommercialAgency, 'id' | 'centreId'>>({
-    name: '', address: '', phone: '', secondaryPhone: '', fax: '', email: ''
+    name: '', address: '', phone: '', secondaryPhone: '', fax: '', email: '', createdAt: ''
   });
 
   const handleOpenUnitForm = (unit?: Unit) => {
@@ -132,10 +132,10 @@ export const StructureManager: React.FC<StructureManagerProps> = ({
     }
     if (agency) {
       setEditingAgency(agency);
-      setAgencyFormData({ name: agency.name, address: agency.address, phone: agency.phone, secondaryPhone: agency.secondaryPhone || '', fax: agency.fax || '', email: agency.email });
+      setAgencyFormData({ name: agency.name, address: agency.address, phone: agency.phone, secondaryPhone: agency.secondaryPhone || '', fax: agency.fax || '', email: agency.email, createdAt: agency.createdAt });
     } else {
       setEditingAgency(null);
-      setAgencyFormData({ name: '', address: '', phone: '', secondaryPhone: '', fax: '', email: '' });
+      setAgencyFormData({ name: '', address: '', phone: '', secondaryPhone: '', fax: '', email: '', createdAt: '' });
     }
     setIsAgencyFormOpen(true);
   };

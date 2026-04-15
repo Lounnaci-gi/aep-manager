@@ -28,6 +28,12 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
   currentUser,
   requests
 }) => {
+  // Obtenir le centreId depuis l'agence
+  const getCentreIdFromAgency = (agencyId: string): string => {
+    const agency = agencies.find(a => a.id === agencyId);
+    return agency?.centreId || '';
+  };
+  
   // Filtrer les types de travaux selon les permissions de l'utilisateur
   const getFilteredWorkTypes = (): WorkType[] => {
     if (!currentUser) return workTypes;
@@ -167,10 +173,12 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
     
     // Utiliser le préfixe du centre de l'utilisateur connecté
     let prefix = 'CB'; // Préfixe par défaut
+    let centreId = ''; // Centre ID
     if (currentUser && centres.length > 0) {
-      const userCentre = centres.find(centre => centre.id === currentUser.centreId);
+      const userCentre = centres.find(centre => centre.id === (currentUser as any).centreId);
       if (userCentre && userCentre.prefix) {
         prefix = userCentre.prefix;
+        centreId = userCentre.id;
       }
     }
     
@@ -266,6 +274,10 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
     const request: WorkRequest = {
       id: initialData?.id || generateTempRequestId(),
       ...formattedData,
+      clientId: initialData?.clientId || '',
+      centreId: initialData?.centreId || getCentreIdFromAgency(formData.agencyId),
+      type: formData.type as 'Proprietaire' | 'Locataire' | 'Mandataire',
+      branchementType: formData.branchementType as any,
       status: initialData?.status || initialStatus,
       assignedValidations,
       validations,

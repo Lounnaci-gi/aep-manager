@@ -21,18 +21,18 @@ export const AgencyManager: React.FC<AgencyManagerProps> = ({
   const [selectedCentreId, setSelectedCentreId] = useState<string>('');
 
   const [agencyFormData, setAgencyFormData] = useState<Omit<CommercialAgency, 'id' | 'centreId'>>({
-    name: '', address: '', phone: '', secondaryPhone: '', fax: '', email: ''
+    name: '', address: '', phone: '', secondaryPhone: '', fax: '', email: '', createdAt: ''
   });
 
   const handleOpenAgencyForm = (centreId?: string, agency?: CommercialAgency) => {
     if (agency) {
       setEditingAgency(agency);
       setSelectedCentreId(agency.centreId);
-      setAgencyFormData({ name: agency.name, address: agency.address, phone: agency.phone, secondaryPhone: agency.secondaryPhone || '', fax: agency.fax || '', email: agency.email });
+      setAgencyFormData({ name: agency.name, address: agency.address, phone: agency.phone, secondaryPhone: agency.secondaryPhone || '', fax: agency.fax || '', email: agency.email, createdAt: agency.createdAt });
     } else {
       setEditingAgency(null);
       setSelectedCentreId(centreId || (centres.length > 0 ? centres[0].id : ''));
-      setAgencyFormData({ name: '', address: '', phone: '', secondaryPhone: '', fax: '', email: '' });
+      setAgencyFormData({ name: '', address: '', phone: '', secondaryPhone: '', fax: '', email: '', createdAt: '' });
     }
     setIsAgencyFormOpen(true);
   };

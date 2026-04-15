@@ -114,7 +114,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ quotes, requests, workType
           <div className="h-64 sm:h-72 w-full">
             <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <PieChart>
-                <Pie data={dataStatus} cx="50%" cy="50%" innerRadius={50} sm:innerRadius={60} outerRadius={80} sm:outerRadius={100} paddingAngle={5} dataKey="value">
+                <Pie data={dataStatus} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value">
                   {dataStatus.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                 </Pie>
                 <Tooltip contentStyle={{ backgroundColor: '#111827', border: 'none', borderRadius: '16px', fontSize: '10px', color: '#fff', fontWeight: '900' }} itemStyle={{ color: '#fff' }} />

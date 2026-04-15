@@ -24,7 +24,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSave, onCancel, initia
     commune: initialData?.commune || '',
     installationAddress: initialData?.installationAddress || '',
     installationCommune: initialData?.installationCommune || '',
-    type: initialData?.type || 'Propriétaire',
+    type: initialData?.type || 'Proprietaire',
   });
 
   const handleSubmit = (e: React.FormEvent) => {

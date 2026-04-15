@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import Swal from 'sweetalert2';
 import { User, UserRole, WorkRequest, RequestStatus, ValidationType, WorkType, Unit, Centre, CommercialAgency, Quote, WorkflowStepType, BranchementType, ValidationRecord } from '../types';
 import { DbService } from '../services/dbService';
-import { workflowConfig } from '../services/workflowConfig';
+import { updateWorkflowRegistryFromWorkTypes, getWorkflowByType } from '../services/workflowConfig';
 import { PermissionService } from '../services/permissionService';
 import { WorkRequestPrint } from './WorkRequestPrint';
 import { QuoteEstablishmentRequestPrint } from './QuoteEstablishmentRequestPrint';
