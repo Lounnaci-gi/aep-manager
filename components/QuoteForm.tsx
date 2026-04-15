@@ -101,8 +101,8 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
   const isAuthorized = useMemo(() => {
     // Si c'est une vue en lecture seule (preview) et que le devis existe déjà, on peut être plus souple
     // Mais ici on suit la règle stricte demandée par l'utilisateur
-    return PermissionService.canManageQuote(currentUser as any, workType);
-  }, [currentUser, workType]);
+    return PermissionService.canManageQuote(currentUser as any, workType, initialData, users);
+  }, [currentUser, workType, initialData, users]);
 
   if (!isAuthorized && initialTab !== 'preview') {
     return (
@@ -116,7 +116,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
         <p className="text-sm text-gray-400 font-bold uppercase tracking-widest leading-relaxed max-w-md mb-8">
           Votre compte ne possède pas les privilèges requis pour éditer des devis de type "{formData.serviceType}".
         </p>
-        <button 
+        <button
           onClick={onCancel}
           className="px-10 py-4 bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-black transition-all shadow-xl"
         >
@@ -679,9 +679,9 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
               <p className="text-[11px] text-gray-400 font-extrabold uppercase tracking-[0.2em] flex items-center gap-2">
                 <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 État : <span className="text-emerald-600 font-black px-2 py-0.5 bg-emerald-50 rounded italic">
-                  {(initialData?.status === QuoteStatus.APPROVED) ? 'Validé' : 
-                   (initialData?.status === QuoteStatus.PENDING || !initialData) ? 'Validation en attente' : 
-                   initialData?.status}
+                  {(initialData?.status === QuoteStatus.APPROVED) ? 'Validé' :
+                    (initialData?.status === QuoteStatus.PENDING || !initialData) ? 'Validation en attente' :
+                      initialData?.status}
                 </span>
               </p>
             </div>
@@ -771,10 +771,10 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                 readOnly
               />
               <div className="flex gap-2">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setActiveTab('form')}
-                  className="p-2 text-gray-400 hover:text-blue-600 transition-colors" 
+                  className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
                   title="Modifier la nature de la demande"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
@@ -1090,7 +1090,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
 
       <div className={activeTab === 'preview' ? 'block' : 'hidden'}>
         {/* Printing Style Orchestration - MOVED OUTSIDE FOR ABSOLUTE PROTECTION */}
-      <style>{`
+        <style>{`
         @media print {
           @page {
             size: A4 portrait;
@@ -1142,356 +1142,351 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
         }
       `}</style>
 
-      {/* Message visible uniquement à l'impression si bloqué */}
-      <div className="print-blocked-message">
-        <h1 style={{ color: 'red', fontSize: '40pt', fontWeight: '900', textTransform: 'uppercase' }}>Impression Interdite</h1>
-        <p style={{ fontSize: '20pt', fontWeight: 'bold' }}>Ce devis n'est pas encore validé par TOUS les responsables requis ({missingValidationsCount} manquantes).</p>
-      </div>
+        {/* Message visible uniquement à l'impression si bloqué */}
+        <div className="print-blocked-message">
+          <h1 style={{ color: 'red', fontSize: '40pt', fontWeight: '900', textTransform: 'uppercase' }}>Impression Interdite</h1>
+          <p style={{ fontSize: '20pt', fontWeight: 'bold' }}>Ce devis n'est pas encore validé par TOUS les responsables requis ({missingValidationsCount} manquantes).</p>
+        </div>
 
-      <div className={activeTab === 'preview' ? 'block animate-in fade-in duration-500' : 'hidden'}>
-        <div className={`quote-print-doc bg-white w-full max-w-[210mm] mx-auto p-[15mm] text-slate-900 block-print-unapproved`} style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
-          {/* Watermark for non-approved quotes */}
-          {initialData?.status !== QuoteStatus.APPROVED && (
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 select-none overflow-hidden">
-              <div className="text-gray-200 text-[120px] font-black uppercase tracking-[0.2em] -rotate-45 whitespace-nowrap opacity-40">
-                NON VALIDÉ
+        <div className={activeTab === 'preview' ? 'block animate-in fade-in duration-500' : 'hidden'}>
+          <div className={`quote-print-doc bg-white w-full max-w-[210mm] mx-auto p-[15mm] text-slate-900 block-print-unapproved`} style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
+            {/* Watermark for non-approved quotes */}
+            {initialData?.status !== QuoteStatus.APPROVED && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 select-none overflow-hidden">
+                <div className="text-gray-200 text-[120px] font-black uppercase tracking-[0.2em] -rotate-45 whitespace-nowrap opacity-40">
+                  NON VALIDÉ
+                </div>
+              </div>
+            )}
+
+
+
+            {/* === HEADER (Logo uniquement) === */}
+            {/* === HEADER (Logo + Textes officiels) === */}
+            <div className="flex justify-center items-center gap-5 mb-6">
+              <img src="/ade.png" alt="ADE" className="h-20 w-auto object-contain" />
+              <div className="flex flex-col items-center">
+                <div className="text-[#1592ef] font-black text-[16px] leading-tight">الجزائرية للمياه</div>
+                <div className="text-[#1592ef] font-black text-[15px] leading-tight tracking-tighter">ⵜⴰⵣⵣⴰⵢⵔⵉⵜ ⵏ ⵡⴰⵎⴰⵏ</div>
+                <div className="text-[#1592ef] font-black text-[11px] uppercase tracking-widest mt-1">ALGERIAN WATER UTILITY</div>
               </div>
             </div>
-          )}
 
-          {/* Republic Text */}
-          <div className="text-center font-bold text-[13px] mb-2 uppercase">
-            الجمهورية الجزائرية الديمقراطية الشعبية
-          </div>
-
-          {/* === HEADER (3 colonnes) === */}
-          <div className="flex justify-between items-center mb-6">
-            <div className="text-[10px] font-bold text-left leading-tight w-1/3">
-              Ministère des ressources en eau<br />
-              E.P ALGERIENNE DES EAUX
-            </div>
-            <div className="flex flex-col items-center w-1/3">
-              <img src="/ade.png" alt="ADE" className="h-16 w-auto object-contain mb-1" />
-            </div>
-            <div className="text-[10px] font-bold text-right leading-tight w-1/3" dir="rtl">
-              وزارة المــــوارد المائيــــــة<br />
-              الجزائريــــــة للميــــــــــاه
-            </div>
-          </div>
-
-          {/* Header Bar */}
-          <div className="bg-gray-100 border border-gray-400 p-2 mb-6" style={{ borderRadius: '8px' }}>
-            <div className="flex justify-between font-bold text-[11px] mb-1">
-              <span>Zone d'Alger</span>
-              <span>Unité de {activeUnit?.name || '................'}</span>
-            </div>
-            <div className="text-[10px] text-center leading-relaxed font-medium">
-              Siège social : {activeUnit?.address || activeCentre?.address || '...........................'} . Tél: {activeUnit?.phone || activeCentre?.phone || '.............'} Fax: {activeUnit?.fax || activeCentre?.fax || '.............'}<br />
-              R.C: {activeUnit?.rc || '..................'} &nbsp;&nbsp;&nbsp; I.F (NIF): {activeUnit?.nif || '..................'} &nbsp;&nbsp;&nbsp; A.I: {activeUnit?.ai || '..................'}
-            </div>
-          </div>
-
-          {/* Title & Ref Section - Using grid to prevent overlaps */}
-          <div className="grid grid-cols-2 gap-6 mb-8 items-start">
-            <div className="space-y-6">
-              <div>
-                <span className="font-bold text-[11px] border-b border-black inline-block pb-0.5">Centre de {activeCentre?.name || '................'}</span>
+            {/* Header Bar */}
+            <div className="bg-gray-100 border border-gray-400 p-2 mb-6" style={{ borderRadius: '8px' }}>
+              <div className="flex justify-between font-bold text-[11px] mb-1">
+                <span>Zone d'Alger</span>
+                <span>Unité de {activeUnit?.name || '................'}</span>
               </div>
-              <div>
-                <h1 className="font-black text-[13px] border-b-[2px] border-black inline-block pb-1 uppercase tracking-tight leading-tight">
-                  DEVIS QUANTITATIF ET ESTIMATIF
-                </h1>
-                <div className="text-[11px] font-bold mt-3">
-                  N°: {initialData?.id && !initialData.id.startsWith('TEMP-') && !initialData.id.startsWith('AEP-')
-                    ? initialData.id
-                    : getNextQuoteNumber()} du: {new Date().toLocaleDateString('fr-DZ')}
+              <div className="text-[10px] text-center leading-relaxed font-medium">
+                Siège social : {activeUnit?.address || activeCentre?.address || '...........................'} . Tél: {activeUnit?.phone || activeCentre?.phone || '.............'} Fax: {activeUnit?.fax || activeCentre?.fax || '.............'}<br />
+                R.C: {activeUnit?.rc || '..................'} &nbsp;&nbsp;&nbsp; I.F (NIF): {activeUnit?.nif || '..................'} &nbsp;&nbsp;&nbsp; A.I: {activeUnit?.ai || '..................'}
+              </div>
+            </div>
+
+            {/* Title & Ref Section - Using grid to prevent overlaps */}
+            <div className="grid grid-cols-2 gap-6 mb-8 items-start">
+              <div className="space-y-6">
+                <div>
+                  <span className="font-bold text-[11px] border-b border-black inline-block pb-0.5">Centre de {activeCentre?.name || '................'}</span>
+                </div>
+                <div>
+                  <h1 className="font-black text-[13px] border-b-[2px] border-black inline-block pb-1 uppercase tracking-tight leading-tight">
+                    DEVIS QUANTITATIF ET ESTIMATIF
+                  </h1>
+                  <div className="text-[11px] font-bold mt-3">
+                    N°: {initialData?.id && !initialData.id.startsWith('TEMP-') && !initialData.id.startsWith('AEP-')
+                      ? initialData.id
+                      : getNextQuoteNumber()} du: {new Date().toLocaleDateString('fr-DZ')}
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-fit min-w-[85mm] max-w-full ml-auto border border-gray-400 p-4 min-h-[45mm] shadow-sm bg-white" style={{ borderRadius: '8px' }}>
+                <div className="text-[11px] leading-relaxed text-gray-900">
+                  <div className="mb-3"><span className="font-bold uppercase pr-2">Doit A :</span> <span className="font-black uppercase">{isLegal ? formData.businessName : `${formData.civility || ''} ${formData.clientName}`.trim()}</span></div>
+                  <div className="mb-1.5"><span className="font-bold pr-2">Adresse :</span> <span className="uppercase">{formData.installationAddress ? formData.installationAddress : '...........................................'}</span></div>
+                  <div className="mb-1.5"><span className="font-bold pr-2">Commune :</span> <span className="uppercase">{formData.installationCommune ? formData.installationCommune : '...................................'}</span></div>
+                  <div className="mb-1.5"><span className="font-bold pr-2">Tél :</span> <span className="uppercase">{formData.clientPhone ? formData.clientPhone : '...........................................'}</span></div>
+                  <div className="mb-1.5"><span className="font-bold pr-2">Fax :</span> <span className="uppercase">.........................................</span></div>
                 </div>
               </div>
             </div>
 
-            <div className="w-fit min-w-[85mm] max-w-full ml-auto border border-gray-400 p-4 min-h-[45mm] shadow-sm bg-white" style={{ borderRadius: '8px' }}>
-              <div className="text-[11px] leading-relaxed text-gray-900">
-                <div className="mb-3"><span className="font-bold uppercase pr-2">Doit A :</span> <span className="font-black uppercase">{isLegal ? formData.businessName : `${formData.civility || ''} ${formData.clientName}`.trim()}</span></div>
-                <div className="mb-1.5"><span className="font-bold pr-2">Adresse :</span> <span className="uppercase">{formData.installationAddress ? formData.installationAddress : '...........................................'}</span></div>
-                <div className="mb-1.5"><span className="font-bold pr-2">Commune :</span> <span className="uppercase">{formData.installationCommune ? formData.installationCommune : '...................................'}</span></div>
-                <div className="mb-1.5"><span className="font-bold pr-2">Tél :</span> <span className="uppercase">{formData.clientPhone ? formData.clientPhone : '...........................................'}</span></div>
-                <div className="mb-1.5"><span className="font-bold pr-2">Fax :</span> <span className="uppercase">.........................................</span></div>
+            {/* Title Section - Dynamic based on work type */}
+            <div className="mb-6 pt-4 space-y-2">
+              <div>
+                <span className="font-black text-[11px] uppercase border-b border-black pb-0.5">OBJET :</span>
+                <span className="text-[11px] ml-2 leading-relaxed">{formData.serviceType}</span>
               </div>
+              {formData.projectTitle && (
+                <div>
+                  <span className="font-bold text-[11px] lowercase italic">Désignation :</span>
+                  <span className="font-medium text-[11px] ml-2 uppercase leading-relaxed">{formData.projectTitle}</span>
+                </div>
+              )}
+              {formData.description && (
+                <div>
+                  <span className="font-bold text-[11px] lowercase italic">Description :</span>
+                  <span className="font-medium text-[11px] ml-2 leading-relaxed">{formData.description}</span>
+                </div>
+              )}
+              {/* Technical details for specific work types */}
+              {workTypeConfig.showBranchementType && formData.branchementType && (
+                <div>
+                  <span className="font-bold text-[11px] lowercase italic">Type de branchement :</span>
+                  <span className="font-medium text-[11px] ml-2 uppercase leading-relaxed">{formData.branchementType}</span>
+                </div>
+              )}
+              {workTypeConfig.showDiameter && formData.diameter && (
+                <div>
+                  <span className="font-bold text-[11px] lowercase italic">Diamètre :</span>
+                  <span className="font-medium text-[11px] ml-2 uppercase leading-relaxed">{formData.diameter}</span>
+                </div>
+              )}
+              {workTypeConfig.showFlowRate && formData.flowRate && (
+                <div>
+                  <span className="font-bold text-[11px] lowercase italic">Débit :</span>
+                  <span className="font-medium text-[11px] ml-2 uppercase leading-relaxed">{formData.flowRate}</span>
+                </div>
+              )}
             </div>
-          </div>
 
-          {/* Title Section - Dynamic based on work type */}
-          <div className="mb-6 pt-4 space-y-2">
-            <div>
-              <span className="font-black text-[11px] uppercase border-b border-black pb-0.5">OBJET :</span>
-              <span className="text-[11px] ml-2 leading-relaxed">{formData.serviceType}</span>
-            </div>
-            {formData.projectTitle && (
-              <div>
-                <span className="font-bold text-[11px] lowercase italic">Désignation :</span>
-                <span className="font-medium text-[11px] ml-2 uppercase leading-relaxed">{formData.projectTitle}</span>
-              </div>
-            )}
-            {formData.description && (
-              <div>
-                <span className="font-bold text-[11px] lowercase italic">Description :</span>
-                <span className="font-medium text-[11px] ml-2 leading-relaxed">{formData.description}</span>
-              </div>
-            )}
-            {/* Technical details for specific work types */}
-            {workTypeConfig.showBranchementType && formData.branchementType && (
-              <div>
-                <span className="font-bold text-[11px] lowercase italic">Type de branchement :</span>
-                <span className="font-medium text-[11px] ml-2 uppercase leading-relaxed">{formData.branchementType}</span>
-              </div>
-            )}
-            {workTypeConfig.showDiameter && formData.diameter && (
-              <div>
-                <span className="font-bold text-[11px] lowercase italic">Diamètre :</span>
-                <span className="font-medium text-[11px] ml-2 uppercase leading-relaxed">{formData.diameter}</span>
-              </div>
-            )}
-            {workTypeConfig.showFlowRate && formData.flowRate && (
-              <div>
-                <span className="font-bold text-[11px] lowercase italic">Débit :</span>
-                <span className="font-medium text-[11px] ml-2 uppercase leading-relaxed">{formData.flowRate}</span>
-              </div>
-            )}
-          </div>
+            {/* Table */}
+            {/* Table Wrap for Border Radius */}
+            <div className="mb-6 overflow-hidden border border-gray-400" style={{ borderRadius: '8px' }}>
+              <table className="w-full border-collapse font-sans text-[11px]">
+                <thead>
+                  <tr className="bg-gray-100 font-bold uppercase text-[10px]">
+                    <th className="border-b border-r border-gray-400 p-2 text-left">Désignation des travaux</th>
+                    <th className="border-b border-r border-gray-400 p-2 text-center w-16">Unité</th>
+                    <th className="border-b border-r border-gray-400 p-2 text-center w-16">Qtité</th>
+                    <th className="border-b border-r border-gray-400 p-2 text-right w-24">P.U (HT)</th>
+                    <th className="border-b border-gray-400 p-2 text-right w-28">Montant HT</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((item, i) => {
+                    const unit = item.unit || 'U';
 
-          {/* Table */}
-          {/* Table Wrap for Border Radius */}
-          <div className="mb-6 overflow-hidden border border-gray-400" style={{ borderRadius: '8px' }}>
-            <table className="w-full border-collapse font-sans text-[11px]">
-              <thead>
-                <tr className="bg-gray-100 font-bold uppercase text-[10px]">
-                  <th className="border-b border-r border-gray-400 p-2 text-left">Désignation des travaux</th>
-                  <th className="border-b border-r border-gray-400 p-2 text-center w-16">Unité</th>
-                  <th className="border-b border-r border-gray-400 p-2 text-center w-16">Qtité</th>
-                  <th className="border-b border-r border-gray-400 p-2 text-right w-24">P.U (HT)</th>
-                  <th className="border-b border-gray-400 p-2 text-right w-28">Montant HT</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((item, i) => {
-                  const unit = item.unit || 'U';
-
-                  return (
-                    <tr key={i} className="hover:bg-gray-50/50">
-                      <td className="border-b border-r border-gray-400 px-2 py-1.5 font-medium">
-                        {item.priceTypeIndicator && (
-                          <span className="inline-block mr-1.5 px-1.5 py-0.5 bg-blue-100 text-blue-800 text-[9px] font-bold rounded">
-                            {item.priceTypeIndicator}
-                          </span>
-                        )}
-                        {item.description}
-                      </td>
-                      <td className="border-b border-r border-gray-400 px-2 py-1.5 text-center">{unit}</td>
-                      <td className="border-b border-r border-gray-400 px-2 py-1.5 text-center font-bold">{item.quantity}</td>
-                      <td className="border-b border-r border-gray-400 px-2 py-1.5 text-right whitespace-nowrap">{item.unitPrice.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
-                      <td className="border-b border-gray-400 px-2 py-1.5 text-right font-bold whitespace-nowrap">{(item.totalHT || 0).toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
-                    </tr>
-                  );
-                })}
-                <tr>
-                  <td rowSpan={2 + Math.max(1, tvaSummaries.length)} className="border-r border-gray-400 p-1.5 text-left align-top leading-tight space-y-0.5">
-                    <p>Compte CCP N°: <span className="font-bold">{activeCentre?.comptePostale || activeUnit?.comptePostale || '...........................'}</span></p>
-                    <p>Compte <span className="font-bold">{activeCentre?.bankName || activeUnit?.bankName || '..........'}</span> N°: <span className="font-bold">{activeCentre?.bankAccount || activeUnit?.bankAccount || '...........................'}</span></p>
-                    <p>Mode de paiement : Chèque,Espece,versement</p>
-                  </td>
-                  <td colSpan={3} className="border-b border-r border-gray-400 font-bold p-2 text-left uppercase text-gray-600">Total HT</td>
-                  <td colSpan={1} className="border-b border-gray-400 p-2 text-right font-black text-[12px]">
-                    {subtotal.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
-                  </td>
-                </tr>
-                {(tvaSummaries.length > 0 ? tvaSummaries : [[defaultTva, tax]]).map(([rate, amount], idx) => (
-                  <tr key={idx}>
-                    <td colSpan={3} className="border-b border-r border-gray-400 font-bold p-2 text-left uppercase text-gray-600">
-                      TVA {rate}%
+                    return (
+                      <tr key={i} className="hover:bg-gray-50/50">
+                        <td className="border-b border-r border-gray-400 px-2 py-1.5 font-medium">
+                          {item.priceTypeIndicator && (
+                            <span className="inline-block mr-1.5 px-1.5 py-0.5 bg-blue-100 text-blue-800 text-[9px] font-bold rounded">
+                              {item.priceTypeIndicator}
+                            </span>
+                          )}
+                          {item.description}
+                        </td>
+                        <td className="border-b border-r border-gray-400 px-2 py-1.5 text-center">{unit}</td>
+                        <td className="border-b border-r border-gray-400 px-2 py-1.5 text-center font-bold">{item.quantity}</td>
+                        <td className="border-b border-r border-gray-400 px-2 py-1.5 text-right whitespace-nowrap">{item.unitPrice.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
+                        <td className="border-b border-gray-400 px-2 py-1.5 text-right font-bold whitespace-nowrap">{(item.totalHT || 0).toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    );
+                  })}
+                  <tr>
+                    <td rowSpan={2 + Math.max(1, tvaSummaries.length)} className="border-r border-gray-400 p-1.5 text-left align-top leading-tight space-y-0.5">
+                      <p>Compte CCP N°: <span className="font-bold">{activeCentre?.comptePostale || activeUnit?.comptePostale || '...........................'}</span></p>
+                      <p>Compte <span className="font-bold">{activeCentre?.bankName || activeUnit?.bankName || '..........'}</span> N°: <span className="font-bold">{activeCentre?.bankAccount || activeUnit?.bankAccount || '...........................'}</span></p>
+                      <p>Mode de paiement : Chèque,Espece,versement</p>
                     </td>
-                    <td colSpan={1} className="border-b border-gray-400 p-2 text-right font-bold">
-                      {amount.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
+                    <td colSpan={3} className="border-b border-r border-gray-400 font-bold p-2 text-left uppercase text-gray-600">Total HT</td>
+                    <td colSpan={1} className="border-b border-gray-400 p-2 text-right font-black text-[12px]">
+                      {subtotal.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
                     </td>
                   </tr>
-                ))}
-                <tr className="bg-gray-100 text-gray-900">
-                  <td colSpan={3} className="font-black p-2 text-left uppercase text-[12px] border-r border-gray-400">NET A PAYER (TTC)</td>
-                  <td colSpan={1} className="p-2 text-right font-black text-[11px] tracking-tight">
-                    {total.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })} DA
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+                  {(tvaSummaries.length > 0 ? tvaSummaries : [[defaultTva, tax]]).map(([rate, amount], idx) => (
+                    <tr key={idx}>
+                      <td colSpan={3} className="border-b border-r border-gray-400 font-bold p-2 text-left uppercase text-gray-600">
+                        TVA {rate}%
+                      </td>
+                      <td colSpan={1} className="border-b border-gray-400 p-2 text-right font-bold">
+                        {amount.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })}
+                      </td>
+                    </tr>
+                  ))}
+                  <tr className="bg-gray-100 text-gray-900">
+                    <td colSpan={3} className="font-black p-2 text-left uppercase text-[12px] border-r border-gray-400">NET A PAYER (TTC)</td>
+                    <td colSpan={1} className="p-2 text-right font-black text-[11px] tracking-tight">
+                      {total.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })} DA
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
 
-          {/* Validity Note - Dynamic based on work type */}
-          <div className="mt-8 text-[11px] space-y-3">
-            <div className="bg-gray-50 p-3 rounded-xl">
-              <p className="font-black text-[11px] tracking-tight capitalize leading-relaxed">
-                {numberToFrenchLetters(total).toLowerCase()}.
+            {/* Validity Note - Dynamic based on work type */}
+            <div className="mt-8 text-[11px] space-y-3">
+              <div className="bg-gray-50 p-3 rounded-xl">
+                <p className="font-black text-[11px] tracking-tight capitalize leading-relaxed">
+                  {numberToFrenchLetters(total).toLowerCase()}.
+                </p>
+              </div>
+              <p className="italic text-[9px] text-gray-500">
+                {workTypeConfig.isAudit
+                  ? 'Nb: Ce devis est valable pour une durée de 03 mois à compter de sa date d\'établissement.'
+                  : workTypeConfig.isReparation
+                    ? 'Nb: Ce devis est valable pour une durée de 02 mois à compter de sa date d\'établissement.'
+                    : 'Nb: Ce devis est valable pour une durée de 01 mois à compter de sa date d\'établissement.'}
               </p>
             </div>
-            <p className="italic text-[9px] text-gray-500">
-              {workTypeConfig.isAudit
-                ? 'Nb: Ce devis est valable pour une durée de 03 mois à compter de sa date d\'établissement.'
-                : workTypeConfig.isReparation
-                  ? 'Nb: Ce devis est valable pour une durée de 02 mois à compter de sa date d\'établissement.'
-                  : 'Nb: Ce devis est valable pour une durée de 01 mois à compter de sa date d\'établissement.'}
-            </p>
-          </div>
 
-          {/* Dynamic Signatures Section - Based on work type and validation roles */}
-          <div className="mt-12 space-y-8">
-            {/* Show Chef Agence signature for most work types */}
-            {(workTypeConfig.isBranchement || workTypeConfig.isReparation || workTypeConfig.isChangement || workTypeConfig.isDeménagement) && (
-              <div className="flex justify-end">
-                <div className="text-center w-64">
-                  <p className="font-black text-[11px] border-b-2 border-black inline-block pb-1 uppercase tracking-widest mb-16">
-                    LE CHEF D'AGENCE COMMERCIALE
-                  </p>
-                  <div className="text-[9px] text-gray-400 italic">(Nom, Signature et Cachet)</div>
-                </div>
-              </div>
-            )}
-
-            {/* Show Chef Centre signature for audit and complex works */}
-            {(workTypeConfig.isAudit || workTypeConfig.isRésiliation || workTypeConfig.isFermeture) && (
-              <div className="flex justify-end">
-                <div className="text-center w-64">
-                  <p className="font-black text-[11px] border-b-2 border-black inline-block pb-1 uppercase tracking-widest mb-16">
-                    LE CHEF DE CENTRE
-                  </p>
-                  <div className="text-[9px] text-gray-400 italic">(Nom, Signature et Cachet)</div>
-                </div>
-              </div>
-            )}
-
-            {/* Show Technico-Commercial for technical works */}
-            {workTypeConfig.isAudit && (
-              <div className="flex justify-end">
-                <div className="text-center w-64">
-                  <p className="font-black text-[11px] border-b-2 border-black inline-block pb-1 uppercase tracking-widest mb-16">
-                    LE RESPONSABLE TECHNIQUE
-                  </p>
-                  <div className="text-[9px] text-gray-400 italic">(Nom, Signature et Cachet)</div>
-                </div>
-              </div>
-            )}
-
-            {/* Default signature if no specific type matched */}
-            {!workTypeConfig.isBranchement &&
-              !workTypeConfig.isReparation &&
-              !workTypeConfig.isChangement &&
-              !workTypeConfig.isDeménagement &&
-              !workTypeConfig.isAudit &&
-              !workTypeConfig.isRésiliation &&
-              !workTypeConfig.isFermeture && (
+            {/* Dynamic Signatures Section - Based on work type and validation roles */}
+            <div className="mt-12 space-y-8">
+              {/* Show Chef Agence signature for most work types */}
+              {(workTypeConfig.isBranchement || workTypeConfig.isReparation || workTypeConfig.isChangement || workTypeConfig.isDeménagement) && (
                 <div className="flex justify-end">
                   <div className="text-center w-64">
                     <p className="font-black text-[11px] border-b-2 border-black inline-block pb-1 uppercase tracking-widest mb-16">
-                      LE RESPONSABLE
+                      LE CHEF D'AGENCE COMMERCIALE
                     </p>
                     <div className="text-[9px] text-gray-400 italic">(Nom, Signature et Cachet)</div>
                   </div>
                 </div>
               )}
-          </div>
 
-          {/* Final footer watermark for screen only */}
-          <div className="mt-auto pt-10 text-[8px] text-gray-300 italic flex justify-between print:hidden">
-            <span>Généré par ADE-MANAGER — Document Officiel</span>
-            <span>Date système : {new Date().toLocaleString()}</span>
+              {/* Show Chef Centre signature for audit and complex works */}
+              {(workTypeConfig.isAudit || workTypeConfig.isRésiliation || workTypeConfig.isFermeture) && (
+                <div className="flex justify-end">
+                  <div className="text-center w-64">
+                    <p className="font-black text-[11px] border-b-2 border-black inline-block pb-1 uppercase tracking-widest mb-16">
+                      LE CHEF DE CENTRE
+                    </p>
+                    <div className="text-[9px] text-gray-400 italic">(Nom, Signature et Cachet)</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Show Technico-Commercial for technical works */}
+              {workTypeConfig.isAudit && (
+                <div className="flex justify-end">
+                  <div className="text-center w-64">
+                    <p className="font-black text-[11px] border-b-2 border-black inline-block pb-1 uppercase tracking-widest mb-16">
+                      LE RESPONSABLE TECHNIQUE
+                    </p>
+                    <div className="text-[9px] text-gray-400 italic">(Nom, Signature et Cachet)</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Default signature if no specific type matched */}
+              {!workTypeConfig.isBranchement &&
+                !workTypeConfig.isReparation &&
+                !workTypeConfig.isChangement &&
+                !workTypeConfig.isDeménagement &&
+                !workTypeConfig.isAudit &&
+                !workTypeConfig.isRésiliation &&
+                !workTypeConfig.isFermeture && (
+                  <div className="flex justify-end">
+                    <div className="text-center w-64">
+                      <p className="font-black text-[11px] border-b-2 border-black inline-block pb-1 uppercase tracking-widest mb-16">
+                        LE RESPONSABLE
+                      </p>
+                      <div className="text-[9px] text-gray-400 italic">(Nom, Signature et Cachet)</div>
+                    </div>
+                  </div>
+                )}
+            </div>
+
+            {/* Final footer watermark for screen only */}
+            <div className="mt-auto pt-10 text-[8px] text-gray-300 italic flex justify-between print:hidden">
+              <span>Généré par ADE-MANAGER — Document Officiel</span>
+              <span>Date système : {new Date().toLocaleString()}</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="px-8 py-6 mb-10 max-w-4xl mx-auto print:hidden">
-        {/* ⚠️ Bannière d'avertissement si devis non validé */}
-        {!isFullyApproved && (
-          <div className="mb-5 flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-2xl">
-            <div className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-amber-100">
-              <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-            </div>
-            <div>
-              <p className="text-xs font-black text-amber-800 uppercase tracking-widest">Impression bloquée</p>
-              <p className="text-[11px] text-amber-600 font-medium mt-0.5">
-                Ce devis nécessite encore <strong className="font-black h-[18px] inline-flex items-center px-2 bg-amber-200 rounded text-amber-900 mx-1">{missingValidationsCount}</strong> validation(s) pour être imprimable.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Floating return button to keep preview clean */}
-        <div className="fixed bottom-8 right-8 z-[110] flex flex-col gap-3 items-end">
-          {/* Validation Controls UI */}
-          {initialData && !initialData.id.startsWith('TEMP-') && canValidateQuote && (
-            <div className="bg-white/80 backdrop-blur-md border border-gray-200 p-2 rounded-2xl shadow-2xl flex gap-2 items-center animate-in slide-in-from-right duration-500">
-              {initialData.status === QuoteStatus.PENDING && (
-                <>
-                  {!hasUserValidated ? (
-                    <>
-                      <button 
-                        onClick={() => onUpdateStatus?.(initialData.id, QuoteStatus.APPROVED)} 
-                        className="bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 flex items-center gap-2"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        Valider le devis
-                      </button>
-                      <button 
-                        onClick={() => onUpdateStatus?.(initialData.id, QuoteStatus.REJECTED)} 
-                        className="bg-rose-600 text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100 flex items-center gap-2"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
-                        Rejeter
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <div className="bg-emerald-50 text-emerald-600 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 border border-emerald-100">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
-                        Déjà validé par vous
-                      </div>
-                      <button 
-                        onClick={async () => {
-                          const { value: reason } = await Swal.fire({
-                            title: 'Annuler la validation',
-                            input: 'textarea',
-                            inputLabel: 'Motif de l\'annulation',
-                            inputPlaceholder: 'Expliquez pourquoi vous annulez votre signature...',
-                            showCancelButton: true,
-                            confirmButtonText: 'Confirmer l\'annulation',
-                            cancelButtonText: 'Conserver la validation',
-                            confirmButtonColor: '#e11d48',
-                            inputValidator: (value) => {
-                              if (!value) return 'Un motif est obligatoire pour annuler !';
-                            }
-                          });
-                          if (reason && onCancelValidation) {
-                            onCancelValidation(initialData.id, reason);
-                          }
-                        }} 
-                        className="bg-white border border-rose-200 text-rose-600 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-50 transition-all flex items-center gap-2"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        Annuler ma signature
-                      </button>
-                    </>
-                  )}
-                </>
-              )}
+        <div className="px-8 py-6 mb-10 max-w-4xl mx-auto print:hidden">
+          {/* ⚠️ Bannière d'avertissement si devis non validé */}
+          {!isFullyApproved && (
+            <div className="mb-5 flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-2xl">
+              <div className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-amber-100">
+                <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+              </div>
+              <div>
+                <p className="text-xs font-black text-amber-800 uppercase tracking-widest">Impression bloquée</p>
+                <p className="text-[11px] text-amber-600 font-medium mt-0.5">
+                  Ce devis nécessite encore <strong className="font-black h-[18px] inline-flex items-center px-2 bg-amber-200 rounded text-amber-900 mx-1">{missingValidationsCount}</strong> validation(s) pour être imprimable.
+                </p>
+              </div>
             </div>
           )}
 
-          <button
-            onClick={() => setActiveTab('form')}
-            className="bg-white border border-slate-200 text-slate-600 px-6 py-3 rounded-full font-black uppercase text-[10px] tracking-widest shadow-2xl hover:bg-slate-50 transition-all flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5L6 10L11 15M6 10H18" /></svg>
-            Retour à l'édition
-          </button>
+          {/* Floating return button to keep preview clean */}
+          <div className="fixed bottom-8 right-8 z-[110] flex flex-col gap-3 items-end">
+            {/* Validation Controls UI */}
+            {initialData && !initialData.id.startsWith('TEMP-') && canValidateQuote && (
+              <div className="bg-white/80 backdrop-blur-md border border-gray-200 p-2 rounded-2xl shadow-2xl flex gap-2 items-center animate-in slide-in-from-right duration-500">
+                {initialData.status === QuoteStatus.PENDING && (
+                  <>
+                    {!hasUserValidated ? (
+                      <>
+                        <button
+                          onClick={() => onUpdateStatus?.(initialData.id, QuoteStatus.APPROVED)}
+                          className="bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 flex items-center gap-2"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                          Valider le devis
+                        </button>
+                        <button
+                          onClick={() => onUpdateStatus?.(initialData.id, QuoteStatus.REJECTED)}
+                          className="bg-rose-600 text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100 flex items-center gap-2"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
+                          Rejeter
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <div className="bg-emerald-50 text-emerald-600 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 border border-emerald-100">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                          Déjà validé par vous
+                        </div>
+                        <button
+                          onClick={async () => {
+                            const { value: reason } = await Swal.fire({
+                              title: 'Annuler la validation',
+                              input: 'textarea',
+                              inputLabel: 'Motif de l\'annulation',
+                              inputPlaceholder: 'Expliquez pourquoi vous annulez votre signature...',
+                              showCancelButton: true,
+                              confirmButtonText: 'Confirmer l\'annulation',
+                              cancelButtonText: 'Conserver la validation',
+                              confirmButtonColor: '#e11d48',
+                              inputValidator: (value) => {
+                                if (!value) return 'Un motif est obligatoire pour annuler !';
+                              }
+                            });
+                            if (reason && onCancelValidation) {
+                              onCancelValidation(initialData.id, reason);
+                            }
+                          }}
+                          className="bg-white border border-rose-200 text-rose-600 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-50 transition-all flex items-center gap-2"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                          Annuler ma signature
+                        </button>
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+
+            {isAuthorized && (
+              <button
+                onClick={() => setActiveTab('form')}
+                className="bg-white border border-slate-200 text-slate-600 px-6 py-3 rounded-full font-black uppercase text-[10px] tracking-widest shadow-2xl hover:bg-slate-50 transition-all flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5L6 10L11 15M6 10H18" /></svg>
+                Retour à l'édition
+              </button>
+            )}
+          </div>
         </div>
       </div>
-    </div>
     </div>
   );
 };

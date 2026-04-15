@@ -3,6 +3,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Swal from 'sweetalert2';
 import { Quote, QuoteStatus, Centre, CommercialAgency, WorkType, User, UserRole, WorkRequest } from '../types';
+import { PermissionService } from '../services/permissionService';
 
 interface QuoteListProps {
   quotes: Quote[];
@@ -224,23 +225,27 @@ export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies,
             {filteredAndSortedQuotes.map((quote) => {
               const expired = checkIsExpired(quote.createdAt, quote.status);
               
-              // Trouver le type de travaux correspondant au devis
               const matchedWorkType = workTypes.find(wt => wt.label === quote.serviceType);
-              // Rôles autorisés à valider ce devis (quoteValidationRoles ou fallback ADMIN/CHEF_CENTRE)
-              const quoteValidationRoles: UserRole[] = (matchedWorkType?.quoteValidationRoles && matchedWorkType.quoteValidationRoles.length > 0)
+
+              // --- NOUVELLE LOGIQUE DE PERMISSIONS CENTRALISÉE ---
+              const canPrint = PermissionService.canPrintQuote(currentUser, matchedWorkType);
+              const canEdit = PermissionService.canManageQuote(currentUser, matchedWorkType, quote, users);
+              const canDelete = PermissionService.canDeleteQuote(currentUser, matchedWorkType);
+              const isFullyApproved = PermissionService.isQuoteFullyValidated(quote, matchedWorkType, users);
+              
+              // Données pour le tooltip de validation
+              const quoteValidationRoles = (matchedWorkType?.quoteValidationRoles && matchedWorkType.quoteValidationRoles.length > 0)
                 ? matchedWorkType.quoteValidationRoles
                 : [UserRole.ADMIN, UserRole.CHEF_CENTRE];
-              const canValidateQuote = currentUser?.role ? quoteValidationRoles.includes(currentUser.role) : false;
               
-              // Vérifier si toutes les validations multi-utilisateurs sont complètes
               const requiredUsers = users.filter(u => quoteValidationRoles.includes(u.role));
               const currentValidations = quote.validations || [];
               const validatedUserIds = currentValidations.filter(v => v.status === 'validated').map(v => v.userId);
               const allUsersValidated = requiredUsers.every(u => validatedUserIds.includes(u.id));
-              
-              const isFullyApproved = quote.status === QuoteStatus.APPROVED && allUsersValidated;
               const hasUserValidated = currentUser ? validatedUserIds.includes(currentUser.id) : false;
               const missingUsers = requiredUsers.filter(u => !validatedUserIds.includes(u.id));
+              
+              const canValidateQuote = currentUser?.role ? quoteValidationRoles.includes(currentUser.role) : false;
 
               return (
                 <tr key={quote.id} className={`hover:bg-blue-50/30 transition-colors group ${expired ? 'bg-rose-50/10' : ''}`}>
@@ -282,8 +287,8 @@ export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies,
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right">
                     <div className="flex justify-end items-center gap-3">
-                      {/* Bouton Visualiser (œil) → ouvre l'aperçu du devis */}
-                      {currentUser?.role !== UserRole.JURISTE && (
+                      {/* Bouton Visualiser/Imprimer → accessible si canPrint est vrai */}
+                      {currentUser?.role !== UserRole.JURISTE && canPrint && (
                         <button 
                           onClick={() => { onView(quote); }} 
                           className={`p-2 rounded-xl transition-all ${
@@ -315,23 +320,16 @@ export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies,
                         </button>
                       )}
                       
-                      {/* Bouton Modifier selon quoteAllowedRoles du type de travail */}
-                      {(() => {
-                        const matchedWorkType = workTypes.find(wt => wt.label === quote.serviceType);
-                        const canEdit = !matchedWorkType?.quoteAllowedRoles || 
-                                        matchedWorkType.quoteAllowedRoles.length === 0 || 
-                                        matchedWorkType.quoteAllowedRoles.includes(currentUser?.role);
-                        
-                        return canEdit ? (
-                          <button onClick={() => onEdit(quote)} className="text-blue-500 hover:text-blue-700 p-2 hover:bg-blue-50 rounded-xl transition-all" title="Modifier le devis">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                          </button>
-                        ) : (
-                          <button disabled className="text-gray-300 cursor-not-allowed p-2" title="Vous n'avez pas l'autorisation de modifier">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                          </button>
-                        );
-                      })()}
+                      {/* Bouton Modifier - utilise PermissionService */}
+                      {canEdit ? (
+                        <button onClick={() => onEdit(quote)} className="text-blue-500 hover:text-blue-700 p-2 hover:bg-blue-50 rounded-xl transition-all" title="Modifier le devis">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                        </button>
+                      ) : (
+                        <button disabled className="text-gray-300 cursor-not-allowed p-2" title={isFullyApproved ? "Ce devis est validé et ne peut plus être modifié par votre rôle" : "Vous n'avez pas l'autorisation de modifier"}>
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                        </button>
+                      )}
 
                       {/* Boutons Valider/Rejeter + Sélecteur statut - basés sur quoteValidationRoles du type de travaux */}
                       {canValidateQuote && (
@@ -436,23 +434,16 @@ export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies,
                         </>
                       )}
 
-                      {/* Bouton Supprimer selon quoteDeleteAllowedRoles du type de travail */}
-                      {(() => {
-                        const matchedWorkType = workTypes.find(wt => wt.label === quote.serviceType);
-                        const canDelete = !matchedWorkType?.quoteDeleteAllowedRoles || 
-                                          matchedWorkType.quoteDeleteAllowedRoles.length === 0 || 
-                                          matchedWorkType.quoteDeleteAllowedRoles.includes(currentUser?.role);
-                        
-                        return canDelete ? (
-                          <button onClick={() => onDelete(quote.id)} className="text-gray-200 hover:text-rose-500 p-2 hover:bg-rose-50 rounded-xl transition-all" title="Supprimer le devis">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                          </button>
-                        ) : (
-                          <button disabled className="text-gray-300 cursor-not-allowed p-2" title="Vous n'avez pas l'autorisation de supprimer">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                          </button>
-                        );
-                      })()}
+                      {/* Bouton Supprimer - utilise PermissionService */}
+                      {canDelete ? (
+                        <button onClick={() => onDelete(quote.id)} className="text-gray-200 hover:text-rose-500 p-2 hover:bg-rose-50 rounded-xl transition-all" title="Supprimer le devis">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                      ) : (
+                        <button disabled className="text-gray-300 cursor-not-allowed p-2" title="Vous n'avez pas l'autorisation de supprimer">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

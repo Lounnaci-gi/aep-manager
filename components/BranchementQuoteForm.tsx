@@ -3,6 +3,7 @@ import Swal from 'sweetalert2';
 import { Quote, QuoteItem, WorkRequest, Client, CommercialAgency, Centre, UserRole, QuoteStatus, Article, Unit, User, WorkType } from '../types';
 import { numberToFrenchLetters } from '../utils/numberToLetters';
 import { ArticleService } from '../services/articleService';
+import { PermissionService } from '../services/permissionService';
 
 interface BranchementQuoteFormProps {
   request: WorkRequest;
@@ -129,6 +130,11 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
     const validatedUserIds = (existingQuote.validations || []).filter(v => v.status === 'validated').map(v => v.userId);
     return requiredUsers.length - validatedUserIds.filter(id => requiredUsers.some(u => u.id === id)).length;
   }, [existingQuote, users, workTypes]);
+
+  const canEdit = useMemo(() => {
+    const matchedWorkType = workTypes.find(wt => wt.label === formData.serviceType);
+    return PermissionService.canManageQuote(currentUser as any, matchedWorkType, existingQuote, users);
+  }, [currentUser, workTypes, formData.serviceType, existingQuote, users]);
 
   // Générer ou récupérer le numéro de devis
   const getQuoteNumber = (): string => {
@@ -1033,23 +1039,15 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
           </div>
         )}
 
-        {/* Republic Text */}
-        <div className="text-center font-bold text-[13px] mb-2 uppercase relative z-10">
-          الجمهورية الجزائرية الديمقراطية الشعبية
-        </div>
 
-        {/* === HEADER (3 colonnes) === */}
-        <div className="flex justify-between items-center mb-6 relative z-10">
-          <div className="text-[10px] font-bold text-left leading-tight w-1/3">
-            Ministère des ressources en eau<br />
-            E.P ALGERIENNE DES EAUX
-          </div>
-          <div className="flex flex-col items-center w-1/3">
-            <img src="/ade.png" alt="ADE" className="h-16 w-auto object-contain mb-1" />
-          </div>
-          <div className="text-[10px] font-bold text-right leading-tight w-1/3" dir="rtl">
-            وزارة المــــوارد المائيــــــة<br />
-            الجزائريــــــة للميــــــــــاه
+
+        {/* === HEADER (Logo + Textes officiels) === */}
+        <div className="flex justify-center items-center gap-5 mb-6 relative z-10">
+          <img src="/ade.png" alt="ADE" className="h-20 w-auto object-contain" />
+          <div className="flex flex-col">
+            <div className="text-[#1592ef] font-black text-[16px] leading-tight">الجزائرية للمياه</div>
+            <div className="text-[#1592ef] font-black text-[15px] leading-tight tracking-tighter">ⵜⴰⵣⵣⴰⵢⵔⵉⵜ ⵏ ⵡⴰⵎⴰⵏ</div>
+            <div className="text-[#1592ef] font-black text-[11px] uppercase tracking-widest mt-1">ALGERIAN WATER UTILITY</div>
           </div>
         </div>
 
@@ -1240,14 +1238,16 @@ export const BranchementQuoteForm: React.FC<BranchementQuoteFormProps> = ({
           </div>
         )}
 
-        {/* Floating return button to keep preview clean */}
-        <button 
-          onClick={() => setActiveTab('form')}
-          className="fixed bottom-8 right-8 z-[110] bg-white border border-slate-200 text-slate-600 px-6 py-3 rounded-full font-black uppercase text-[10px] tracking-widest shadow-2xl hover:bg-slate-50 transition-all flex items-center gap-2"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5L6 10L11 15M6 10H18" /></svg>
-          Retour à l'édition
-        </button>
+        {/* Floating return button to keep preview clean - Securing based on canEdit */}
+        {canEdit && (
+          <button 
+            onClick={() => setActiveTab('form')}
+            className="fixed bottom-8 right-8 z-[110] bg-white border border-slate-200 text-slate-600 px-6 py-3 rounded-full font-black uppercase text-[10px] tracking-widest shadow-2xl hover:bg-slate-50 transition-all flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5L6 10L11 15M6 10H18" /></svg>
+            Retour à l'édition
+          </button>
+        )}
       </div>
     </div>
     </div>
