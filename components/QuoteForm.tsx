@@ -53,29 +53,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
     return TaxService.getApplicableRate(taxRates, TaxType.PRESTATION, new Date());
   }, [taxRates]);
 
-  // VÉRIFICATION DE SÉCURITÉ (Barrière Ultime)
-  const workType = useMemo(() => {
-    return workTypes.find(wt => wt.label?.toLowerCase() === formData.serviceType?.toLowerCase());
-  }, [workTypes, formData.serviceType]);
 
-  const isAuthorized = useMemo(() => {
-    // Si c'est une vue en lecture seule (preview) et que le devis existe déjà, on peut être plus souple
-    // Mais ici on suit la règle stricte demandée par l'utilisateur
-    return PermissionService.canManageQuote(currentUser as any, workType);
-  }, [currentUser, workType]);
-
-  if (!isAuthorized && initialTab !== 'preview') {
-    return (
-      <div className="flex flex-col items-center justify-center p-20 text-center animate-in fade-in duration-500 bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 max-w-2xl mx-auto mt-12">
-        <div className="w-24 h-24 mb-6 bg-rose-50 rounded-[2.5rem] flex items-center justify-center border border-rose-100 shadow-xl shadow-rose-50/50">
-          <svg className="w-12 h-12 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
-        </div>
-        <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tighter mb-2">Accès Non Autorisé</h2>
-        <p className="text-sm text-gray-400 font-bold uppercase tracking-widest leading-relaxed max-w-md mb-8">
-          Votre compte ne possède pas les privilèges requis pour éditer des devis de type "{formData.serviceType}".
-        </p>
   const [formData, setFormData] = useState({
     requestId: initialData?.requestId || '',
     clientId: initialData?.clientId || '',
