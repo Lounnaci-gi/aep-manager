@@ -823,7 +823,6 @@ const App: React.FC = () => {
             onSaveCentre={handleSaveCentre}
             onDeleteCentre={handleDeleteCentre}
             onSaveAgency={handleSaveAgency}
-            onDeleteAgency={handleDeleteAgency}
           />
         )}
         {view === 'agencies' && (
@@ -871,7 +870,6 @@ const App: React.FC = () => {
             centres={centres}
             agencies={agencies}
             workTypes={workTypes}
-            requests={requests}
             onDelete={handleDeleteQuote} 
             onUpdateStatus={handleUpdateStatus} 
             onCancelValidation={handleCancelValidation}
@@ -942,7 +940,6 @@ const App: React.FC = () => {
               currentUser={currentUser}
               initialTab={quoteInitialTab}
               onSave={handleSaveQuote}
-              onDelete={handleDeleteQuote}
               onUpdateStatus={handleUpdateStatus}
               onCancelValidation={handleCancelValidation}
               onCancel={() => { setView(returnView); setEditingQuote(undefined); }} 

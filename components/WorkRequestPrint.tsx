@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { WorkRequest, RequestStatus, CommercialAgency, Centre, BranchementType, ValidationType, Unit } from '../types';
+import { WorkRequest, CommercialAgency, Centre, BranchementType, Unit } from '../types';
 
 interface WorkRequestPrintProps {
   request: WorkRequest;
@@ -11,9 +11,6 @@ interface WorkRequestPrintProps {
 }
 
 export const WorkRequestPrint: React.FC<WorkRequestPrintProps> = ({ request, agency, centre, unit, onClose }) => {
-  const handlePrint = () => {
-    window.print();
-  };
 
   return (
     <div className="fixed inset-0 z-[100] bg-white overflow-y-auto print:static print:bg-white">

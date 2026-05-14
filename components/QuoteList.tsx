@@ -10,7 +10,7 @@ interface QuoteListProps {
   centres: Centre[];
   agencies: CommercialAgency[];
   workTypes: WorkType[];
-  requests?: WorkRequest[];
+
   onDelete: (id: string) => void;
   onUpdateStatus: (id: string, status: QuoteStatus) => void;
   onCancelValidation?: (id: string, reason: string) => void;
@@ -81,14 +81,10 @@ const PortalTooltip: React.FC<PortalTooltipProps> = ({ trigger, children, classN
   );
 };
 
-export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies, workTypes, requests, onDelete, onUpdateStatus, onCancelValidation, onEdit, onView, currentUser, users = [] }) => {
+export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies, workTypes, onDelete, onUpdateStatus, onCancelValidation, onEdit, onView, currentUser, users = [] }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
   const [selectedCentreId, setSelectedCentreId] = useState('');
   const [selectedAgencyId, setSelectedAgencyId] = useState('');
-  const [selectedWorkType, setSelectedWorkType] = useState('');
-  const [statusSortOrder, setStatusSortOrder] = useState<SortDirection>('none');
 
   const getStatusColor = (status: QuoteStatus, isExpired: boolean) => {
     if (status === QuoteStatus.PENDING && isExpired) {
@@ -128,17 +124,6 @@ export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies,
         q.clientName.toLowerCase().includes(term) || 
         q.id.toLowerCase().includes(term);
 
-      const quoteDate = new Date(q.createdAt).setHours(0, 0, 0, 0);
-      let matchesDate = true;
-      if (startDate) {
-        const start = new Date(startDate).setHours(0, 0, 0, 0);
-        if (quoteDate < start) matchesDate = false;
-      }
-      if (endDate) {
-        const end = new Date(endDate).setHours(23, 59, 59, 999);
-        if (quoteDate > end) matchesDate = false;
-      }
-
       let matchesStructure = true;
       if (selectedAgencyId) {
         if (q.agencyId !== selectedAgencyId) matchesStructure = false;
@@ -147,26 +132,13 @@ export const QuoteList: React.FC<QuoteListProps> = ({ quotes, centres, agencies,
         if (!quoteAgency || quoteAgency.centreId !== selectedCentreId) matchesStructure = false;
       }
 
-      let matchesWorkType = true;
-      if (selectedWorkType && q.serviceType !== selectedWorkType) {
-        matchesWorkType = false;
-      }
-
-      return matchesSearch && matchesDate && matchesStructure && matchesWorkType;
+      return matchesSearch && matchesStructure;
     });
 
-    if (statusSortOrder !== 'none') {
-      result.sort((a, b) => {
-        const statusA = a.status.toString();
-        const statusB = b.status.toString();
-        return statusSortOrder === 'asc' ? statusA.localeCompare(statusB) : statusB.localeCompare(statusA);
-      });
-    } else {
-      result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    }
+    result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     return result;
-  }, [quotes, searchTerm, startDate, endDate, selectedCentreId, selectedAgencyId, selectedWorkType, agencies, statusSortOrder]);
+  }, [quotes, searchTerm, selectedCentreId, selectedAgencyId, agencies]);
 
   return (
     <div className="bg-white shadow-xl rounded-2xl md:rounded-[2rem] overflow-hidden border border-gray-100 mx-2 sm:mx-0">

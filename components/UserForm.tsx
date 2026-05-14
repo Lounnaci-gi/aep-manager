@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { User, UserRole, Centre, CommercialAgency } from '../types';
 import { verifyPassword } from '../services/passwordUtils';
 import Swal from 'sweetalert2';

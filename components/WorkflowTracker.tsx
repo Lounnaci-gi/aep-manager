@@ -124,7 +124,6 @@ export const WorkflowTracker: React.FC<WorkflowTrackerProps> = ({
           
           {workflow.steps.map((step, index) => {
             const status = getStepStatus(step.step);
-            const isLast = index === workflow.steps.length - 1;
             
             return (
               <div 

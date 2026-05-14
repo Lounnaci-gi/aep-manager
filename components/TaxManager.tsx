@@ -10,7 +10,6 @@ interface TaxManagerProps {
 
 export const TaxManager: React.FC<TaxManagerProps> = ({ onBack, currentUserRole }) => {
   const [rates, setRates] = useState<TaxRate[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingRate, setEditingRate] = useState<TaxRate | undefined>(undefined);
   
@@ -27,15 +26,12 @@ export const TaxManager: React.FC<TaxManagerProps> = ({ onBack, currentUserRole 
   }, []);
 
   const loadRates = async () => {
-    setLoading(true);
     try {
       const data = await DbService.getTaxRates();
       setRates(data);
     } catch (error) {
       console.error('Erreur chargement taxes:', error);
       Swal.fire('Erreur', 'Impossible de charger les taux de TVA', 'error');
-    } finally {
-      setLoading(false);
     }
   };
 

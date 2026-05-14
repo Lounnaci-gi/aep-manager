@@ -2,9 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Swal from 'sweetalert2';
 import { User, UserRole, WorkRequest, RequestStatus, ValidationType, WorkType, Unit, Centre, CommercialAgency, Quote, WorkflowStepType, BranchementType, ValidationRecord } from '../types';
-import { DbService } from '../services/dbService';
 import { updateWorkflowRegistryFromWorkTypes, getWorkflowByType } from '../services/workflowConfig';
-import { PermissionService } from '../services/permissionService';
 import { WorkRequestPrint } from './WorkRequestPrint';
 import { QuoteEstablishmentRequestPrint } from './QuoteEstablishmentRequestPrint';
 import { WorkflowTracker } from './WorkflowTracker';
@@ -111,7 +109,6 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
   const [endDate, setEndDate] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('date-desc');
   const [validationFilter, setValidationFilter] = useState<'all' | 'pending' | 'validated'>('all');
-  const [printingRequest, setPrintingRequest] = useState<WorkRequest | null>(null);
   const [selectedRequestForWorkflow, setSelectedRequestForWorkflow] = useState<WorkRequest | null>(null);
 
 
@@ -123,25 +120,6 @@ export const WorkRequestList: React.FC<WorkRequestListProps> = ({
         : [ValidationType.AGENCY, ValidationType.CUSTOMER_SERVICE, ValidationType.LAWYER]
     }));
   }, [requests]);
-
-  // Compter les demandes en attente de validation pour chaque rôle
-  const pendingAgencyValidation = normalizedRequests.filter(req =>
-    req.assignedValidations?.includes(ValidationType.AGENCY) &&
-    !req.validations?.find(v => v.type === ValidationType.AGENCY && v.status === 'validated') &&
-    currentUser?.role === UserRole.CHEF_AGENCE
-  ).length;
-
-  const pendingCustomerServiceValidation = normalizedRequests.filter(req =>
-    req.assignedValidations?.includes(ValidationType.CUSTOMER_SERVICE) &&
-    !req.validations?.find(v => v.type === ValidationType.CUSTOMER_SERVICE && v.status === 'validated') &&
-    currentUser?.role === UserRole.AGENT
-  ).length;
-
-  const pendingLawyerValidation = normalizedRequests.filter(req =>
-    req.assignedValidations?.includes(ValidationType.LAWYER) &&
-    !req.validations?.find(v => v.type === ValidationType.LAWYER && v.status === 'validated') &&
-    currentUser?.role === UserRole.JURISTE
-  ).length;
 
   // Filtrer les demandes selon le filtre de validation
   const getFilteredRequests = () => {

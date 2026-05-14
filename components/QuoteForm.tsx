@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Quote, QuoteItem, QuoteStatus, WorkType, Client, CommercialAgency, Centre, ClientCategory, Unit, WorkRequest, UserRole, User, TaxRate, TaxType } from '../types';
 import { TaxService } from '../services/taxService';
 import { getAIRecommendation } from '../services/geminiService';
@@ -10,7 +10,6 @@ import Swal from 'sweetalert2';
 
 interface QuoteFormProps {
   onSave: (quote: Quote) => void;
-  onDelete?: (id: string) => void;
   onCancel: () => void;
   onUpdateStatus?: (id: string, status: QuoteStatus) => void;
   onCancelValidation?: (id: string, reason: string) => void;
@@ -31,7 +30,6 @@ interface QuoteFormProps {
 
 export const QuoteForm: React.FC<QuoteFormProps> = ({
   onSave,
-  onDelete,
   onCancel,
   onUpdateStatus,
   onCancelValidation,
@@ -138,7 +136,6 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
     return [];
   });
 
-  const [loadingAI, setLoadingAI] = useState(false);
   const [aiRec, setAiRec] = useState(initialData?.aiNotes || '');
   const [activeTab, setActiveTab] = useState<'form' | 'preview'>(initialTab);
   const [articles, setArticles] = useState<any[]>([]);
@@ -146,12 +143,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
   const [showArticleDropdown, setShowArticleDropdown] = useState<{ [key: number]: boolean }>({});
   const [searchTerm, setSearchTerm] = useState<{ [key: number]: string }>({});
 
-  const isLegal = formData.category === ClientCategory.LEGAL;
-
   // Déterminer le type de travaux actuel
-  const currentWorkType = useMemo(() => {
-    return workTypes.find(wt => wt.label === formData.serviceType);
-  }, [formData.serviceType, workTypes]);
 
   // Configuration dynamique selon le type de travaux
   const workTypeConfig = useMemo(() => {
@@ -462,65 +454,6 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
     }
   }, [workTypes, initialData]);
 
-  const handleSelectClient = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const clientId = e.target.value;
-    const selected = clients.find(c => c.id === clientId);
-    if (selected) {
-      setFormData({
-        ...formData,
-        category: selected.category,
-        civility: selected.civility || 'M.',
-        businessName: selected.businessName || '',
-        clientName: selected.name,
-        idDocumentType: selected.idDocumentType || 'CNI',
-        idDocumentNumber: selected.idDocumentNumber || '',
-        idDocumentIssueDate: selected.idDocumentIssueDate || '',
-        idDocumentIssuer: selected.idDocumentIssuer || '',
-        clientEmail: selected.email,
-        clientPhone: selected.phone,
-        clientFax: selected.fax || '',
-        address: selected.address,
-        commune: selected.commune,
-        installationAddress: selected.installationAddress || selected.address,
-        installationCommune: selected.installationCommune || selected.commune,
-        type: selected.type || 'Propriétaire',
-      });
-    }
-  };
-
-  const handleSelectRequest = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const requestId = e.target.value;
-    const selected = requests.find(r => r.id === requestId);
-    if (selected) {
-      setFormData({
-        ...formData,
-        category: selected.category || ClientCategory.PHYSICAL,
-        civility: selected.civility || 'M.',
-        businessName: selected.businessName || '',
-        clientName: selected.clientName,
-        idDocumentType: selected.idDocumentType || 'CNI',
-        idDocumentNumber: selected.idDocumentNumber || '',
-        idDocumentIssueDate: selected.idDocumentIssueDate || '',
-        idDocumentIssuer: selected.idDocumentIssuer || '',
-        clientEmail: selected.clientEmail || selected.correspondenceEmail || '',
-        clientPhone: selected.clientPhone || selected.correspondencePhone || '',
-        clientFax: selected.clientFax || '',
-        address: selected.address || '',
-        commune: selected.commune || '',
-        installationAddress: selected.installationAddress || selected.address || '',
-        installationCommune: selected.installationCommune || selected.commune || '',
-        serviceType: selected.serviceType,
-        description: selected.description,
-        type: selected.type || 'Propriétaire',
-        // Champs techniques
-        branchementType: selected.branchementType || '',
-        branchementDetails: selected.branchementDetails || '',
-        diameter: selected.diameter || '',
-        flowRate: selected.flowRate || '',
-      });
-    }
-  };
-
   const updateItem = (index: number, field: keyof QuoteItem, value: any) => {
     const newItems = [...items];
     const item = newItems[index];
@@ -548,24 +481,6 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
     const cost = (item.unitPrice || 0) / (1 + (item.margin || 0) / 100);
     return acc + (item.quantity * ((item.unitPrice || 0) - cost));
   }, 0);
-
-  const marginRate = subtotal > 0 ? (grossMargin / subtotal) * 100 : 0;
-
-  const handleConsultAI = async () => {
-    setLoadingAI(true);
-    const rec = await getAIRecommendation({
-      serviceType: formData.serviceType,
-      clientName: isLegal ? formData.businessName : formData.clientName,
-      description: formData.description,
-      total: total
-    });
-    setAiRec(rec);
-    setLoadingAI(false);
-  };
-
-  const formatCurrency = (val: number) => {
-    return val.toLocaleString('fr-DZ', { style: 'currency', currency: 'DZD' });
-  };
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -614,16 +529,18 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
     onSave(quoteData);
   };
 
-  const { agency: activeAgency, centre: activeCentre, unit: activeUnit } = (function () {
+  const { centre: activeCentre, unit: activeUnit } = (function () {
     const agency = agencies.find(a => a.id === formData.agencyId);
     const centre = agency ? centres.find(c => c.id === agency.centreId) : null;
     const unit = centre ? units.find(u => u.id === centre.unitId) : null;
     return {
-      agency: agency || agencies[0],
       centre: centre || centres[0],
       unit: unit || units[0]
     };
   })();
+
+  // Indique si le client est une personne morale (société)
+  const isLegal = formData.category === ClientCategory.LEGAL;
 
   // Fonction pour générer un ID temporaire pour les devis
   const generateTempQuoteId = () => {
@@ -638,8 +555,6 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
     // ID spécial pour indiquer au backend de générer le vrai numéro incrémental
     return `TEMP-QUOTE-${Date.now()}-${prefix}-${currentYear}`;
   };
-
-  const isEditMode = !!initialData;
 
   // Calcule le prochain numéro de devis incrémental pour ce centre et cette année
   const getNextQuoteNumber = (): string => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
-import { WorkRequest, RequestStatus, WorkType, Client, CommercialAgency, Centre, ClientCategory, UserRole, WORK_TYPE_PERMISSIONS, BranchementType, ValidationType } from '../types';
+import { WorkRequest, RequestStatus, WorkType, Client, CommercialAgency, Centre, ClientCategory, UserRole, WORK_TYPE_PERMISSIONS, BranchementType } from '../types';
 import { WorkflowEngine } from '../services/workflowEngine';
 
 interface WorkRequestFormProps {
@@ -140,49 +140,18 @@ export const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
 
 
 
-  const handleSelectClient = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const clientId = e.target.value;
-    const selected = clients.find(c => c.id === clientId);
-    if (selected) {
-      setFormData({
-        ...formData,
-        category: selected.category,
-        civility: selected.civility || 'M.',
-        businessName: selected.businessName || '',
-        clientName: selected.name,
-        idDocumentType: selected.idDocumentType || 'CNI',
-        idDocumentNumber: selected.idDocumentNumber || '',
-        idDocumentIssueDate: selected.idDocumentIssueDate || '',
-        idDocumentIssuer: selected.idDocumentIssuer || '',
-        clientEmail: selected.email,
-        clientPhone: selected.phone,
-        address: selected.address,
-        commune: selected.commune,
-        installationAddress: selected.installationAddress || selected.address,
-        installationCommune: selected.installationCommune || selected.commune,
-        type: selected.type || 'Propriétaire',
-      });
-    }
-  };
-
   // Fonction pour générer un ID temporaire au format spécial pour indiquer au backend de générer un vrai ID
   // NOTE: Pour une implémentation complète, cette fonction devrait être appelée via le backend
   // avec un système d'incrément basé sur la base de données
   const generateTempRequestId = () => {
     const currentYear = new Date().getFullYear();
-    
-    // Utiliser le préfixe du centre de l'utilisateur connecté
-    let prefix = 'CB'; // Préfixe par défaut
-    let centreId = ''; // Centre ID
+    let prefix = 'CB';
     if (currentUser && centres.length > 0) {
       const userCentre = centres.find(centre => centre.id === (currentUser as any).centreId);
       if (userCentre && userCentre.prefix) {
         prefix = userCentre.prefix;
-        centreId = userCentre.id;
       }
     }
-    
-    // ID spécial pour indiquer au backend de générer le vrai numéro incrémental
     return `TEMP-${Date.now()}-${prefix}-${currentYear}`;
   };
 

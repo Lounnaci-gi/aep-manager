@@ -12,7 +12,6 @@ interface StructureManagerProps {
   onSaveCentre: (centre: Centre) => void;
   onDeleteCentre: (id: string) => void;
   onSaveAgency: (agency: CommercialAgency) => void;
-  onDeleteAgency: (id: string) => void;
 }
 
 export const StructureManager: React.FC<StructureManagerProps> = ({
@@ -23,8 +22,7 @@ export const StructureManager: React.FC<StructureManagerProps> = ({
   onDeleteUnit,
   onSaveCentre,
   onDeleteCentre,
-  onSaveAgency,
-  onDeleteAgency
+  onSaveAgency
 }) => {
   const [showUnitForm, setShowUnitForm] = useState(false);
   const [isCentreFormOpen, setIsCentreFormOpen] = useState(false);
